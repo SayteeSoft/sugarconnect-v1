@@ -19,7 +19,7 @@ import { WhatIsSection } from '@/components/what-is-section';
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
   if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockUsers);
+    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin'));
   }
 
   try {
@@ -136,6 +136,17 @@ export default function Home() {
         </section>
 
         <WhatIsSection />
+
+        <section className="bg-[#ebe5eb] dark:bg-card py-20 md:py-24">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-3xl mx-auto">
+                    <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-6">High Level Security &amp; Privacy</h2>
+                    <p className="text-muted-foreground">
+                        We prioritize your privacy and security. Our platform uses state-of-the-art encryption and security measures to protect your personal information. You can connect with others, knowing that your data is safe and your privacy is respected.
+                    </p>
+                </div>
+            </div>
+        </section>
 
       </main>
       <Footer />
