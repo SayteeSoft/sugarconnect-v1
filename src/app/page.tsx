@@ -11,7 +11,8 @@ import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
-import { mockUsers } from '@/lib/mock-data';
+import { mockUsers, mockTestimonials } from '@/lib/mock-data';
+import { TestimonialsSection } from '@/components/testimonials-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
@@ -20,7 +21,8 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
   }
 
   try {
-    const res = await fetch(`/api/users`, { cache: 'no-store' });
+    const baseUrl = process.env.URL || 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
     if (!res.ok) {
       console.error("Failed to fetch profiles:", res.statusText);
       return [];
@@ -116,6 +118,9 @@ export default function Home() {
               )}
           </div>
         </section>
+        
+        <TestimonialsSection testimonials={mockTestimonials} />
+
       </main>
       <Footer />
       <CookieConsent />

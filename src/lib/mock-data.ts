@@ -48,5 +48,51 @@ export const mockUsers: UserProfile[] = [
     bio: 'University student studying literature. Im a romantic at heart and love poetry, long walks, and deep conversations. Hoping to find a kind, generous man to create beautiful memories with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
     image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
-  }
+  },
+];
+
+export type Testimonial = {
+  name: string;
+  role: string;
+  quote: string;
+  image: string;
+  rating: number;
+};
+
+export const mockTestimonials: Testimonial[] = [
+  {
+    name: 'Darianna',
+    role: 'Sugar Baby',
+    quote: 'Art student with a love for adventure and exploring new cultures.',
+    image: '/user-profiles/Darianna_Gemini_Generated_Image(small)-001.jpg',
+    rating: 5,
+  },
+  {
+    name: 'Kateryna',
+    role: 'Sugar Baby',
+    quote: 'Recent graduate starting my career in marketing.',
+    image: '/user-profiles/Kateryna_Gemini_Generated_Image(small)-001.jpg',
+    rating: 5,
+  },
+  {
+    name: 'Mark',
+    role: 'Sugar Daddy',
+    quote: 'Investor and lover of the great outdoors.',
+    image: 'https://placehold.co/100x100.png',
+    rating: 5,
+  },
+    {
+    name: 'Sofia',
+    role: 'Sugar Baby',
+    quote: 'A perfect platform to meet genuine people.',
+    image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
+    rating: 5,
+  },
+  {
+    name: 'John',
+    role: 'Sugar Daddy',
+    quote: 'Found exactly what I was looking for. Highly recommend.',
+    image: 'https://placehold.co/100x100.png',
+    rating: 5,
+  },
 ];
