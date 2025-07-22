@@ -22,15 +22,6 @@ export default function ContactPage() {
                         <p className="text-lg text-muted-foreground">We're here to help. Reach out to us with any questions.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto items-start">
-                         <Card className="shadow-xl">
-                            <CardHeader>
-                                <CardTitle>Send us a Message</CardTitle>
-                                <CardDescription>Fill out the form below and we'll get back to you as soon as possible.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <ContactForm />
-                            </CardContent>
-                        </Card>
                         <div className="space-y-8 pt-8">
                             <div>
                                 <h3 className="text-2xl font-headline font-bold text-primary mb-4 flex items-center gap-3">
@@ -63,6 +54,15 @@ export default function ContactPage() {
                                 </p>
                             </div>
                         </div>
+                         <Card className="shadow-xl">
+                            <CardHeader>
+                                <CardTitle>Send us a Message</CardTitle>
+                                <CardDescription>Fill out the form below and we'll get back to you as soon as possible.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ContactForm />
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </main>
