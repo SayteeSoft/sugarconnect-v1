@@ -10,21 +10,27 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
+import { mockUsers } from '@/lib/mock-data';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
-  try {
-    const res = await fetch(`/api/users`, { cache: 'no-store' });
-    if (!res.ok) {
-      console.error("Failed to fetch profiles:", res.statusText);
+  // In a real app, this would be an API call to your backend
+  // For local development, we are using mock data.
+  if (process.env.NETLIFY) {
+    try {
+      const res = await fetch(`/api/users`, { cache: 'no-store' });
+      if (!res.ok) {
+        console.error("Failed to fetch profiles:", res.statusText);
+        return [];
+      }
+      const users = await res.json();
+      return users.slice(0, 4); // Get the first 4 profiles
+    } catch (error) {
+      console.error("Error fetching profiles:", error);
       return [];
     }
-    const users = await res.json();
-    return users.slice(0, 4); // Get the first 4 profiles
-  } catch (error) {
-    console.error("Error fetching profiles:", error);
-    return [];
   }
+  return Promise.resolve(mockUsers.slice(0,4));
 }
 
 

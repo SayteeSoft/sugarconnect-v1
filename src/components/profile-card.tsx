@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { UserProfile } from "@/lib/mock-data";
+import { UserProfile } from "@/lib/users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 type ProfileCardProps = {
   user: UserProfile;

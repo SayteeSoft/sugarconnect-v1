@@ -2,6 +2,7 @@
 import { UserProfile } from "@/lib/users";
 import { ProfileClient } from "@/components/profile-client";
 import { notFound } from "next/navigation";
+import { mockUsers } from "@/lib/mock-data";
 
 type ProfilePageProps = {
   params: {
@@ -9,25 +10,30 @@ type ProfilePageProps = {
   };
 };
 
-// In a real app, this would be an API call
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
-  try {
-    const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
-    if (!res.ok) return undefined;
-    return res.json();
-  } catch (e) {
-    return undefined;
+  if (process.env.NETLIFY) {
+    try {
+      const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
+      if (!res.ok) return undefined;
+      return res.json();
+    } catch (e) {
+      return undefined;
+    }
   }
+  return Promise.resolve(mockUsers.find(p => p.id === id));
 };
 
 const getAllProfiles = async (): Promise<UserProfile[]> => {
-  try {
-    const res = await fetch(`/api/users`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return res.json();
-  } catch (e) {
-    return [];
-  }
+    if (process.env.NETLIFY) {
+        try {
+            const res = await fetch(`/api/users`, { cache: 'no-store' });
+            if (!res.ok) return [];
+            return res.json();
+        } catch (e) {
+            return [];
+        }
+    }
+    return Promise.resolve(mockUsers);
 };
 
 const getCurrentUser = async (): Promise<UserProfile | undefined> => {
