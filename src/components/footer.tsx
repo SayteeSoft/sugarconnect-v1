@@ -8,7 +8,7 @@ export function Footer() {
       title: 'Site',
       links: [
         { label: 'About Us', href: '/about' },
-        { label: 'FAQs', href: '#' },
+        { label: 'FAQs', href: '/faq' },
         { label: 'Glossary', href: '#' },
       ],
     },
