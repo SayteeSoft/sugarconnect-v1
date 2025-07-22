@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import { FeaturedProfileCard } from '@/components/featured-profile-card';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { cache: 'no-store' });
+    const res = await fetch(`/api/users`, { cache: 'no-store' });
     if (!res.ok) {
       console.error("Failed to fetch profiles:", res.statusText);
       return [];

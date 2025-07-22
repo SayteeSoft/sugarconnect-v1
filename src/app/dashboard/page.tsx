@@ -1,3 +1,4 @@
+
 import { DashboardClient } from "@/components/dashboard-client";
 import { UserProfile } from "@/lib/users";
 
@@ -6,7 +7,7 @@ async function getProfiles(): Promise<UserProfile[]> {
   // This is a placeholder for where you would fetch data in a real app.
   // When running on Netlify, this will be replaced by a call to a Netlify function.
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { cache: 'no-store' });
+    const res = await fetch(`/api/users`, { cache: 'no-store' });
     if (!res.ok) {
       console.error("Failed to fetch profiles:", res.statusText);
       return [];

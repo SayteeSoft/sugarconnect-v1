@@ -1,3 +1,4 @@
+
 import { UserProfile } from "@/lib/users";
 import { ProfileClient } from "@/components/profile-client";
 import { notFound } from "next/navigation";
@@ -11,7 +12,7 @@ type ProfilePageProps = {
 // In a real app, this would be an API call
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${id}`, { cache: 'no-store' });
+    const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
     if (!res.ok) return undefined;
     return res.json();
   } catch (e) {
@@ -21,7 +22,7 @@ const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
 
 const getAllProfiles = async (): Promise<UserProfile[]> => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { cache: 'no-store' });
+    const res = await fetch(`/api/users`, { cache: 'no-store' });
     if (!res.ok) return [];
     return res.json();
   } catch (e) {
