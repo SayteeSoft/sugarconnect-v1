@@ -30,7 +30,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-white text-foreground py-12 md:py-16">
+    <footer className="bg-white text-foreground dark:bg-[#22252a] py-12 md:py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center mb-8">
           <Logo isScrolled={true} />
