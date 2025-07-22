@@ -29,7 +29,7 @@ export function Header() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex flex-1 justify-center items-center gap-6 text-sm font-medium">
+        <nav className="hidden md:flex flex-1 justify-center items-center gap-6 text-base font-medium">
           {navLinks.map(link => (
             <Link key={link.label} href={link.href} className={navLinkClasses}>
               {link.label}
