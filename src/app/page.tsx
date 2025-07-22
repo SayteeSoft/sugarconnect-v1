@@ -11,8 +11,14 @@ import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
+import { mockUsers } from '@/lib/mock-data';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
+  // Use mock data in development, and fetch from API in production
+  if (process.env.NODE_ENV === 'development') {
+    return Promise.resolve(mockUsers.slice(0, 4));
+  }
+
   try {
     const res = await fetch(`/api/users`, { cache: 'no-store' });
     if (!res.ok) {
