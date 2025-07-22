@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { UserProfile } from "@/lib/mock-data";
+import { UserProfile } from "@/lib/users";
 import { summarizeProfile } from "@/ai/flows/summarize-profile";
 import { matchProfiles, type MatchProfilesOutput } from "@/ai/flows/ai-match-profiles";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Sparkles, Heart } from "lucide-react";
+import { Calendar, MapPin, Sparkles, Heart, Trash2 } from "lucide-react";
 
 type ProfileClientProps = {
   profile: UserProfile;
@@ -22,19 +23,23 @@ type ProfileClientProps = {
   currentUser: UserProfile;
 };
 
-export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClientProps) {
+export function ProfileClient({ profile: initialProfile, allProfiles, currentUser }: ProfileClientProps) {
   const { toast } = useToast();
+  const router = useRouter();
+  const [profile, setProfile] = useState(initialProfile);
   const [summary, setSummary] = useState("");
   const [matches, setMatches] = useState<MatchProfilesOutput['matches']>([]);
   const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [isMatchesLoading, setIsMatchesLoading] = useState(false);
+  const isOwnProfile = profile.id === currentUser.id;
 
   useEffect(() => {
+    setProfile(initialProfile);
     async function getSummary() {
-      if (!profile) return;
+      if (!initialProfile) return;
       setIsSummaryLoading(true);
       try {
-        const profileDetails = `Name: ${profile.name}, Age: ${profile.age}, Location: ${profile.location}, Role: ${profile.role}, Bio: ${profile.bio}, Interests: ${profile.interests.join(", ")}`;
+        const profileDetails = `Name: ${initialProfile.name}, Age: ${initialProfile.age}, Location: ${initialProfile.location}, Role: ${initialProfile.role}, Bio: ${initialProfile.bio}, Interests: ${initialProfile.interests.join(", ")}`;
         const result = await summarizeProfile({
           profileDetails,
           userInterests: currentUser.interests.join(", "),
@@ -53,7 +58,7 @@ export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClie
       }
     }
     getSummary();
-  }, [profile, currentUser.interests, toast]);
+  }, [initialProfile, currentUser.interests, toast]);
 
   const handleFindMatches = async () => {
     setIsMatchesLoading(true);
@@ -71,9 +76,9 @@ export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClie
       const matchedProfilesWithData = result.matches.map(match => {
         const originalProfile = candidateProfiles.find(p => match.profileSummary.includes(p.name));
         return { ...match, ...originalProfile };
-      });
+      }).filter(Boolean);
       
-      setMatches(matchedProfilesWithData);
+      setMatches(matchedProfilesWithData as any);
     } catch (error) {
       console.error("Failed to find matches:", error);
       toast({
@@ -86,19 +91,52 @@ export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClie
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${profile.id}/delete`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete profile');
+      }
+
+      toast({
+        title: 'Profile Deleted',
+        description: 'The profile has been successfully deleted.',
+      });
+      router.push('/dashboard');
+      router.refresh(); // To reflect changes in the dashboard
+    } catch (error) {
+      console.error('Failed to delete profile:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not delete the profile.',
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-8">
           <Card className="overflow-hidden">
-            <Image
-              src={profile.image}
-              alt={profile.name}
-              width={600}
-              height={600}
-              className="w-full aspect-square object-cover"
-              data-ai-hint="portrait person"
-            />
+            {profile.image && (
+              <Image
+                src={profile.image}
+                alt={profile.name}
+                width={600}
+                height={600}
+                className="w-full aspect-square object-cover"
+                data-ai-hint="portrait person"
+                unoptimized
+              />
+            )}
             <CardContent className="p-6">
               <h2 className="text-3xl font-bold font-headline">{profile.name}</h2>
               <div className="flex items-center gap-4 text-muted-foreground mt-2">
@@ -140,6 +178,11 @@ export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClie
           <Card>
             <CardHeader>
               <CardTitle>About {profile.name}</CardTitle>
+               {isOwnProfile && (
+                <Button variant="outline" size="sm" onClick={() => {/* TODO: Implement edit functionality */}}>
+                  Edit Profile
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-lg leading-relaxed">{profile.bio}</p>
@@ -152,46 +195,53 @@ export function ProfileClient({ profile, allProfiles, currentUser }: ProfileClie
                 </div>
               </div>
 
-               <Dialog>
-                <DialogTrigger asChild>
-                  <Button onClick={handleFindMatches} disabled={isMatchesLoading}>
-                    {isMatchesLoading ? 'Finding Matches...' : <>
-                    <Heart className="mr-2 h-4 w-4" /> Find Matches for {profile.name}
-                    </>}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Top Matches for {profile.name}</DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-                    {isMatchesLoading ? (
-                      <p>Finding the best matches...</p>
-                    ) : matches.length > 0 ? (
-                      matches.map((match, index) => (
-                        <Card key={index}>
-                           <CardContent className="p-4 flex gap-4">
-                             <Avatar className="h-20 w-20">
-                               <AvatarImage src={match.image} alt={match.name} data-ai-hint="portrait person" />
-                               <AvatarFallback>{match.name?.charAt(0)}</AvatarFallback>
-                             </Avatar>
-                             <div className="flex-grow">
-                              <h4 className="font-bold">{match.name}, {match.age}</h4>
-                              <p className="text-sm text-muted-foreground mt-1">{match.reason}</p>
-                              <div className="mt-2">
-                                <Label className="text-xs">Match Score: {Math.round(match.matchScore * 100)}%</Label>
-                                <Progress value={match.matchScore * 100} className="h-2 mt-1" />
-                              </div>
-                             </div>
-                           </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <p>No matches found yet. Click the button to start!</p>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
+               <div className="flex items-center gap-4">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button onClick={handleFindMatches} disabled={isMatchesLoading}>
+                        {isMatchesLoading ? 'Finding Matches...' : <>
+                        <Heart className="mr-2 h-4 w-4" /> Find Matches for {profile.name}
+                        </>}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Top Matches for {profile.name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 pr-2">
+                        {isMatchesLoading ? (
+                          <p>Finding the best matches...</p>
+                        ) : matches.length > 0 ? (
+                          matches.map((match, index) => (
+                            <Card key={index}>
+                              <CardContent className="p-4 flex gap-4">
+                                <Avatar className="h-20 w-20">
+                                  {match.image && <AvatarImage src={match.image} alt={match.name} data-ai-hint="portrait person" />}
+                                  <AvatarFallback>{match.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-grow">
+                                  <h4 className="font-bold">{match.name}, {match.age}</h4>
+                                  <p className="text-sm text-muted-foreground mt-1">{match.reason}</p>
+                                  <div className="mt-2">
+                                    <Label className="text-xs">Match Score: {Math.round(match.matchScore * 100)}%</Label>
+                                    <Progress value={match.matchScore * 100} className="h-2 mt-1" />
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <p>No matches found yet. Click the button to start!</p>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  {isOwnProfile && (
+                     <Button variant="destructive" onClick={handleDeleteProfile}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete My Profile
+                    </Button>
+                  )}
+               </div>
 
             </CardContent>
           </Card>

@@ -1,0 +1,19 @@
+import { getStore } from '@netlify/blobs';
+import { NextResponse } from 'next/server';
+import { UserProfile } from '@/lib/users';
+
+export async function GET() {
+  const store = getStore('users');
+  try {
+    const { blobs } = await store.list();
+    const users: UserProfile[] = [];
+    for (const blob of blobs) {
+      const user = await store.get(blob.key, { type: 'json' });
+      users.push(user);
+    }
+    return NextResponse.json(users);
+  } catch (error) {
+    console.error('Failed to list users:', error);
+    return NextResponse.json({ message: 'Failed to list users' }, { status: 500 });
+  }
+}

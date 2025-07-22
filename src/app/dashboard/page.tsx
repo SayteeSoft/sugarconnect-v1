@@ -1,9 +1,26 @@
-import { users } from "@/lib/mock-data";
 import { DashboardClient } from "@/components/dashboard-client";
+import { UserProfile } from "@/lib/users";
+
+// In a real app, this would be an API call to your backend
+async function getProfiles(): Promise<UserProfile[]> {
+  // This is a placeholder for where you would fetch data in a real app.
+  // When running on Netlify, this will be replaced by a call to a Netlify function.
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { cache: 'no-store' });
+    if (!res.ok) {
+      console.error("Failed to fetch profiles:", res.statusText);
+      return [];
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching profiles:", error);
+    return [];
+  }
+}
+
 
 export default async function DashboardPage() {
-  // In a real app, this would be an API call to your backend
-  const profiles = users;
+  const profiles = await getProfiles();
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -11,7 +28,7 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold font-headline">Discover Profiles</h1>
         <p className="text-muted-foreground">Browse and connect with members of the community.</p>
       </div>
-      <DashboardClient profiles={profiles} />
+      <DashboardClient initialProfiles={profiles} />
     </div>
   );
 }

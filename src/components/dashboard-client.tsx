@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { UserProfile } from "@/lib/mock-data";
+import { useState, useMemo, useEffect } from "react";
+import { UserProfile } from "@/lib/users";
 import { ProfileCard } from "./profile-card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,14 +10,19 @@ import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 
 type DashboardClientProps = {
-  profiles: UserProfile[];
+  initialProfiles: UserProfile[];
 };
 
-export function DashboardClient({ profiles }: DashboardClientProps) {
+export function DashboardClient({ initialProfiles }: DashboardClientProps) {
+  const [profiles, setProfiles] = useState(initialProfiles);
   const [locationFilter, setLocationFilter] = useState("");
   const [sexFilter, setSexFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [ageRange, setAgeRange] = useState([18, 70]);
+
+  useEffect(() => {
+    setProfiles(initialProfiles);
+  }, [initialProfiles]);
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter((profile) => {
