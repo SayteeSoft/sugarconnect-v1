@@ -11,13 +11,15 @@ import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
-import { mockUsers, mockTestimonials } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/mock-data';
 import { TestimonialsSection } from '@/components/testimonials-section';
+import { mockTestimonials } from '@/lib/mock-data';
+import { WhatIsSection } from '@/components/what-is-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
   if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin'));
+    return Promise.resolve(mockUsers);
   }
 
   try {
@@ -119,9 +121,9 @@ export default function Home() {
               )}
           </div>
         </section>
-
-        <TestimonialsSection testimonials={mockTestimonials} />
         
+        <TestimonialsSection testimonials={mockTestimonials} />
+
         <section className="bg-[#ebe5eb] dark:bg-card py-20 md:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-3xl mx-auto">
@@ -132,6 +134,8 @@ export default function Home() {
                 </div>
             </div>
         </section>
+
+        <WhatIsSection />
 
       </main>
       <Footer />
