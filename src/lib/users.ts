@@ -4,8 +4,8 @@ export type UserProfile = {
   name: string;
   age: number;
   location: string;
-  role: 'Sugar Daddy' | 'Sugar Mommy' | 'Sugar Baby';
-  sex: 'Male' | 'Female' | 'Other';
+  role: 'Admin' | 'Sugar Daddy' | 'Sugar Baby';
+  sex: 'Male' | 'Female';
   bio: string;
   interests: string[];
   image: string;
