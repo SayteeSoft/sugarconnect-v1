@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Logo } from './logo';
 
@@ -38,7 +39,7 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left mb-8">
           {footerSections.map((section) => (
             <div key={section.title}>
               <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
