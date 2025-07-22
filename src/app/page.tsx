@@ -11,9 +11,8 @@ import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
-import { mockUsers } from '@/lib/mock-data';
 import { TestimonialsSection } from '@/components/testimonials-section';
-import { mockTestimonials } from '@/lib/mock-data';
+import { mockTestimonials, mockUsers } from '@/lib/mock-data';
 import { WhatIsSection } from '@/components/what-is-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
@@ -124,7 +123,7 @@ export default function Home() {
         
         <TestimonialsSection testimonials={mockTestimonials} />
 
-        <section className="bg-[#ebe5eb] dark:bg-card py-20 md:py-24">
+        <section className="bg-[#ebe5eb] py-20 md:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-6">What is a Sugar Relationship?</h2>
@@ -136,17 +135,6 @@ export default function Home() {
         </section>
 
         <WhatIsSection />
-
-        <section className="bg-[#ebe5eb] dark:bg-card py-20 md:py-24">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-6">High Level Security &amp; Privacy</h2>
-                    <p className="text-muted-foreground">
-                        We prioritize your privacy and security. Our platform uses state-of-the-art encryption and security measures to protect your personal information. You can connect with others, knowing that your data is safe and your privacy is respected.
-                    </p>
-                </div>
-            </div>
-        </section>
 
       </main>
       <Footer />
