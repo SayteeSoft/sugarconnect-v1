@@ -15,6 +15,7 @@ import { TestimonialsSection } from '@/components/testimonials-section';
 import { mockTestimonials, mockUsers } from '@/lib/mock-data';
 import { WhatIsSection } from '@/components/what-is-section';
 import { SecuritySection } from '@/components/security-section';
+import { ByTheNumbersSection } from '@/components/by-the-numbers-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
@@ -124,18 +125,9 @@ export default function Home() {
         
         <TestimonialsSection testimonials={mockTestimonials} />
 
-        <section className="bg-[#ebe5eb] py-20 md:py-24">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-6">What is a Sugar Relationship?</h2>
-                    <p className="text-muted-foreground">
-                        Sugar dating, in its modern form, has elevated the world of traditional dating relationships, making it more satisfying for both partners. Like-minded people can find each other and explore relationships on their own terms, free from the judgement they may feel from their friends, family, or wider society.
-                    </p>
-                </div>
-            </div>
-        </section>
-
         <WhatIsSection />
+
+        <ByTheNumbersSection />
 
         <SecuritySection />
 
