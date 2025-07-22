@@ -1,13 +1,25 @@
-import { getStore, GetStoreOptions } from '@netlify/blobs';
+
+import { getStore, type StoreOptions } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
-  const userStoreOptions: GetStoreOptions | string = process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'};
-  const imageStoreOptions: GetStoreOptions | string = process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'};
-  
-  const store = getStore(userStoreOptions);
+  const getStoreOptions = (name: string): StoreOptions | string => {
+    if (process.env.NETLIFY) {
+      return name;
+    }
+    return {
+      name,
+      consistency: 'strong',
+      siteID: 'studio-mock-site-id',
+      token: 'studio-mock-token',
+    };
+  }
+
+  const userStore = getStore(getStoreOptions('users'));
+  const imageStore = getStore(getStoreOptions('images'));
+
   const formData = await request.formData();
   const email = formData.get('email') as string;
 
@@ -15,7 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Email is required' }, { status: 400 });
   }
 
-  const existingUser = await store.get(email);
+  const existingUser = await userStore.get(email);
   if (existingUser) {
     return NextResponse.json({ message: 'User already exists' }, { status: 409 });
   }
@@ -35,7 +47,6 @@ export async function POST(request: NextRequest) {
   
   const imageFile = formData.get('image') as File | null;
   if (imageFile) {
-      const imageStore = getStore(imageStoreOptions);
       const imageBuffer = await imageFile.arrayBuffer();
       const imageKey = newUser.id; // Use new user's ID as the key
       await imageStore.set(imageKey, imageBuffer, {
@@ -45,6 +56,6 @@ export async function POST(request: NextRequest) {
   }
 
 
-  await store.setJSON(email, newUser);
+  await userStore.setJSON(email, newUser);
   return NextResponse.json(newUser, { status: 201 });
 }
