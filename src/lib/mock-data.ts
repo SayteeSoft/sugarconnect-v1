@@ -47,7 +47,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'University student studying literature. Im a romantic at heart and love poetry, long walks, and deep conversations. Hoping to find a kind, generous man to create beautiful memories with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
+    image: '/user-profiles/Vansessa_Gemini_Generated_Image(small)-003.jpg',
   },
 ];
 
