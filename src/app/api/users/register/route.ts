@@ -43,4 +43,5 @@ export async function POST(request: NextRequest) {
 
 
   await store.setJSON(email, newUser);
-  return NextResponse.json(newUser, { status: 201
+  return NextResponse.json(newUser, { status: 201 });
+}
