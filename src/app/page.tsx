@@ -7,14 +7,45 @@ import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { Header } from '@/components/header';
 import { CookieConsent } from '@/components/cookie-consent';
+import { UserProfile } from '@/lib/users';
+import { FeaturedProfileCard } from '@/components/featured-profile-card';
+
+async function getFeaturedProfiles(): Promise<UserProfile[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, { cache: 'no-store' });
+    if (!res.ok) {
+      console.error("Failed to fetch profiles:", res.statusText);
+      return [];
+    }
+    const users = await res.json();
+    return users.slice(0, 4); // Get the first 4 profiles
+  } catch (error) {
+    console.error("Error fetching profiles:", error);
+    return [];
+  }
+}
+
 
 export default function Home() {
   const [offsetY, setOffsetY] = useState(0);
+  const [featuredProfiles, setFeaturedProfiles] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const handleScroll = () => setOffsetY(window.pageYOffset);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const loadProfiles = async () => {
+      setLoading(true);
+      const profiles = await getFeaturedProfiles();
+      setFeaturedProfiles(profiles);
+      setLoading(false);
+    };
+    loadProfiles();
   }, []);
 
   return (
@@ -62,10 +93,19 @@ export default function Home() {
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Featured Profiles</h2>
             </div>
-            {/* Placeholder for featured profiles */}
-             <div className="text-center text-muted-foreground">
-                Featured profiles will be displayed here.
-            </div>
+             {loading ? (
+                <div className="text-center text-muted-foreground">Loading profiles...</div>
+              ) : featuredProfiles.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {featuredProfiles.map((profile) => (
+                    <FeaturedProfileCard key={profile.id} user={profile} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  No featured profiles available at the moment.
+                </div>
+              )}
           </div>
         </section>
       </main>
