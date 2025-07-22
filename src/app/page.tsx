@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
@@ -6,16 +9,25 @@ import { Header } from '@/components/header';
 import { CookieConsent } from '@/components/cookie-consent';
 
 export default function Home() {
+  const [offsetY, setOffsetY] = useState(0);
+  const handleScroll = () => setOffsetY(window.pageYOffset);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
-        <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center text-white text-center">
+        <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center text-white text-center overflow-hidden">
           <Image
-            src="https://placehold.co/1600x900.png"
+            src="/sd-connect-hero-background.jpg"
             alt="Couple"
             fill
             className="absolute inset-0 z-0 object-cover"
+            style={{ transform: `translateY(${offsetY * 0.5}px)` }}
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
