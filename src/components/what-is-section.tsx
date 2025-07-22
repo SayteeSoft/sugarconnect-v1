@@ -13,29 +13,29 @@ export function WhatIsSection() {
     return (
         <section className="bg-[#f7f3f7] dark:bg-card py-20 md:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-8">What is a...</h2>
-                    <Tabs defaultValue="daddy" className="w-full max-w-lg mx-auto">
-                        <TabsList className="grid w-full grid-cols-2">
+                 <Tabs defaultValue="daddy" className="w-full">
+                    <div className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary mb-8">What is a...</h2>
+                        <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
                             <TabsTrigger value="daddy">Sugar Daddy</TabsTrigger>
                             <TabsTrigger value="baby">Sugar Baby</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="daddy">
-                            <Card className="mt-4">
-                                <CardContent className="p-6 text-center text-muted-foreground">
-                                    {definitions.daddy}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="baby">
-                            <Card className="mt-4">
-                                <CardContent className="p-6 text-center text-muted-foreground">
-                                    {definitions.baby}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </Tabs>
-                </div>
+                    </div>
+                    <TabsContent value="daddy">
+                        <Card className="mt-8">
+                            <CardContent className="p-6 text-center text-muted-foreground">
+                                {definitions.daddy}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="baby">
+                        <Card className="mt-8">
+                            <CardContent className="p-6 text-center text-muted-foreground">
+                                {definitions.baby}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </section>
     );
