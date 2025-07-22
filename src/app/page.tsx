@@ -15,7 +15,6 @@ import { TestimonialsSection } from '@/components/testimonials-section';
 import { mockTestimonials, mockUsers } from '@/lib/mock-data';
 import { WhatIsSection } from '@/components/what-is-section';
 import { SecuritySection } from '@/components/security-section';
-import { ByTheNumbersSection } from '@/components/by-the-numbers-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
@@ -137,8 +136,6 @@ export default function Home() {
         </section>
 
         <WhatIsSection />
-
-        <ByTheNumbersSection />
 
         <SecuritySection />
 
