@@ -11,7 +11,7 @@ export function Logo({ className, inSidebar = false, isScrolled = false }: { cla
       className
     )}>
       <Heart className="h-6 w-6 fill-current" />
-      <span className="text-xl font-headline">Sugar Connect</span>
+      <span className="text-2xl font-headline">Sugar Connect</span>
     </Link>
   );
 }
