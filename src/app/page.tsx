@@ -13,9 +13,9 @@ import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
 import { TestimonialsSection } from '@/components/testimonials-section';
 import { mockTestimonials, mockUsers } from '@/lib/mock-data';
-import { WhatIsSection } from '@/components/what-is-section';
 import { SecuritySection } from '@/components/security-section';
 import { ByTheNumbersSection } from '@/components/by-the-numbers-section';
+import { SugarRelationshipSection } from '@/components/sugar-relationship-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
@@ -125,7 +125,7 @@ export default function Home() {
         
         <TestimonialsSection testimonials={mockTestimonials} />
 
-        <WhatIsSection />
+        <SugarRelationshipSection />
 
         <ByTheNumbersSection />
 
