@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { UserNav } from '@/components/user-nav';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Heart } from 'lucide-react';
 import { useState } from 'react';
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const navLinkClasses = "transition-colors hover:text-primary text-foreground";
+  const navLinkClasses = "transition-colors hover:text-primary text-foreground text-base";
   const mobileNavLinkClasses = "block py-2 text-lg transition-colors hover:text-primary";
 
   const navLinks = [
@@ -46,7 +46,10 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+              <SheetHeader className="p-6 pb-0">
+                  <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+              </SheetHeader>
               <div className="p-6">
                 <div className="mb-8">
                    <Logo isScrolled={true} />
