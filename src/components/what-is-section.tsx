@@ -26,10 +26,10 @@ export function WhatIsSection() {
             </h2>
           </div>
           <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 max-w-xl mx-auto">
-            <TabsTrigger value="sugar-daddy" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">
+            <TabsTrigger value="sugar-daddy" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">
               {definitions['sugar-daddy'].title}
             </TabsTrigger>
-            <TabsTrigger value="sugar-baby" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">
+            <TabsTrigger value="sugar-baby" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">
               {definitions['sugar-baby'].title}
             </TabsTrigger>
           </TabsList>
