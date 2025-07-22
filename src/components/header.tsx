@@ -31,7 +31,7 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex flex-1 justify-center items-center gap-6 text-sm font-medium">
           {navLinks.map(link => (
-            <Link key={link.href} href={link.href} className={navLinkClasses}>
+            <Link key={link.label} href={link.href} className={navLinkClasses}>
               {link.label}
             </Link>
           ))}
@@ -53,7 +53,7 @@ export function Header() {
                 </div>
                 <nav className="flex flex-col gap-4">
                   {navLinks.map(link => (
-                     <Link key={link.href} href={link.href} className={mobileNavLinkClasses} onClick={() => setIsOpen(false)}>
+                     <Link key={link.label} href={link.href} className={mobileNavLinkClasses} onClick={() => setIsOpen(false)}>
                       {link.label}
                     </Link>
                   ))}
