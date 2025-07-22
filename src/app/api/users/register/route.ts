@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return {
       name,
       consistency: 'strong',
-      siteId: 'studio-mock-site-id',
+      siteID: 'studio-mock-site-id',
       token: 'studio-mock-token',
     };
   }
