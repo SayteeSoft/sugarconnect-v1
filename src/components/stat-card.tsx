@@ -8,7 +8,7 @@ type StatCardProps = {
 
 export function StatCard({ icon, title, description }: StatCardProps) {
   return (
-    <Card className="text-center bg-background/50 border-0 shadow-lg">
+    <Card className="text-center bg-background/50 border-0 shadow-lg dark:bg-card">
       <CardContent className="p-8">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-6">
           {icon}

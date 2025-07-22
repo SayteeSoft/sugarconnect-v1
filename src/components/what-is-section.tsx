@@ -17,7 +17,7 @@ export function WhatIsSection() {
   };
 
   return (
-    <section className="bg-[#f7f3f7] py-20 md:py-24">
+    <section className="bg-secondary py-20 md:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <Tabs defaultValue="sugar-daddy" className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
@@ -34,14 +34,14 @@ export function WhatIsSection() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="sugar-daddy">
-            <Card className="mt-6 border-0 shadow-lg bg-background/50">
+            <Card className="mt-6 border-0 shadow-lg bg-background/50 dark:bg-card">
               <CardContent className="p-8 text-center text-muted-foreground">
                 {definitions['sugar-daddy'].content}
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="sugar-baby">
-            <Card className="mt-6 border-0 shadow-lg bg-background/50">
+            <Card className="mt-6 border-0 shadow-lg bg-background/50 dark:bg-card">
               <CardContent className="p-8 text-center text-muted-foreground">
                 {definitions['sugar-baby'].content}
               </CardContent>
