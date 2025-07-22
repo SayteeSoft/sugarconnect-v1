@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -67,7 +66,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
-        <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center text-white text-center overflow-hidden">
+        <section className="relative h-[65vh] md:h-[75vh] flex items-center justify-center text-white text-center overflow-hidden">
           <Image
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
