@@ -14,9 +14,8 @@ export default function Home() {
           <Image
             src="https://placehold.co/1600x900.png"
             alt="Couple"
-            layout="fill"
-            objectFit="cover"
-            className="absolute inset-0 z-0"
+            fill
+            className="absolute inset-0 z-0 object-cover"
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
