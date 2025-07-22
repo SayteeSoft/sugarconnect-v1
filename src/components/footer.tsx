@@ -20,7 +20,7 @@ export function Footer() {
     {
       title: 'Policies',
       links: [
-        { label: 'Cookie Policy', href: '#' }, // Href is now #
+        { label: 'Cookie Policy', href: '#' },
         { label: 'Privacy Policy', href: '#' },
         { label: 'Terms of Use', href: '#' },
       ],
@@ -72,6 +72,27 @@ export function Footer() {
       </div>
   );
 
+  const privacyPolicyContent = (
+    <div className="prose dark:prose-invert max-w-none space-y-6 text-foreground/80">
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">1. Introduction</h3>
+            <p>This Privacy Policy outlines how we collect, use, disclose, and protect your personal information when you use our services. We are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner.</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">2. Information We Collect</h3>
+            <p>We may collect the following types of information: Personal Identification Information (Name, email address, phone number, etc.), Profile Information (age, photos, interests, bio), and Usage Data (how you use our service, IP address, browser type).</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">3. How We Use Your Information</h3>
+            <p>Your information is used to provide and improve our services, personalize your experience, communicate with you, ensure the security of our platform, and comply with legal obligations.</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">4. Information Sharing</h3>
+            <p>We do not sell your personal information. We may share information with trusted third-party service providers who assist us in operating our website, conducting our business, or servicing you, so long as those parties agree to keep this information confidential. We may also release your information when we believe release is appropriate to comply with the law.</p>
+        </div>
+    </div>
+  );
+
   return (
     <footer className="bg-white text-foreground dark:bg-[#22252a] py-12 md:py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,6 +123,27 @@ export function Footer() {
                           </DialogHeader>
                           <ScrollArea className="h-[70vh] pr-6">
                             {cookiePolicyContent}
+                          </ScrollArea>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button>Accept & Close</Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    ) : link.label === 'Privacy Policy' ? (
+                       <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
+                            {link.label}
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle className="text-2xl font-headline font-bold text-primary mb-3">Privacy Policy</DialogTitle>
+                          </DialogHeader>
+                          <ScrollArea className="h-[70vh] pr-6">
+                            {privacyPolicyContent}
                           </ScrollArea>
                           <DialogFooter>
                             <DialogClose asChild>
