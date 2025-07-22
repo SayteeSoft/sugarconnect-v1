@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import Image from 'next/image';
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
@@ -110,9 +111,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} SugarConnect. All rights reserved.</p>
-      </footer>
+      <Footer />
       <CookieConsent />
     </div>
   );
