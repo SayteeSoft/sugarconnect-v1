@@ -62,7 +62,7 @@ export default function FAQPage() {
     return (
         <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
             <Header />
-            <main className="flex-grow py-28">
+            <main className="flex-grow pt-36 pb-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Frequently Asked Questions</h1>
