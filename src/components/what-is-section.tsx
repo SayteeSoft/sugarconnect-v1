@@ -17,7 +17,7 @@ export function WhatIsSection() {
   };
 
   return (
-    <section className="bg-secondary py-20 md:py-24">
+    <section className="bg-[#f7f3f7] dark:bg-secondary py-20 md:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <Tabs defaultValue="sugar-daddy" className="max-w-3xl mx-auto">
           <div className="text-center mb-12">

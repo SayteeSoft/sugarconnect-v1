@@ -8,7 +8,7 @@ type TestimonialsSectionProps = {
 
 export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   return (
-    <section className="bg-secondary py-20 md:py-24">
+    <section className="bg-[#f7f3f7] dark:bg-secondary py-20 md:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">What Our Members Say</h2>
