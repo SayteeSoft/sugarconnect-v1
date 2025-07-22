@@ -9,7 +9,7 @@ export function Footer() {
       links: [
         { label: 'About Us', href: '/about' },
         { label: 'FAQs', href: '/faq' },
-        { label: 'Glossary', href: '#' },
+        { label: 'Glossary', href: '/glossary' },
       ],
     },
     {
