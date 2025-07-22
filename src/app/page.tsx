@@ -17,7 +17,7 @@ import { TestimonialsSection } from '@/components/testimonials-section';
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
   if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockUsers);
+    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin'));
   }
 
   try {
@@ -28,7 +28,8 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
       return [];
     }
     const users = await res.json();
-    return users.slice(0, 4); // Get the first 4 profiles
+    // Filter out admin users and take the first 4 non-admin profiles
+    return users.filter((user: UserProfile) => user.role !== 'Admin').slice(0, 4);
   } catch (error) {
     console.error("Error fetching profiles:", error);
     return [];
@@ -118,6 +119,8 @@ export default function Home() {
               )}
           </div>
         </section>
+
+        <TestimonialsSection testimonials={mockTestimonials} />
         
         <section className="bg-[#ebe5eb] dark:bg-card py-20 md:py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -129,8 +132,6 @@ export default function Home() {
                 </div>
             </div>
         </section>
-
-        <TestimonialsSection testimonials={mockTestimonials} />
 
       </main>
       <Footer />
