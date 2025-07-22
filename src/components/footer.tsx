@@ -1,71 +1,64 @@
 import Link from 'next/link';
 import { Logo } from './logo';
-import { Button } from './ui/button';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
 
 export function Footer() {
-  return (
-    <footer className="bg-white text-foreground">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and About */}
-          <div className="md:col-span-1">
-            <Logo isScrolled={true} />
-            <p className="mt-4 text-sm text-muted-foreground">
-              The exclusive platform for ambitious and attractive individuals to connect.
-            </p>
-          </div>
+  const footerSections = [
+    {
+      title: 'Site',
+      links: [
+        { label: 'About Us', href: '#' },
+        { label: 'FAQs', href: '#' },
+        { label: 'Glossary', href: '#' },
+      ],
+    },
+    {
+      title: 'Policies',
+      links: [
+        { label: 'Cookie Policy', href: '/cookie-policy' },
+        { label: 'Privacy Policy', href: '#' },
+        { label: 'Terms of Use', href: '#' },
+      ],
+    },
+    {
+      title: 'Help',
+      links: [
+        { label: 'Contact Us', href: '#' },
+        { label: 'Sitemap', href: '#' },
+      ],
+    },
+  ];
 
-          {/* Links */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:col-span-3">
-            <div>
-              <h3 className="font-semibold text-foreground">Company</h3>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">About</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Careers</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Press</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Support</h3>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Contact Us</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Safety</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground">Legal</h3>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-muted-foreground hover:text-primary">Terms of Service</Link></li>
-                <li><Link href="/cookie-policy" className="text-muted-foreground hover:text-primary">Cookie Policy</Link></li>
-              </ul>
-            </div>
-          </div>
+  return (
+    <footer className="bg-white text-foreground py-12 md:py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center text-center mb-8">
+          <Logo isScrolled={true} />
+          <p className="mt-2 text-sm text-muted-foreground max-w-md">
+            An exclusive platform for ambitious and attractive individuals.
+          </p>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between">
-          <p className="text-sm text-muted-foreground order-2 sm:order-1 mt-4 sm:mt-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left mb-8">
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="font-semibold text-foreground mb-4">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} SugarConnect. All rights reserved.
           </p>
-          <div className="flex space-x-4 order-1 sm:order-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="#" aria-label="Twitter">
-                <Twitter className="h-5 w-5 text-muted-foreground hover:text-primary" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="#" aria-label="Facebook">
-                <Facebook className="h-5 w-5 text-muted-foreground hover:text-primary" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="#" aria-label="Instagram">
-                <Instagram className="h-5 w-5 text-muted-foreground hover:text-primary" />
-              </Link>
-            </Button>
-          </div>
         </div>
       </div>
     </footer>
