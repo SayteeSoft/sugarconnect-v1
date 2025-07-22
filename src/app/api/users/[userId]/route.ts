@@ -1,4 +1,4 @@
-import { getStore } from '@netlify/blobs';
+import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 
@@ -7,7 +7,12 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
-  const store = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  let store: Store;
+  if (process.env.NETLIFY) {
+    store = getStore('users');
+  } else {
+    store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  }
 
   try {
     const { blobs } = await store.list();
@@ -30,8 +35,18 @@ export async function PUT(
 ) {
     const { userId } = params;
     const formData = await request.formData();
-    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-    const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    
+    let userStore: Store;
+    let imageStore: Store;
+
+    if (process.env.NETLIFY) {
+        userStore = getStore('users');
+        imageStore = getStore('images');
+    } else {
+        userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+        imageStore = getStore({ name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    }
+
 
     try {
         const { blobs } = await userStore.list();
