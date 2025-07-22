@@ -28,7 +28,7 @@ export function Footer() {
     {
       title: 'Help',
       links: [
-        { label: 'Contact Us', href: '#' },
+        { label: 'Contact Us', href: '/contact' },
         { label: 'Sitemap', href: '#' },
       ],
     },
