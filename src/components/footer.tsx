@@ -3,8 +3,9 @@
 
 import Link from 'next/link';
 import { Logo } from './logo';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
 export function Footer() {
   const footerSections = [
@@ -102,6 +103,11 @@ export function Footer() {
                           <ScrollArea className="h-[70vh] pr-6">
                             {cookiePolicyContent}
                           </ScrollArea>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button>Accept & Close</Button>
+                            </DialogClose>
+                          </DialogFooter>
                         </DialogContent>
                       </Dialog>
                     ) : (
