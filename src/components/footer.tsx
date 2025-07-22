@@ -93,6 +93,51 @@ export function Footer() {
     </div>
   );
 
+  const termsOfUseContent = (
+    <div className="prose dark:prose-invert max-w-none space-y-6 text-foreground/80">
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">1. Acceptance of Terms</h3>
+            <p>By accessing and using our service, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">2. User Conduct</h3>
+            <p>You agree not to use the service to post or transmit any material that is abusive, harassing, defamatory, vulgar, obscene, or is otherwise objectionable. You are responsible for all activities that occur under your account.</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">3. Intellectual Property</h3>
+            <p>The Service and its original content, features, and functionality are and will remain the exclusive property of Sugar Connect and its licensors. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of Sugar Connect.</p>
+        </div>
+        <div>
+            <h3 className="text-xl font-headline font-bold text-primary mb-3">4. Termination</h3>
+            <p>We may terminate or suspend your account and bar access to the Service immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever and without limitation, including but not to a breach of the Terms.</p>
+        </div>
+    </div>
+  );
+
+
+  const renderPolicyDialog = (title: string, content: React.ReactNode) => (
+      <Dialog>
+        <DialogTrigger asChild>
+          <button className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
+            {title}
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-headline font-bold text-primary mb-3">{title}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[70vh] pr-6">
+            {content}
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Accept & Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+  );
+
   return (
     <footer className="bg-white text-foreground dark:bg-[#22252a] py-12 md:py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,47 +156,11 @@ export function Footer() {
                 {section.links.map((link) => (
                   <li key={link.label}>
                     {link.label === 'Cookie Policy' ? (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
-                            {link.label}
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl font-headline font-bold text-primary mb-3">Cookie Policy</DialogTitle>
-                          </DialogHeader>
-                          <ScrollArea className="h-[70vh] pr-6">
-                            {cookiePolicyContent}
-                          </ScrollArea>
-                          <DialogFooter>
-                            <DialogClose asChild>
-                              <Button>Accept & Close</Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                       renderPolicyDialog('Cookie Policy', cookiePolicyContent)
                     ) : link.label === 'Privacy Policy' ? (
-                       <Dialog>
-                        <DialogTrigger asChild>
-                          <button className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
-                            {link.label}
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl font-headline font-bold text-primary mb-3">Privacy Policy</DialogTitle>
-                          </DialogHeader>
-                          <ScrollArea className="h-[70vh] pr-6">
-                            {privacyPolicyContent}
-                          </ScrollArea>
-                          <DialogFooter>
-                            <DialogClose asChild>
-                              <Button>Accept & Close</Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                       renderPolicyDialog('Privacy Policy', privacyPolicyContent)
+                    ) : link.label === 'Terms of Use' ? (
+                       renderPolicyDialog('Terms of Use', termsOfUseContent)
                     ) : (
                       <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary">
                         {link.label}
