@@ -21,7 +21,7 @@ import { WhatIsSection } from '@/components/what-is-section';
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
   // Use mock data in development, and fetch from API in production
   if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin'));
+    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin').slice(0, 4));
   }
 
   try {

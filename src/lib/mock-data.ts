@@ -49,6 +49,18 @@ export const mockUsers: UserProfile[] = [
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
     image: '/user-profiles/Vansessa_Gemini_Generated_Image(small)-003.jpg',
   },
+  {
+    id: '6',
+    email: 'mark6gmail.com',
+    name: 'Mark',
+    age: 41,
+    location: 'New York, USA',
+    role: 'Sugar Daddy',
+    sex: 'Male',
+    bio: 'Looking for a hot young girl...',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
+  },
 ];
 
 export type Testimonial = {
@@ -78,7 +90,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Mark',
     role: 'Sugar Daddy',
     quote: 'Investor and lover of the great outdoors.',
-    image: 'https://placehold.co/100x100.png',
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
     rating: 5,
   },
     {
@@ -92,7 +104,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'John',
     role: 'Sugar Daddy',
     quote: 'Found exactly what I was looking for. Highly recommend.',
-    image: 'https://placehold.co/100x100.png',
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
     rating: 5,
   },
 ];
