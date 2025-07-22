@@ -6,20 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
-  const getStoreOptions = (name: string): StoreOptions | string => {
-    if (process.env.NETLIFY) {
-      return name;
-    }
-    return {
-      name,
-      consistency: 'strong',
-      siteID: 'studio-mock-site-id',
-      token: 'studio-mock-token',
-    };
-  }
-
-  const userStore = getStore(getStoreOptions('users'));
-  const imageStore = getStore(getStoreOptions('images'));
+  const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   const formData = await request.formData();
   const email = formData.get('email') as string;
