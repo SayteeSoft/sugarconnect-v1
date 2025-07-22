@@ -1,14 +1,19 @@
-import { getStore, type StoreOptions } from '@netlify/blobs';
+import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
-  const userStoreOptions: StoreOptions | string = process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'};
-  const imageStoreOptions: StoreOptions | string = process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'};
+  let userStore: Store;
+  let imageStore: Store;
 
-  const userStore = getStore(userStoreOptions);
-  const imageStore = getStore(imageStoreOptions);
+  if (process.env.NETLIFY) {
+    userStore = getStore('users');
+    imageStore = getStore('images');
+  } else {
+    userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    imageStore = getStore({ name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  }
 
   const formData = await request.formData();
   const email = formData.get('email') as string;
@@ -17,9 +22,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Email is required' }, { status: 400 });
   }
 
-  const existingUser = await userStore.get(email);
-  if (existingUser) {
-    return NextResponse.json({ message: 'User already exists' }, { status: 409 });
+  try {
+    const existingUser = await userStore.get(email);
+    if (existingUser) {
+      return NextResponse.json({ message: 'User already exists' }, { status: 409 });
+    }
+  } catch (error) {
+    // Netlify blobs get throws an error if blob not found.
   }
   
   const newUser: UserProfile = {
