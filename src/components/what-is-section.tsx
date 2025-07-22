@@ -19,13 +19,13 @@ export function WhatIsSection() {
   return (
     <section className="bg-[#f7f3f7] py-20 md:py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <Tabs defaultValue="sugar-daddy" className="max-w-xl mx-auto">
+        <Tabs defaultValue="sugar-daddy" className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">
               What is a...
             </h2>
           </div>
-          <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 max-w-xl mx-auto">
             <TabsTrigger value="sugar-daddy" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none rounded-md">
               {definitions['sugar-daddy'].title}
             </TabsTrigger>
