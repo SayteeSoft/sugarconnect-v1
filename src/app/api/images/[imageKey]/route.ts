@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { imageKey: string } }
 ) {
   const { imageKey } = params;
-  const store = getStore('images');
+  const store = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   try {
     const blob = await store.get(imageKey, { type: 'blob' });

@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
-  const store = getStore('users');
+  const store = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   try {
     const { blobs } = await store.list();
@@ -30,8 +30,8 @@ export async function PUT(
 ) {
     const { userId } = params;
     const formData = await request.formData();
-    const userStore = getStore('users');
-    const imageStore = getStore('images');
+    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
     try {
         const { blobs } = await userStore.list();

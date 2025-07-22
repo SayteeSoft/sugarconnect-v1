@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
-  const store = getStore('users');
+  const store = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
   const formData = await request.formData();
   const email = formData.get('email') as string;
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   
   const imageFile = formData.get('image') as File | null;
   if (imageFile) {
-      const imageStore = getStore('images');
+      const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
       const imageBuffer = await imageFile.arrayBuffer();
       const imageKey = newUser.id; // Use new user's ID as the key
       await imageStore.set(imageKey, imageBuffer, {
@@ -43,5 +43,4 @@ export async function POST(request: NextRequest) {
 
 
   await store.setJSON(email, newUser);
-  return NextResponse.json(newUser, { status: 201 });
-}
+  return NextResponse.json(newUser, { status: 201

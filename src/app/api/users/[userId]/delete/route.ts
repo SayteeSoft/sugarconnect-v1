@@ -6,7 +6,7 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
-  const userStore = getStore('users');
+  const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   try {
     const { blobs } = await userStore.list();
@@ -28,7 +28,7 @@ export async function DELETE(
 
     // Delete image from blob store if it exists
     if (userBlob?.image) {
-        const imageStore = getStore('images');
+        const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
         try {
             // We need to find the key for the image to delete it.
             // Let's assume the image key is the user ID for simplicity.
