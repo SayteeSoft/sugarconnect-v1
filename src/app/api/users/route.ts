@@ -14,4 +14,6 @@ export async function GET() {
     return NextResponse.json(users);
   } catch (error) {
     console.error('Failed to list users:', error);
-    return NextResponse.json({ message: 'Failed to list users' }, { status: 5
+    return NextResponse.json({ message: 'Failed to list users' }, { status: 500 });
+  }
+}
