@@ -1,25 +1,21 @@
 
 import { DashboardClient } from "@/components/dashboard-client";
 import { UserProfile } from "@/lib/users";
-import { mockUsers } from "@/lib/mock-data";
 
 async function getProfiles(): Promise<UserProfile[]> {
-  // In a real app, this would be an API call to your backend
-  // For local development, we are using mock data.
-  if (process.env.NETLIFY) {
-      try {
-        const res = await fetch(`/api/users`, { cache: 'no-store' });
-        if (!res.ok) {
-          console.error("Failed to fetch profiles:", res.statusText);
-          return [];
-        }
-        return res.json();
-      } catch (error) {
-        console.error("Error fetching profiles:", error);
-        return [];
-      }
+  try {
+    // We construct an absolute URL for fetching on the server.
+    const baseUrl = process.env.URL || 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+    if (!res.ok) {
+      console.error("Failed to fetch profiles:", res.statusText);
+      return [];
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching profiles:", error);
+    return [];
   }
-  return Promise.resolve(mockUsers);
 }
 
 
