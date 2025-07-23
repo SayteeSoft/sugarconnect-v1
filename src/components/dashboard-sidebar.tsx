@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Settings, User, Search } from "lucide-react";
+import { LayoutDashboard, Settings, User, Search as SearchIcon } from "lucide-react";
 import { Logo } from "./logo";
 
 const currentUser = {
@@ -28,7 +28,7 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/search", label: "Search", icon: Search },
+    { href: "/search", label: "Search", icon: SearchIcon },
     { href: "/dashboard/profile", label: "My Profile", icon: User },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];

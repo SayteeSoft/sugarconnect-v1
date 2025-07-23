@@ -1,47 +1,37 @@
 import Link from "next/link";
 import Image from "next/image";
 import { UserProfile } from "@/lib/users";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MapPin } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Star } from "lucide-react";
 
 type ProfileCardProps = {
   user: UserProfile;
 };
 
 export function ProfileCard({ user }: ProfileCardProps) {
-  const roleVariant = user.role.includes('Baby') ? 'secondary' : 'default';
+  const isOnline = Math.random() > 0.5; // Simulate online status
 
   return (
     <Link href={`/dashboard/profile/${user.id}`}>
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 hover:border-primary/50">
-        <div className="relative">
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
+        <div className="relative aspect-[3/4]">
           <Image
-            src={user.image}
+            src={user.image || 'https://placehold.co/400x533.png'}
             alt={user.name}
-            width={400}
-            height={400}
-            className="aspect-square w-full object-cover"
+            fill
+            className="object-cover"
             data-ai-hint="portrait person"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-          <div className="absolute bottom-0 left-0 p-4">
-            <h3 className="text-xl font-bold text-white font-headline">{user.name}, {user.age}</h3>
-            <div className="flex items-center gap-2 text-sm text-white/80">
-              <MapPin className="h-4 w-4" />
-              <span>{user.location}</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+          <div className="absolute bottom-0 left-0 p-4 w-full">
+            <div className="flex items-center gap-2 text-white font-bold text-lg font-headline">
+              <span>{user.name}, {user.age}</span>
+              {user.role !== 'Sugar Baby' && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
+              {isOnline && <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>}
             </div>
+            <p className="text-sm text-white/90">{user.location}</p>
           </div>
-          <Badge variant={roleVariant} className="absolute top-3 right-3">{user.role}</Badge>
         </div>
-        <CardContent className="p-4">
-          <p className="text-muted-foreground text-sm line-clamp-2 h-10">{user.bio}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {user.interests.slice(0, 3).map((interest) => (
-              <Badge key={interest} variant="outline">{interest}</Badge>
-            ))}
-          </div>
-        </CardContent>
       </Card>
     </Link>
   );
