@@ -62,8 +62,8 @@ export function Header() {
                   ))}
                 </nav>
                  <div className="mt-8 pt-6 border-t border-border flex flex-col gap-4">
-                    <Button variant="outline">
-                        Unlimited
+                    <Button variant="outline" className="text-xs">
+                        Unlimited Credits
                     </Button>
                      <UserNav />
                 </div>
@@ -74,8 +74,8 @@ export function Header() {
 
         {/* Desktop User Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" size="sm">
-            Unlimited
+          <Button variant="outline" size="sm" className="text-xs">
+            Unlimited Credits
           </Button>
           <UserNav />
         </div>
