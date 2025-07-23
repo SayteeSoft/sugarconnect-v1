@@ -76,7 +76,6 @@ export function DashboardClient({ initialProfiles }: DashboardClientProps) {
                 <SelectItem value="all">Any Role</SelectItem>
                 <SelectItem value="Sugar-Baby">Sugar Baby</SelectItem>
                 <SelectItem value="Sugar-Daddy">Sugar Daddy</SelectItem>
-                <SelectItem value="Sugar-Mommy">Sugar Mommy</SelectItem>
               </SelectContent>
             </Select>
           </div>

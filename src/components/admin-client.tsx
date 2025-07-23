@@ -4,9 +4,8 @@ import { useState, useEffect } from "react";
 import { UserProfile } from "@/lib/users";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -18,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Pencil, Trash2, Users, Briefcase, Heart, Wifi } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +50,8 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete user");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete user");
       }
 
       setUsers(users.filter((user) => user.id !== userId));
@@ -60,17 +60,17 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
         description: "The user has been successfully removed.",
       });
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Deletion failed:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not delete the user.",
+        description: error.message || "Could not delete the user.",
       });
     }
   };
 
-  const getRoleVariant = (role: UserProfile['role']): "default" | "destructive" | "secondary" => {
+  const getRoleVariant = (role: UserProfile['role']): "default" | "destructive" | "secondary" | "outline" => {
     switch (role) {
       case 'Admin': return 'destructive';
       case 'Sugar Daddy': return 'default';
@@ -78,7 +78,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
       default: return 'outline';
     }
   }
-
+  
   const getRoleDisplayName = (role: UserProfile['role']): string => {
     if (role === 'Sugar Daddy') return 'Daddy';
     if (role === 'Sugar Baby') return 'Baby';
@@ -88,8 +88,8 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
   return (
     <div className="container mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">User Management</h1>
-        <p className="text-lg text-muted-foreground">A list of all users in the system.</p>
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Admin Dashboard</h1>
+        <p className="text-lg text-muted-foreground">Manage user profiles and site settings.</p>
       </div>
 
       <Card className="shadow-xl">
@@ -111,7 +111,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                   <TableRow key={user.id}>
                     <TableCell>
                       <Avatar>
-                        <AvatarImage src={user.image} alt={user.name} data-ai-hint="avatar person" />
+                        <AvatarImage src={user.image || `https://placehold.co/100x100.png`} alt={user.name} data-ai-hint="avatar person" />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </TableCell>
@@ -136,7 +136,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" disabled={user.role === 'Admin'}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>

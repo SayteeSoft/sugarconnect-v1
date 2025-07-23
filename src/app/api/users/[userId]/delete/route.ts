@@ -25,6 +25,11 @@ export async function DELETE(
     if (!userKey) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
+    
+    // Prevent admin deletion
+    if (userBlob?.role === 'Admin') {
+        return NextResponse.json({ message: 'Cannot delete admin user' }, { status: 403 });
+    }
 
     // Delete image from blob store if it exists
     if (userBlob?.image) {
@@ -39,7 +44,6 @@ export async function DELETE(
             console.error(`Could not delete image for user ${userId}:`, imgErr);
         }
     }
-
 
     await userStore.delete(userKey);
 
