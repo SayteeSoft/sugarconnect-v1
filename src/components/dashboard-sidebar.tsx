@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -13,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Settings, User, Users } from "lucide-react";
+import { LayoutDashboard, Settings, User, Search } from "lucide-react";
 import { Logo } from "./logo";
 
 const currentUser = {
@@ -27,7 +28,7 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/profiles", label: "Profiles", icon: Users },
+    { href: "/dashboard/search", label: "Search", icon: Search },
     { href: "/dashboard/profile", label: "My Profile", icon: User },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
@@ -44,7 +45,7 @@ export function DashboardSidebar() {
         <SidebarContent>
           <SidebarMenu>
             {menuItems.map((item) => {
-              const isActive = pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard');
+              const isActive = pathname === item.href;
               return (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
