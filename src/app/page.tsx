@@ -78,7 +78,7 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
           <div className="relative z-20 px-4">
-            <h1 className="text-7xl md:text-8xl font-headline font-bold tracking-tighter mb-4">
+            <h1 className="text-8xl md:text-9xl font-headline font-bold tracking-tighter mb-4">
               Sugar Connect
             </h1>
             <p className="max-w-2xl mx-auto text-3xl md:text-4xl font-light mb-6">
