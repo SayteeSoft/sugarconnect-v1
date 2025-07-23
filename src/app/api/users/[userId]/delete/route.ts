@@ -30,8 +30,7 @@ export async function DELETE(
     if (userBlob?.image) {
         const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
         try {
-            // We need to find the key for the image to delete it.
-            // Let's assume the image key is the user ID for simplicity.
+            // The image key is the user ID.
             const imageKey = userId;
             await imageStore.delete(imageKey);
         } catch (imgErr) {

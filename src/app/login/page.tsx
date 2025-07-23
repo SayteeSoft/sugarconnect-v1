@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState('sugar-baby');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -23,9 +25,13 @@ export default function LoginPage() {
     setTimeout(() => {
       toast({
         title: "Login Successful",
-        description: "Welcome back! Redirecting you to your dashboard.",
+        description: "Welcome back! Redirecting you...",
       });
-      router.push('/dashboard');
+      if (role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     }, 1000);
   };
 
@@ -51,7 +57,7 @@ export default function LoginPage() {
             </div>
             <div className="space-y-3">
               <Label>I am a</Label>
-              <RadioGroup defaultValue="sugar-baby" className="flex gap-4">
+              <RadioGroup value={role} onValueChange={setRole} className="flex gap-4">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="sugar-baby" id="r1" />
                   <Label htmlFor="r1">Sugar Baby</Label>
@@ -73,9 +79,9 @@ export default function LoginPage() {
             </Button>
             <p className="text-xs text-muted-foreground">
               Don't have an account?{' '}
-              <a href="#" className="font-medium text-primary hover:underline">
+              <Link href="#" className="font-medium text-primary hover:underline">
                 Sign Up
-              </a>
+              </Link>
             </p>
           </CardFooter>
         </form>
