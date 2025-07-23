@@ -2,6 +2,18 @@ import { UserProfile } from './users';
 
 export const mockUsers: UserProfile[] = [
   {
+    id: '1',
+    email: 'saytee.software@gmail.com',
+    name: 'Admin',
+    age: 49,
+    location: 'London, UK',
+    role: 'Admin',
+    sex: 'Male',
+    bio: 'Adminitrator',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Admin_Gemini_Generated_Image(small)-001.jpg',
+  },
+  {
     id: '2',
     email: 'darianna2@gmail.com',
     name: 'Darianna',
@@ -60,6 +72,30 @@ export const mockUsers: UserProfile[] = [
     bio: 'Looking for a hot young girl...',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
     image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
+  },
+  {
+    id: '7',
+    email: 'Cecilia7gmail.com',
+    name: 'Cecilia',
+    age: 25,
+    location: 'Rio, Brazil',
+    role: 'Sugar Baby',
+    sex: 'Female',
+    bio: 'Musician and free spirit. My life is filled with melodies, travel, and laughter. Im searching for a patron and partner who appreciates the arts and has a zest for life.',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
+  },
+  {
+    id: '8',
+    email: 'olivia7gmail.com',
+    name: 'Olivia',
+    age: 23,
+    location: 'Medellín, CO',
+    role: 'Sugar Baby',
+    sex: 'Female',
+    bio: 'Yoga instructor and nature lover. I find peace in the outdoors and joy in healthy living. Seeking a grounded, successful partner who values wellness and authenticity.',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
   },
 ];
 

@@ -1,6 +1,7 @@
 export type UserProfile = {
   id: string;
   email: string;
+  password?: string; // Storing hashed password
   name: string;
   age: number;
   location: string;

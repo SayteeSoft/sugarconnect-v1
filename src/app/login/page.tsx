@@ -7,85 +7,106 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Logo } from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState('sugar-baby');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
       toast({
         title: "Login Successful",
         description: "Welcome back! Redirecting you...",
       });
-      if (role === 'admin') {
+
+      // Redirect based on user role
+      if (data.user.role === 'Admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
-    }, 1000);
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'Please check your credentials and try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
-            <Logo />
-          </div>
-          <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="your@email.com" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" required />
-            </div>
-            <div className="space-y-3">
-              <Label>I am a</Label>
-              <RadioGroup value={role} onValueChange={setRole} className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sugar-baby" id="r1" />
-                  <Label htmlFor="r1">Sugar Baby</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sugar-daddy-mommy" id="r2" />
-                  <Label htmlFor="r2">Sugar Daddy/Mommy</Label>
-                </div>
-                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="r3" />
-                  <Label htmlFor="r3">Admin</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/login" className="font-medium text-primary hover:underline">
-                Sign Up
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+    <div className="flex min-h-screen items-center justify-center bg-secondary p-4 dark:bg-background">
+       <div className="w-full max-w-4xl text-center">
+            <h1 className="text-4xl font-bold text-primary mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground mb-8">Sign in to access your exclusive community.</p>
+            <Card className="w-full max-w-md mx-auto shadow-2xl">
+                <CardHeader className="text-center">
+                <CardTitle className="font-headline text-2xl">Login</CardTitle>
+                <CardDescription>Enter your email below to login to your account.</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-6 text-left">
+                    <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="m@example.com" 
+                        required 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input 
+                        id="password" 
+                        type="password" 
+                        placeholder="••••••••" 
+                        required 
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                    Don't have an account?{' '}
+                    <Link href="/register" className="font-medium text-primary hover:underline">
+                        Sign up for free
+                    </Link>
+                    </p>
+                </CardFooter>
+                </form>
+            </Card>
+       </div>
     </div>
   );
 }
