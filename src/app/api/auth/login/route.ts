@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     let user: UserProfile | null = await store.get(email, { type: 'json' }).catch(() => null);
 
     // Special handling for the admin user to ensure they exist with a valid password.
-    if (email === 'saytee.software@gmail.com' && (!user || !user.password)) {
+    if (email.toLowerCase() === 'saytee.software@gmail.com' && (!user || !user.password)) {
         user = await createAdminUser(store);
     }
     
