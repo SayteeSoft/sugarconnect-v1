@@ -6,7 +6,7 @@ export type UserProfile = {
   age: number;
   location: string;
   role: 'Admin' | 'Sugar Daddy' | 'Sugar Baby';
-  sex: 'Male' | 'Female ';
+  sex: 'Male' | 'Female' | 'Other';
   bio: string;
   interests: string[];
   image: string;
