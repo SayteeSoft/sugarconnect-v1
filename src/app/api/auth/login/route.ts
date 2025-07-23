@@ -1,3 +1,4 @@
+
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
@@ -7,27 +8,30 @@ import { mockUsers } from '@/lib/mock-data'; // Import mockUsers to get admin de
 const saltRounds = 10;
 
 // This function ensures the admin user exists and has a securely hashed password.
-// It's called before attempting a login.
 async function ensureAdminUser(store: Store) {
     const adminEmail = 'saytee.software@gmail.com';
     try {
-        const adminData = await store.get(adminEmail, { type: 'json' });
-        // If admin exists but doesn't have a hashed password (e.g., from old mock data)
-        if (!adminData.password) {
+        const adminData: UserProfile = await store.get(adminEmail, { type: 'json' });
+        if (adminData && !adminData.password) {
              const hashedPassword = await bcrypt.hash('password123', saltRounds);
              adminData.password = hashedPassword;
              await store.setJSON(adminEmail, adminData);
         }
-    } catch (error) {
-        // Admin does not exist, create it from mock data definition
-        const mockAdmin = mockUsers.find(u => u.email === adminEmail);
-        if (mockAdmin) {
-            const hashedPassword = await bcrypt.hash('password123', saltRounds);
-            const adminUser: UserProfile = {
-                ...mockAdmin,
-                password: hashedPassword,
-            };
-            await store.setJSON(adminEmail, adminUser);
+    } catch (error: any) {
+        if (error.status === 404) {
+            // Admin does not exist, create it from mock data definition
+            const mockAdmin = mockUsers.find(u => u.email === adminEmail);
+            if (mockAdmin) {
+                const hashedPassword = await bcrypt.hash('password123', saltRounds);
+                const adminUser: UserProfile = {
+                    ...mockAdmin,
+                    password: hashedPassword,
+                };
+                await store.setJSON(adminEmail, adminUser);
+            }
+        } else {
+            // Log other errors but don't prevent login flow
+            console.error("Error ensuring admin user:", error);
         }
     }
 }
@@ -35,7 +39,7 @@ async function ensureAdminUser(store: Store) {
 
 export async function POST(request: NextRequest) {
   let store: Store;
-  if (process.env.NETLIFY) {
+   if (process.env.NETLIFY) {
     store = getStore('users');
   } else {
     store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
