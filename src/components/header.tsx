@@ -17,7 +17,7 @@ export function Header() {
   const navLinks = [
     { href: "/dashboard", label: "Profile" },
     { href: "#", label: "Messages" },
-    { href: "#", label: "Matches" },
+    { href: "/matches", label: "Matches" },
     { href: "/search", label: "Search" },
   ];
 

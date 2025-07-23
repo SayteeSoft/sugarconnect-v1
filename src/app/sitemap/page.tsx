@@ -29,9 +29,9 @@ const sitemapSections = [
         title: "Main Pages",
         links: [
             { icon: Home, text: "Home", description: "The main landing page of Sugar Connect.", href: "/" },
-            { icon: Search, text: "Search", description: "Find and filter profiles.", href: "/dashboard" },
+            { icon: Search, text: "Search", description: "Find and filter profiles.", href: "/search" },
             { icon: MessageSquare, text: "Messages", description: "Your private conversations.", href: "#" },
-            { icon: Users, text: "Matches", description: "View your matches and favorites.", href: "#" },
+            { icon: Users, text: "Matches", description: "View your matches and favorites.", href: "/matches" },
         ]
     },
     {
