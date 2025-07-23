@@ -115,7 +115,7 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
                         </CardHeader>
                         <CardContent className="flex-grow flex flex-col">
                              <p className="text-sm text-muted-foreground mb-6">All transactions are secure and encrypted.</p>
-                             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                             <RadioGroup value={paymentMethod} onValuechange={setPaymentMethod} className="space-y-4">
                                 <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'paypal' && 'border-primary ring-2 ring-primary')}>
                                     <RadioGroupItem value="paypal" id="paypal" />
                                     <Landmark className="h-5 w-5" />
