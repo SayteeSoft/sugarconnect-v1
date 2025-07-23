@@ -35,17 +35,16 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed');
       }
 
+      // Store user info in local storage
+      localStorage.setItem('user', JSON.stringify(data.user));
+
       toast({
         title: "Login Successful",
         description: "Welcome back! Redirecting you...",
       });
-
-      // Redirect based on user role
-      if (data.user.role === 'Admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      
+      // Force a re-render of the header by reloading the page
+      window.location.href = data.user.role === 'Admin' ? '/admin' : '/dashboard';
 
     } catch (error: any) {
       toast({
