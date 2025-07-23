@@ -30,7 +30,7 @@ export function DashboardSidebar() {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/search", label: "Search", icon: SearchIcon },
     { href: "/dashboard/profile", label: "My Profile", icon: User },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    { href: "/settings", label: "Settings", icon: Settings },
   ];
 
   return (

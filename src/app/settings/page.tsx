@@ -1,4 +1,3 @@
-
 import { SettingsClient } from "@/components/settings-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
