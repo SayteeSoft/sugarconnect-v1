@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
    if (process.env.NETLIFY) {
     store = getStore('users');
   } else {
+    // Ensure mock credentials are used for local development
     store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
   }
   
