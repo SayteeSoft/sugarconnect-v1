@@ -56,7 +56,7 @@ export function UserNav() {
 
   if (!mounted) {
     return (
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10"></Avatar>
         </Button>
     );
