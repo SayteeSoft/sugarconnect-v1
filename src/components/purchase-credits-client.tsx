@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -68,7 +69,7 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
     };
 
     return (
-        <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD", intent: "capture" }}>
+        <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD", intent: "capture", components: "buttons" }}>
             <div className="container mx-auto max-w-5xl">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Purchase Credits</h1>
