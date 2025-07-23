@@ -17,7 +17,7 @@ export default function PurchaseCreditsPage() {
     const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
     if (!paypalClientId) {
-        return <div className="text-center py-10">Error: PayPal Client ID not configured.</div>
+        return <div className="container mx-auto py-10 text-center text-destructive">Error: PayPal Client ID not configured. Please set NEXT_PUBLIC_PAYPAL_CLIENT_ID in your environment variables.</div>
     }
     
     return (

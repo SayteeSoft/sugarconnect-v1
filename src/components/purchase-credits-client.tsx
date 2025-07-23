@@ -32,35 +32,45 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
     const { toast } = useToast();
 
     const handleCreateOrder = async (data: any, actions: any) => {
-        const res = await fetch('/api/paypal/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: selectedPackage.price }),
-        });
-        const order = await res.json();
-        if (order.success) {
-            return order.data.orderID;
-        } else {
-            toast({ variant: "destructive", title: "Error", description: "Could not create PayPal order." });
-            return null;
+        try {
+            const res = await fetch('/api/paypal/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: selectedPackage.price }),
+            });
+            const order = await res.json();
+            if (order.success && order.data.orderID) {
+                return order.data.orderID;
+            } else {
+                toast({ variant: "destructive", title: "Error", description: order.message || "Could not create PayPal order." });
+                return null;
+            }
+        } catch(e) {
+             toast({ variant: "destructive", title: "Error", description: "Could not create PayPal order." });
+             return null;
         }
     };
 
     const handleOnApprove = async (data: any, actions: any) => {
         setIsProcessing(true);
-        const res = await fetch('/api/paypal/capture-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderID: data.orderID }),
-        });
-        const result = await res.json();
-        
-        if (result.success) {
-            toast({ title: "Payment Successful", description: "Your credits have been added to your account." });
-        } else {
-            toast({ variant: "destructive", title: "Payment Error", description: result.message || "There was an issue with your payment." });
+        try {
+            const res = await fetch('/api/paypal/capture-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderID: data.orderID }),
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                toast({ title: "Payment Successful", description: "Your credits have been added to your account." });
+            } else {
+                toast({ variant: "destructive", title: "Payment Error", description: result.message || "There was an issue with your payment." });
+            }
+        } catch (e) {
+             toast({ variant: "destructive", title: "Payment Error", description: "There was an issue with your payment." });
+        } finally {
+            setIsProcessing(false);
         }
-        setIsProcessing(false);
     };
 
     const handleOnError = (err: any) => {
@@ -115,21 +125,16 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
                         </CardHeader>
                         <CardContent className="flex-grow flex flex-col">
                              <p className="text-sm text-muted-foreground mb-6">All transactions are secure and encrypted.</p>
-                             <RadioGroup value={paymentMethod} onValuechange={setPaymentMethod} className="space-y-4">
+                             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
                                 <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'paypal' && 'border-primary ring-2 ring-primary')}>
                                     <RadioGroupItem value="paypal" id="paypal" />
                                     <Landmark className="h-5 w-5" />
                                     <span>PayPal</span>
                                 </Label>
-                                <Label htmlFor="credit-card" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'credit-card' && 'border-primary ring-2 ring-primary')}>
-                                    <RadioGroupItem value="credit-card" id="credit-card" />
+                                <Label htmlFor="credit-card" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer text-muted-foreground", paymentMethod === 'credit-card' && 'border-primary ring-2 ring-primary')}>
+                                    <RadioGroupItem value="credit-card" id="credit-card" disabled />
                                     <CreditCard className="h-5 w-5" />
-                                    <span>Credit Card</span>
-                                </Label>
-                                <Label htmlFor="debit-card" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'debit-card' && 'border-primary ring-2 ring-primary')}>
-                                    <RadioGroupItem value="debit-card" id="debit-card" />
-                                    <CreditCard className="h-5 w-5" />
-                                    <span>Debit Card</span>
+                                    <span>Credit Card (coming soon)</span>
                                 </Label>
                             </RadioGroup>
 
@@ -139,6 +144,7 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
                                         <Button disabled className="w-full">Processing...</Button>
                                     ) : (
                                         <PayPalButtons
+                                            key={selectedPackage.id}
                                             style={{ layout: "vertical", label: "pay" }}
                                             createOrder={handleCreateOrder}
                                             onApprove={handleOnApprove}
@@ -148,7 +154,7 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
                                     )
                                 ) : (
                                      <Button className="w-full" disabled>
-                                        Complete Purchase
+                                        Coming Soon
                                      </Button>
                                 )}
                             </div>
