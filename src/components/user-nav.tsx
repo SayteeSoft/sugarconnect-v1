@@ -65,18 +65,18 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            {user ? (
+        {user ? (
+            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
                     <AvatarImage src={user.image || "https://placehold.co/100x100.png"} alt={user.name} data-ai-hint="avatar placeholder" />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-            ) : (
-                <div className="h-10 w-10 rounded-full border flex items-center justify-center bg-secondary">
-                    <UserIcon className="h-5 w-5 text-muted-foreground" />
-                </div>
-            )}
-        </Button>
+            </Button>
+        ) : (
+             <Button variant="secondary" size="icon" className="relative h-10 w-10 rounded-full">
+                <UserIcon className="h-5 w-5 text-muted-foreground" />
+            </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         {user ? (
