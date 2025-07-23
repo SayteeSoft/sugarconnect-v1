@@ -44,6 +44,16 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
 export default function Home() {
   const [featuredProfiles, setFeaturedProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offsetY, setOffsetY] = useState(0);
+
+  const handleScroll = () => {
+    setOffsetY(window.scrollY * 0.4);
+  };
+  
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   useEffect(() => {
     const loadProfiles = async () => {
@@ -64,7 +74,8 @@ export default function Home() {
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
             fill
-            className="absolute inset-0 z-0 object-cover object-top"
+            className="absolute inset-0 z-0 object-cover"
+            style={{ transform: `translateY(${offsetY}px)` }}
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
