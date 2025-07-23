@@ -30,7 +30,7 @@ const sitemapSections = [
         links: [
             { icon: Home, text: "Home", description: "The main landing page of Sugar Connect.", href: "/" },
             { icon: Search, text: "Search", description: "Find and filter profiles.", href: "/search" },
-            { icon: MessageSquare, text: "Messages", description: "Your private conversations.", href: "#" },
+            { icon: MessageSquare, text: "Messages", description: "Your private conversations.", href: "/messages" },
             { icon: Users, text: "Matches", description: "View your matches and favorites.", href: "/matches" },
         ]
     },
@@ -40,7 +40,7 @@ const sitemapSections = [
             { icon: User, text: "My Profile", description: "View and edit your profile.", href: "/dashboard/profile" },
             { icon: LogIn, text: "Login", description: "Access your account.", href: "/login" },
             { icon: UserPlus, text: "Sign Up", description: "Create a new account for free.", href: "/login" },
-            { icon: CreditCard, text: "Purchase Credits", description: "Buy credits to connect with others.", href: "#" },
+            { icon: CreditCard, text: "Purchase Credits", description: "Buy credits to connect with others.", href: "/purchase-credits" },
         ]
     },
     {
