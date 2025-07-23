@@ -1,0 +1,22 @@
+import { SettingsClient } from "@/components/settings-client";
+import { UserProfile } from "@/lib/users";
+import { mockUsers } from "@/lib/mock-data";
+import { Metadata }s from "next";
+
+export const metadata: Metadata = {
+    title: "Account Settings - Sugar Connect",
+    description: "Manage your profile, password, and account settings.",
+};
+
+// In a real app, you would fetch the currently authenticated user.
+async function getCurrentUser(): Promise<UserProfile> {
+  return Promise.resolve(mockUsers[0]);
+}
+
+export default async function SettingsPage() {
+  const user = await getCurrentUser();
+  
+  return (
+    <SettingsClient user={user} />
+  );
+}
