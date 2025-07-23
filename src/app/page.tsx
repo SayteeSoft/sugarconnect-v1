@@ -67,7 +67,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
-        <section className="relative h-[85vh] md:h-[85vh] flex items-center justify-center text-white text-center overflow-hidden">
+        <section className="relative h-[80vh] md:h-[80vh] flex items-center justify-center text-white text-center overflow-hidden">
           <Image
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
