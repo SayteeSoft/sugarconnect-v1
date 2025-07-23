@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 type SettingsClientProps = {
   user: UserProfile;
@@ -46,76 +48,80 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
 
   return (
-    <div className="container mx-auto max-w-2xl">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Account Settings</h1>
-        <p className="text-lg text-muted-foreground">Manage your profile, password, and account settings.</p>
+        <p className="text-lg text-muted-foreground">Manage your profile, password, and account details.</p>
       </div>
+      <Card className="max-w-4xl mx-auto shadow-xl">
+        <CardContent className="p-8 md:p-12">
+            <div className="prose dark:prose-invert max-w-none space-y-12 text-foreground/80">
 
-      <div className="space-y-8">
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>Update your username and email address.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={user.email} disabled />
-                 <p className="text-xs text-muted-foreground pt-1">Changing your email address is not supported in this demo.</p>
-              </div>
-              <Button type="submit">Save Changes</Button>
-            </form>
-          </CardContent>
-        </Card>
+                {/* Profile Information Section */}
+                <div>
+                    <h2 className="text-3xl font-headline font-bold text-primary mb-6">Profile Information</h2>
+                    <form onSubmit={handleProfileUpdate} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="username" className="text-base">Username</Label>
+                            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} className="max-w-md"/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email" className="text-base">Email Address</Label>
+                            <Input id="email" type="email" value={user.email} disabled className="max-w-md" />
+                            <p className="text-xs text-muted-foreground pt-1">Changing your email address is not supported in this demo.</p>
+                        </div>
+                        <Button type="submit">Save Changes</Button>
+                    </form>
+                </div>
 
-        {/* Change Password */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>Choose a new, strong password.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handlePasswordUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
-              </div>
-              <Button type="submit">Update Password</Button>
-            </form>
-          </CardContent>
-        </Card>
+                {/* Change Password Section */}
+                <div>
+                    <h2 className="text-3xl font-headline font-bold text-primary mb-6">Change Password</h2>
+                     <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="current-password">Current Password</Label>
+                            <Input id="current-password" type="password" className="max-w-md"/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">New Password</Label>
+                            <Input id="new-password" type="password" className="max-w-md"/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-password">Confirm New Password</Label>
+                            <Input id="confirm-password" type="password" className="max-w-md"/>
+                        </div>
+                        <Button type="submit">Update Password</Button>
+                    </form>
+                </div>
 
-        {/* Danger Zone */}
-        <Alert variant="destructive">
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Danger Zone</AlertTitle>
-          <AlertDescription>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold">Delete your account</p>
-                <p>This will permanently delete your account and all associated data.</p>
-              </div>
-              <Button variant="destructive" onClick={handleDeleteAccount}>Delete Account</Button>
+                {/* Delete Account Section */}
+                <div>
+                    <h2 className="text-3xl font-headline font-bold text-primary mb-6">Danger Zone</h2>
+                    <Alert variant="destructive" className="max-w-xl">
+                        <Terminal className="h-4 w-4" />
+                        <AlertTitle>Delete Your Account</AlertTitle>
+                        <AlertDescription>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div>
+                                    <p>This action is permanent and cannot be undone. This will permanently delete your account and all associated data.</p>
+                                </div>
+                                <Button variant="destructive" onClick={handleDeleteAccount} className="flex-shrink-0">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                                </Button>
+                            </div>
+                        </AlertDescription>
+                    </Alert>
+                </div>
+                 <div className="text-center pt-8">
+                    <Button size="lg" asChild>
+                        <Link href="/dashboard">
+                            Back to Dashboard
+                        </Link>
+                    </Button>
+                </div>
             </div>
-          </AlertDescription>
-        </Alert>
-
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

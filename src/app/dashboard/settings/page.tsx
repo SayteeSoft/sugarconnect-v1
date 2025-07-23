@@ -1,3 +1,4 @@
+
 import { SettingsClient } from "@/components/settings-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
@@ -10,7 +11,9 @@ export const metadata: Metadata = {
 
 // In a real app, you would fetch the currently authenticated user.
 async function getCurrentUser(): Promise<UserProfile> {
-  return Promise.resolve(mockUsers[0]);
+  // We will look for a user with the email `alex.doe@example.com`
+  const users = await Promise.resolve(mockUsers);
+  return users.find(u => u.email === 'alex.doe@example.com') || users[0];
 }
 
 export default async function SettingsPage() {
