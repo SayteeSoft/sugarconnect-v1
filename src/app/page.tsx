@@ -86,7 +86,7 @@ export default function Home() {
                 <Link href="/login">I'm a Sugar Daddy</Link>
               </Button>
             </div>
-            <Button size="lg" asChild>
+            <Button size="lg" asChild className="w-full lg:w-auto">
               <Link href="/login">
                 <Heart className="mr-2 h-5 w-5" /> Find Your Match
               </Link>
