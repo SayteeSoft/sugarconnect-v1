@@ -12,22 +12,19 @@ const saltRounds = 10;
 async function ensureAdminUser(store: Store) {
     const adminEmail = 'saytee.software@gmail.com';
     try {
-        const adminData = await store.get(adminEmail, { type: 'json' });
-         if (!adminData.password) {
-             const hashedPassword = await bcrypt.hash('password123', saltRounds);
-             adminData.password = hashedPassword;
-             await store.setJSON(adminEmail, adminData);
-        }
-    } catch (error) {
-        // Admin does not exist, create it from mock data definition
-        const mockAdmin = mockUsers.find(u => u.email === adminEmail);
-        if (mockAdmin) {
-            const hashedPassword = await bcrypt.hash('password123', saltRounds);
-            const adminUser: UserProfile = {
-                ...mockAdmin,
-                password: hashedPassword,
-            };
-            await store.setJSON(adminEmail, adminUser);
+        await store.get(adminEmail, { type: 'json' });
+    } catch (error: any) {
+        if (error.status === 404 || (error.message && error.message.includes('not found'))) {
+            // Admin does not exist, create it from mock data definition
+            const mockAdmin = mockUsers.find(u => u.email === adminEmail);
+            if (mockAdmin) {
+                const hashedPassword = await bcrypt.hash('password123', saltRounds);
+                const adminUser: UserProfile = {
+                    ...mockAdmin,
+                    password: hashedPassword,
+                };
+                await store.setJSON(adminEmail, adminUser);
+            }
         }
     }
 }

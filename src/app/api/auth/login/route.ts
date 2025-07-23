@@ -18,7 +18,7 @@ async function ensureAdminUser(store: Store) {
              await store.setJSON(adminEmail, adminData);
         }
     } catch (error: any) {
-        if (error.status === 404) {
+        if (error.status === 404 || (error.message && error.message.includes('not found'))) {
             // Admin does not exist, create it from mock data definition
             const mockAdmin = mockUsers.find(u => u.email === adminEmail);
             if (mockAdmin) {
