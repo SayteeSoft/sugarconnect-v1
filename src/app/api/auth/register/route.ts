@@ -12,20 +12,23 @@ const saltRounds = 10;
 async function ensureAdminUser(store: Store) {
     const adminEmail = 'saytee.software@gmail.com';
     try {
-        await store.get(adminEmail, { type: 'json' });
-    } catch (error: any) {
-        if (error.status === 404 || (error.message && error.message.includes('not found'))) {
-            // Admin does not exist, create it from mock data definition
-            const mockAdmin = mockUsers.find(u => u.email === adminEmail);
-            if (mockAdmin) {
-                const hashedPassword = await bcrypt.hash('password123', saltRounds);
-                const adminUser: UserProfile = {
-                    ...mockAdmin,
-                    password: hashedPassword,
-                };
-                await store.setJSON(adminEmail, adminUser);
-            }
+        const adminExists = await store.get(adminEmail, { type: 'json' }).catch(() => null);
+        if (adminExists) {
+            return;
         }
+        // Admin does not exist, create it from mock data definition
+        const mockAdmin = mockUsers.find(u => u.email === adminEmail);
+        if (mockAdmin) {
+            const hashedPassword = await bcrypt.hash('password123', saltRounds);
+            const adminUser: UserProfile = {
+                ...mockAdmin,
+                password: hashedPassword,
+            };
+            await store.setJSON(adminEmail, adminUser);
+        }
+    } catch (error: any) {
+       // Catch any other errors during admin creation
+       console.error("Failed to ensure admin user exists:", error);
     }
 }
 
@@ -48,12 +51,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const existingUser = await userStore.get(email);
+    const existingUser = await userStore.get(email, { type: 'json' }).catch(() => null);
     if (existingUser) {
       return NextResponse.json({ message: 'User already exists' }, { status: 409 });
     }
   } catch (error) {
-    // Netlify blobs get throws an error if blob not found, which is expected here.
+    // Other errors with the store
   }
   
   const hashedPassword = await bcrypt.hash(password, saltRounds);

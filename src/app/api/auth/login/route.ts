@@ -36,16 +36,12 @@ export async function POST(request: NextRequest) {
 
   try {
     let user: UserProfile | null = null;
-    try {
-        user = await store.get(email, { type: 'json' });
-    } catch (error: any) {
-        // User not found in blob store.
-        if (error.status !== 404 && !error.message.includes('not found')) {
-            throw error; // Re-throw if it's not a "not found" error
-        }
-    }
+    
+    // The user data is keyed by email in the blob store.
+    user = await store.get(email, { type: 'json' }).catch(err => null);
 
-    // Special handling for the admin user to ensure they exist.
+
+    // Special handling for the admin user to ensure they exist with a valid password.
     if (email === 'saytee.software@gmail.com' && (!user || !user.password)) {
         user = await createAdminUser(store);
     }
@@ -67,6 +63,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ message: 'Invalid credentials' }, { status: 500 });
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
