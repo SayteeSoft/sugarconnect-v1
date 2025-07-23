@@ -1,69 +1,89 @@
 
+'use server';
+
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 import { UserProfile } from '@/lib/users';
+import bcrypt from 'bcrypt';
 import { mockUsers } from '@/lib/mock-data';
 
-const saltRounds = 10;
+const getBlobStore = (): Store => {
+  if (process.env.NETLIFY) {
+    return getStore('users');
+  }
+  // Use a mock store for local development
+  return getStore({
+    name: 'users',
+    consistency: 'strong',
+    siteID: 'studio-mock-site-id',
+    token: 'studio-mock-token',
+  });
+};
 
-// This function finds the mock admin user, hashes their password, and saves them to the store.
-async function createAdminUser(store: Store): Promise<UserProfile> {
-    const adminEmail = 'saytee.software@gmail.com';
-    const mockAdmin = mockUsers.find(u => u.email === adminEmail);
-    if (!mockAdmin) {
-        throw new Error("Mock admin user not found in mock-data.ts");
+// This function ensures the admin user exists, creating it if necessary.
+async function ensureAdminUser(store: Store): Promise<UserProfile> {
+  const adminEmail = 'saytee.software@gmail.com';
+  try {
+    const adminData = await store.get(adminEmail, { type: 'json' });
+    if (adminData && adminData.password) {
+      return adminData as UserProfile;
     }
-    const hashedPassword = await bcrypt.hash('password123', saltRounds);
-    const adminUser: UserProfile = { ...mockAdmin, password: hashedPassword };
-    await store.setJSON(adminEmail, adminUser);
-    return adminUser;
+  } catch (error) {
+    // Admin does not exist, so we will create it.
+  }
+
+  const adminTemplate = mockUsers.find(u => u.role === 'Admin');
+  if (!adminTemplate) {
+    throw new Error('Admin template not found in mock data.');
+  }
+
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  
+  const adminUser: UserProfile = {
+    ...adminTemplate,
+    email: adminEmail,
+    password: hashedPassword,
+  };
+
+  await store.setJSON(adminEmail, adminUser);
+  return adminUser;
 }
 
 export async function POST(request: NextRequest) {
-  const store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
-  
+  const store = getBlobStore();
   const { email, password } = await request.json();
 
   if (!email || !password) {
     return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
   }
 
+  let user: UserProfile | null = null;
+
   try {
-    let user: UserProfile | null = await store.get(email, { type: 'json' }).catch(() => null);
-
-    // Special handling for the admin user to ensure they exist with a valid password.
-    if (email.toLowerCase() === 'saytee.software@gmail.com' && (!user || !user.password)) {
-        user = await createAdminUser(store);
+    if (email.toLowerCase() === 'saytee.software@gmail.com') {
+      user = await ensureAdminUser(store);
+    } else {
+      const userData = await store.get(email, { type: 'json' });
+      user = userData as UserProfile;
     }
-    
-    if (!user || !user.password) {
-      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
-    }
-    
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userToReturn } = user;
-
-    const response = NextResponse.json({ user: userToReturn });
-
-    // Set a cookie for the user session
-    response.cookies.set('user-session', JSON.stringify(userToReturn), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-        path: '/',
-    });
-    
-    return response;
-
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+     // User not found, which we handle below
   }
+
+  if (!user || !user.password) {
+    return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatch) {
+    return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+  }
+
+  // Omit password from the response
+  const { password: _, ...userToReturn } = user;
+
+  // In a real app, you would set a session cookie here.
+  // For this demo, we return user info to be stored in localStorage.
+  return NextResponse.json({ message: 'Login successful', user: userToReturn });
 }
