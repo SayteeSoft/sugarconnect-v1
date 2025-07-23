@@ -64,7 +64,7 @@ export default function Home() {
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
             fill
-            className="absolute inset-0 z-0 object-cover object-bottom"
+            className="absolute inset-0 z-0 object-cover object-center"
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
