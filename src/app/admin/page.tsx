@@ -11,10 +11,19 @@ export const metadata: Metadata = {
 
 async function getUsers(): Promise<UserProfile[]> {
   try {
-    const baseUrl = process.env.URL || 'http://localhost:3000';
+    const baseUrl = process.env.URL;
+    if (!baseUrl) {
+      // Fallback to mock data if URL is not set
+      console.warn("URL env var not set, falling back to mock users.");
+      const users = [...mockUsers];
+      const adminUser = users.find(u => u.role === 'Admin');
+      const otherUsers = users.filter(u => u.role !== 'Admin');
+      return adminUser ? [adminUser, ...otherUsers] : otherUsers;
+    }
     const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
     if (!res.ok) {
         // Fallback to mock data if API fails
+        console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
         const users = [...mockUsers];
         const adminUser = users.find(u => u.role === 'Admin');
         const otherUsers = users.filter(u => u.role !== 'Admin');
@@ -29,7 +38,7 @@ async function getUsers(): Promise<UserProfile[]> {
     return adminUser ? [adminUser, ...otherUsers] : otherUsers;
 
   } catch (e) {
-    console.error("Error fetching users:", e);
+    console.error("Error fetching users, falling back to mock users:", e);
     const users = [...mockUsers];
     const adminUser = users.find(u => u.role === 'Admin');
     const otherUsers = users.filter(u => u.role !== 'Admin');
