@@ -4,31 +4,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 import bcrypt from 'bcrypt';
+import { mockUsers } from '@/lib/mock-data';
 
 const saltRounds = 10;
 
+// This function ensures the admin user exists and has a securely hashed password.
 async function ensureAdminUser(store: Store) {
     const adminEmail = 'saytee.software@gmail.com';
     try {
-        await store.get(adminEmail);
-        // Admin already exists
+        const adminData = await store.get(adminEmail, { type: 'json' });
+         if (!adminData.password) {
+             const hashedPassword = await bcrypt.hash('password123', saltRounds);
+             adminData.password = hashedPassword;
+             await store.setJSON(adminEmail, adminData);
+        }
     } catch (error) {
-        // Admin does not exist, create it
-        const hashedPassword = await bcrypt.hash('password123', saltRounds);
-        const adminUser: UserProfile = {
-            id: '1',
-            email: adminEmail,
-            password: hashedPassword,
-            name: 'Admin',
-            age: 49,
-            location: 'London, UK',
-            role: 'Admin',
-            sex: 'Male',
-            bio: 'Administrator',
-            interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-            image: '/user-profiles/Admin_Gemini_Generated_Image(small)-001.jpg',
-        };
-        await store.setJSON(adminEmail, adminUser);
+        // Admin does not exist, create it from mock data definition
+        const mockAdmin = mockUsers.find(u => u.email === adminEmail);
+        if (mockAdmin) {
+            const hashedPassword = await bcrypt.hash('password123', saltRounds);
+            const adminUser: UserProfile = {
+                ...mockAdmin,
+                password: hashedPassword,
+            };
+            await store.setJSON(adminEmail, adminUser);
+        }
     }
 }
 

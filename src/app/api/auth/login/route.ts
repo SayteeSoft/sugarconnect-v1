@@ -2,6 +2,36 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { UserProfile } from '@/lib/users';
+import { mockUsers } from '@/lib/mock-data'; // Import mockUsers to get admin details
+
+const saltRounds = 10;
+
+// This function ensures the admin user exists and has a securely hashed password.
+// It's called before attempting a login.
+async function ensureAdminUser(store: Store) {
+    const adminEmail = 'saytee.software@gmail.com';
+    try {
+        const adminData = await store.get(adminEmail, { type: 'json' });
+        // If admin exists but doesn't have a hashed password (e.g., from old mock data)
+        if (!adminData.password) {
+             const hashedPassword = await bcrypt.hash('password123', saltRounds);
+             adminData.password = hashedPassword;
+             await store.setJSON(adminEmail, adminData);
+        }
+    } catch (error) {
+        // Admin does not exist, create it from mock data definition
+        const mockAdmin = mockUsers.find(u => u.email === adminEmail);
+        if (mockAdmin) {
+            const hashedPassword = await bcrypt.hash('password123', saltRounds);
+            const adminUser: UserProfile = {
+                ...mockAdmin,
+                password: hashedPassword,
+            };
+            await store.setJSON(adminEmail, adminUser);
+        }
+    }
+}
+
 
 export async function POST(request: NextRequest) {
   let store: Store;
@@ -10,6 +40,9 @@ export async function POST(request: NextRequest) {
   } else {
     store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
   }
+
+  // Ensure the admin user exists before any login attempt
+  await ensureAdminUser(store);
 
   const { email, password } = await request.json();
 
