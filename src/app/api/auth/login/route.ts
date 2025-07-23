@@ -21,13 +21,7 @@ async function createAdminUser(store: Store): Promise<UserProfile> {
 }
 
 export async function POST(request: NextRequest) {
-  let store: Store;
-   if (process.env.NETLIFY) {
-    store = getStore('users');
-  } else {
-    // Ensure mock credentials are used for local development
-    store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
-  }
+  const store = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token' });
   
   const { email, password } = await request.json();
 
@@ -56,7 +50,17 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userToReturn } = user;
 
-    return NextResponse.json({ user: userToReturn });
+    const response = NextResponse.json({ user: userToReturn });
+
+    // Set a cookie for the user session
+    response.cookies.set('user-session', JSON.stringify(userToReturn), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+    });
+    
+    return response;
 
   } catch (error) {
     console.error('Login error:', error);

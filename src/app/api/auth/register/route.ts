@@ -37,13 +37,7 @@ async function ensureAdminUser(store: Store) {
 
 
 export async function POST(request: NextRequest) {
-  let userStore: Store;
-  if (process.env.NETLIFY) {
-    userStore = getStore('users');
-  } else {
-    // Ensure mock credentials are used for local development
-    userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-  }
+  const userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   // Ensure the admin user exists with a hashed password. This seeds the admin account.
   await ensureAdminUser(userStore);
