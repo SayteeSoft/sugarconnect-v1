@@ -18,7 +18,7 @@ export function Header() {
     { href: "/dashboard", label: "Profile" },
     { href: "#", label: "Messages" },
     { href: "#", label: "Matches" },
-    { href: "#", label: "Search" },
+    { href: "/dashboard/search", label: "Search" },
   ];
 
   return (
