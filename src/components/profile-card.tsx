@@ -1,15 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { UserProfile } from "@/lib/users";
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { useState, useEffect } from "react";
 
 type ProfileCardProps = {
   user: UserProfile;
 };
 
 export function ProfileCard({ user }: ProfileCardProps) {
-  const isOnline = Math.random() > 0.5; // Simulate online status
+  const [isOnline, setIsOnline] = useState(false);
+
+  useEffect(() => {
+    setIsOnline(Math.random() > 0.5);
+  }, []);
 
   return (
     <Link href={`/dashboard/profile/${user.id}`}>
