@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 async function getUsers(): Promise<UserProfile[]> {
   try {
-    const baseUrl = process.env.URL;
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
     if (!baseUrl) {
       // Fallback to mock data if URL is not set
       console.warn("URL env var not set, falling back to mock users.");

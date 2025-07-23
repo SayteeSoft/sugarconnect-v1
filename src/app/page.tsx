@@ -25,7 +25,7 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
   }
 
   try {
-    const baseUrl = process.env.URL || 'http://localhost:9002';
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:9002';
     const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
     if (!res.ok) {
       console.error("Failed to fetch profiles:", res.statusText);
