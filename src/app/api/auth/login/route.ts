@@ -11,7 +11,6 @@ const getBlobStore = (): Store => {
   if (process.env.NETLIFY) {
     return getStore('users');
   }
-  // Use a mock store for local development
   return getStore({
     name: 'users',
     consistency: 'strong',
@@ -20,16 +19,17 @@ const getBlobStore = (): Store => {
   });
 };
 
-// This function ensures the admin user exists, creating it if necessary.
 async function ensureAdminUser(store: Store): Promise<UserProfile> {
   const adminEmail = 'saytee.software@gmail.com';
+  let adminData;
   try {
-    const adminData = await store.get(adminEmail, { type: 'json' });
-    if (adminData && adminData.password) {
-      return adminData as UserProfile;
-    }
-  } catch (error) {
-    // Admin does not exist, so we will create it.
+      adminData = await store.get(adminEmail, { type: 'json' });
+  } catch(e) {
+      adminData = null;
+  }
+  
+  if (adminData) {
+    return adminData as UserProfile;
   }
 
   const adminTemplate = mockUsers.find(u => u.role === 'Admin');
@@ -63,8 +63,7 @@ export async function POST(request: NextRequest) {
     if (email.toLowerCase() === 'saytee.software@gmail.com') {
       user = await ensureAdminUser(store);
     } else {
-      const userData = await store.get(email, { type: 'json' });
-      user = userData as UserProfile;
+      user = (await store.get(email, { type: 'json' })) as UserProfile;
     }
   } catch (error) {
      // User not found, which we handle below
