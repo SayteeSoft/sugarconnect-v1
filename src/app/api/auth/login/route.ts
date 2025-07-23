@@ -35,11 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let user: UserProfile | null = null;
-    
-    // The user data is keyed by email in the blob store.
-    user = await store.get(email, { type: 'json' }).catch(err => null);
-
+    let user: UserProfile | null = await store.get(email, { type: 'json' }).catch(() => null);
 
     // Special handling for the admin user to ensure they exist with a valid password.
     if (email === 'saytee.software@gmail.com' && (!user || !user.password)) {

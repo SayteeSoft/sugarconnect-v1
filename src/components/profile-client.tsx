@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, MapPin, Sparkles, Heart, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Sparkles, Heart, Trash2, Edit } from "lucide-react";
 
 type ProfileClientProps = {
   profile: UserProfile;
@@ -63,23 +63,25 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
 
   const handleFindMatches = async () => {
     setIsMatchesLoading(true);
+    setMatches([]);
     try {
-      const candidateProfiles = allProfiles.filter(p => p.id !== profile.id);
-      const candidateProfileSummaries = candidateProfiles.map(p => `Name: ${p.name}, Age: ${p.age}, Bio: ${p.bio}, Interests: ${p.interests.join(", ")}`);
-      const userProfileSummary = `Name: ${profile.name}, Age: ${profile.age}, Bio: ${profile.bio}, Interests: ${profile.interests.join(", ")}`;
+      const candidateProfiles = allProfiles.filter(p => p.id !== profile.id && p.role !== 'Admin');
+      const candidateProfileSummaries = candidateProfiles.map(p => `ID: ${p.id}, Name: ${p.name}, Age: ${p.age}, Location: ${p.location}, Role: ${p.role}, Bio: ${p.bio}, Interests: ${p.interests.join(", ")}`);
+      const userProfileSummary = `ID: ${profile.id}, Name: ${profile.name}, Age: ${profile.age}, Location: ${profile.location}, Role: ${profile.role}, Bio: ${profile.bio}, Interests: ${profile.interests.join(", ")}`;
       
       const result = await matchProfiles({
         userProfileSummary,
         candidateProfileSummaries,
-        matchCriteria: `Find the best matches for ${profile.name}. Consider shared interests, age compatibility, and role preferences. User is looking for someone who is ${profile.role.includes('Baby') ? 'generous and established' : 'ambitious and attractive'}.`,
+        matchCriteria: `Find the best matches for ${profile.name}. Consider shared interests, age compatibility, and role preferences. User is a ${profile.role} looking for someone who is ${profile.role.includes('Baby') ? 'generous and established' : 'ambitious and attractive'}.`,
       });
-
+      
       const matchedProfilesWithData = result.matches.map(match => {
         const originalProfile = candidateProfiles.find(p => match.profileSummary.includes(p.name));
         return { ...match, ...originalProfile };
-      }).filter(Boolean);
+      }).filter(Boolean); // Filter out any potential undefined matches
       
       setMatches(matchedProfilesWithData as any);
+
     } catch (error) {
       console.error("Failed to find matches:", error);
       toast({
@@ -101,9 +103,10 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
       const response = await fetch(`/api/users/${profile.id}/delete`, {
         method: 'DELETE',
       });
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error('Failed to delete profile');
+        throw new Error(data.message || 'Failed to delete profile');
       }
 
       toast({
@@ -111,13 +114,13 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
         description: 'The profile has been successfully deleted.',
       });
       router.push('/dashboard');
-      router.refresh(); // To reflect changes in the dashboard
-    } catch (error) {
+      router.refresh();
+    } catch (error: any) {
       console.error('Failed to delete profile:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not delete the profile.',
+        description: error.message || 'Could not delete the profile.',
       });
     }
   };
@@ -128,15 +131,16 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
         <div className="lg:col-span-1 space-y-8">
           <Card className="overflow-hidden">
             {profile.image && (
-              <Image
-                src={profile.image}
-                alt={profile.name}
-                width={600}
-                height={600}
-                className="w-full aspect-square object-cover"
-                data-ai-hint="portrait person"
-                unoptimized
-              />
+              <div className="relative w-full aspect-square">
+                 <Image
+                    src={profile.image}
+                    alt={profile.name}
+                    fill
+                    className="object-cover"
+                    data-ai-hint="portrait person"
+                    unoptimized
+                  />
+              </div>
             )}
             <CardContent className="p-6">
               <h2 className="text-3xl font-bold font-headline">{profile.name}</h2>
@@ -177,11 +181,11 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
 
         <div className="lg:col-span-2 space-y-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>About {profile.name}</CardTitle>
                {isOwnProfile && (
-                <Button variant="outline" size="sm" onClick={() => {/* TODO: Implement edit functionality */}}>
-                  Edit Profile
+                <Button variant="outline" size="sm" onClick={() => router.push('/settings')}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit Profile
                 </Button>
               )}
             </CardHeader>
@@ -196,7 +200,7 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
                 </div>
               </div>
 
-               <div className="flex items-center gap-4">
+               <div className="flex items-center gap-4 pt-4 border-t">
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button onClick={handleFindMatches} disabled={isMatchesLoading}>
@@ -211,13 +215,15 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
                       </DialogHeader>
                       <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-4 pr-2">
                         {isMatchesLoading ? (
-                          <p>Finding the best matches...</p>
+                          <div className="flex items-center justify-center p-8">
+                            <p>Finding the best matches using AI...</p>
+                          </div>
                         ) : matches.length > 0 ? (
                           matches.map((match, index) => (
                             <Card key={index}>
                               <CardContent className="p-4 flex gap-4">
                                 <Avatar className="h-20 w-20">
-                                  {match.image && <AvatarImage src={match.image} alt={match.name} data-ai-hint="portrait person" />}
+                                  {match.image && <AvatarImage src={match.image} alt={match.name || 'Profile'} data-ai-hint="portrait person" />}
                                   <AvatarFallback>{match.name?.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-grow">
@@ -232,7 +238,9 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
                             </Card>
                           ))
                         ) : (
-                          <p>No matches found yet. Click the button to start!</p>
+                          <div className="text-center p-8">
+                            <p>No matches found yet. Click the button again to start!</p>
+                          </div>
                         )}
                       </div>
                     </DialogContent>
@@ -243,7 +251,6 @@ export function ProfileClient({ profile: initialProfile, allProfiles, currentUse
                     </Button>
                   )}
                </div>
-
             </CardContent>
           </Card>
         </div>

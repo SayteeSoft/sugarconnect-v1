@@ -13,10 +13,10 @@ async function ensureAdminUser(store: Store) {
     const adminEmail = 'saytee.software@gmail.com';
     try {
         const adminExists = await store.get(adminEmail, { type: 'json' }).catch(() => null);
-        if (adminExists) {
+        if (adminExists && adminExists.password) {
             return;
         }
-        // Admin does not exist, create it from mock data definition
+        // Admin does not exist or is missing a password, create it from mock data definition
         const mockAdmin = mockUsers.find(u => u.email === adminEmail);
         if (mockAdmin) {
             const hashedPassword = await bcrypt.hash('password123', saltRounds);

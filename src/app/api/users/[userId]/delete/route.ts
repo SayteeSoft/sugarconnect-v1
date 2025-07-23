@@ -1,3 +1,4 @@
+
 import { getStore } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +12,7 @@ export async function DELETE(
   try {
     const { blobs } = await userStore.list();
     let userKey: string | null = null;
-    let userBlob = null;
+    let userBlob: any = null;
 
     for (const blob of blobs) {
       const userData = await userStore.get(blob.key, { type: 'json' });
@@ -32,7 +33,7 @@ export async function DELETE(
     }
 
     // Delete image from blob store if it exists
-    if (userBlob?.image) {
+    if (userBlob?.image && userBlob.image.startsWith('/api/images/')) {
         const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
         try {
             // The image key is the user ID.

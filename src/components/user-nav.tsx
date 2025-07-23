@@ -20,12 +20,10 @@ import { Cog, LogOut, Moon, User as UserIcon, Shield, Sun, LogIn, UserPlus } fro
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/users";
 
 export function UserNav() {
   const { theme, setTheme } = useTheme();
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
 
@@ -47,7 +45,7 @@ export function UserNav() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    window.location.href = '/';
+    window.location.href = '/login';
   };
 
   const handleThemeToggle = () => {
@@ -56,7 +54,7 @@ export function UserNav() {
 
   if (!mounted) {
     return (
-        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full bg-secondary">
             <Avatar className="h-10 w-10"></Avatar>
         </Button>
     );
@@ -73,7 +71,7 @@ export function UserNav() {
                 </Avatar>
             </Button>
         ) : (
-             <Button variant="secondary" size="icon" className="relative h-10 w-10 rounded-full">
+             <Button variant="secondary" className="relative h-10 w-10 rounded-full">
                 <UserIcon className="h-5 w-5 text-muted-foreground" />
             </Button>
         )}
