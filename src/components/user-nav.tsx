@@ -21,12 +21,13 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UserProfile } from "@/lib/users";
 
 export function UserNav() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<{name: string} | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +47,7 @@ export function UserNav() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    router.push('/');
+    window.location.href = '/';
   };
 
   const handleThemeToggle = () => {
@@ -67,7 +68,7 @@ export function UserNav() {
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             {user ? (
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt="@shadcn" data-ai-hint="avatar placeholder" />
+                    <AvatarImage src={user.image || "https://placehold.co/100x100.png"} alt={user.name} data-ai-hint="avatar placeholder" />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
             ) : (
@@ -82,13 +83,16 @@ export function UserNav() {
             <>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">My Account</p>
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                         <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                        </p>
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                    <Link href="/dashboard/profile">
+                    <Link href={`/dashboard/profile/${user.id}`}>
                     <UserIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                     </Link>
@@ -99,12 +103,14 @@ export function UserNav() {
                     <span>Settings</span>
                     </Link>
                 </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin</span>
-                    </Link>
-                </DropdownMenuItem>
+                 {user.role === 'Admin' && (
+                    <DropdownMenuItem asChild>
+                        <Link href="/admin">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                        </Link>
+                    </DropdownMenuItem>
+                 )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleThemeToggle}>
