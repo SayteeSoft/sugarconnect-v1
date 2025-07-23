@@ -1,8 +1,37 @@
+
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 import bcrypt from 'bcrypt';
+
+const saltRounds = 10;
+
+async function ensureAdminUser(store: Store) {
+    const adminEmail = 'saytee.software@gmail.com';
+    try {
+        await store.get(adminEmail);
+        // Admin already exists
+    } catch (error) {
+        // Admin does not exist, create it
+        const hashedPassword = await bcrypt.hash('password123', saltRounds);
+        const adminUser: UserProfile = {
+            id: '1',
+            email: adminEmail,
+            password: hashedPassword,
+            name: 'Admin',
+            age: 49,
+            location: 'London, UK',
+            role: 'Admin',
+            sex: 'Male',
+            bio: 'Administrator',
+            interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+            image: '/user-profiles/Admin_Gemini_Generated_Image(small)-001.jpg',
+        };
+        await store.setJSON(adminEmail, adminUser);
+    }
+}
+
 
 export async function POST(request: NextRequest) {
   let userStore: Store;
@@ -11,6 +40,9 @@ export async function POST(request: NextRequest) {
   } else {
     userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
   }
+
+  // Ensure the admin user exists with a hashed password
+  await ensureAdminUser(userStore);
 
   const { email, password, name, role } = await request.json();
 
@@ -27,7 +59,6 @@ export async function POST(request: NextRequest) {
     // Netlify blobs get throws an error if blob not found, which is expected here.
   }
   
-  const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   const newUser: UserProfile = {
