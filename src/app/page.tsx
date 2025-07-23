@@ -42,17 +42,9 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
 
 
 export default function Home() {
-  const [offsetY, setOffsetY] = useState(0);
   const [featuredProfiles, setFeaturedProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const handleScroll = () => setOffsetY(window.pageYOffset);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   useEffect(() => {
     const loadProfiles = async () => {
       setLoading(true);
@@ -73,7 +65,6 @@ export default function Home() {
             alt="Couple"
             fill
             className="absolute inset-0 z-0 object-cover"
-            style={{ transform: `translateY(${offsetY * 0.5}px)` }}
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
