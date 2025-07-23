@@ -67,7 +67,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
-        <section className="relative h-[75vh] md:h-[85vh] flex items-center justify-center text-white text-center overflow-hidden">
+        <section className="relative h-[85vh] md:h-[85vh] flex items-center justify-center text-white text-center overflow-hidden">
           <Image
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
@@ -81,7 +81,7 @@ export default function Home() {
             <h1 className="text-7xl md:text-8xl font-headline font-bold tracking-tighter mb-4">
               Sugar Connect
             </h1>
-            <p className="max-w-2xl mx-auto text-4xl md:text-5xl font-light mb-6">
+            <p className="max-w-2xl mx-auto text-3xl md:text-4xl font-light mb-6">
               For Sugar Daddy and Sugar Baby
             </p>
             <p className="max-w-3xl mx-auto text-base md:text-lg mb-8">
