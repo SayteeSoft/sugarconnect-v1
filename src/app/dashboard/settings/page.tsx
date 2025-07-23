@@ -1,7 +1,7 @@
 import { SettingsClient } from "@/components/settings-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
-import { Metadata }s from "next";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Account Settings - Sugar Connect",
