@@ -11,7 +11,7 @@ type ProfilePageProps = {
 
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
   try {
-    const baseUrl = process.env.URL || 'http://localhost:9002';
+    const baseUrl = process.env.URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/users/${id}`, { cache: 'no-store' });
     if (!res.ok) return undefined;
     return res.json();
@@ -23,7 +23,7 @@ const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
 
 const getAllProfiles = async (): Promise<UserProfile[]> => {
     try {
-        const baseUrl = process.env.URL || 'http://localhost:9002';
+        const baseUrl = process.env.URL || 'http://localhost:3000';
         const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
         if (!res.ok) return [];
         return res.json();

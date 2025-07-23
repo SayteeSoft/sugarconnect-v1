@@ -1,3 +1,4 @@
+
 import { AdminClient } from "@/components/admin-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 async function getUsers(): Promise<UserProfile[]> {
   try {
-    const baseUrl = process.env.URL || 'http://localhost:9002';
+    const baseUrl = process.env.URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
     if (!res.ok) {
         // Fallback to mock data if API fails
