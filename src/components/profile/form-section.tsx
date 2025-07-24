@@ -8,13 +8,9 @@ type FormSectionProps = {
 
 export function FormSection({ title, children }: FormSectionProps) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                {children}
-            </CardContent>
-        </Card>
+        <div className="space-y-4">
+            <h2 className="text-2xl font-headline font-bold text-primary mb-4">{title}</h2>
+            {children}
+        </div>
     );
 }

@@ -5,7 +5,6 @@ import { useState, useRef } from 'react';
 import { UserProfile } from '@/lib/users';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,14 +12,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, PlusCircle, Loader2 } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
-import { FormSection } from './form-section';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter } from 'next/navigation';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
     currentUser: UserProfile;
 };
+
+const FormSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
+    <div className="space-y-4">
+        <h2 className="text-2xl font-headline font-bold text-primary mb-4">{title}</h2>
+        {children}
+    </div>
+);
+
 
 export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const router = useRouter();
@@ -132,72 +139,70 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left Column */}
             <div className="md:col-span-1 space-y-8 self-start sticky top-28">
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="relative group mb-6">
-                            <Image
-                                src={imagePreview || 'https://placehold.co/500x500.png'}
-                                alt={profile.name}
-                                width={500}
-                                height={500}
-                                className="rounded-lg object-cover aspect-square"
-                                data-ai-hint="profile photo"
-                                key={imagePreview}
-                            />
-                            {isEditMode && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
-                                        <Camera className="mr-2 h-4 w-4" /> Change Photo
-                                    </Button>
-                                    <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                                </div>
-                            )}
-                        </div>
+                <div className="space-y-6">
+                    <div className="relative group">
+                        <Image
+                            src={imagePreview || 'https://placehold.co/500x500.png'}
+                            alt={profile.name}
+                            width={500}
+                            height={500}
+                            className="rounded-lg object-cover aspect-square"
+                            data-ai-hint="profile photo"
+                            key={imagePreview}
+                        />
+                        {isEditMode && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
+                                    <Camera className="mr-2 h-4 w-4" /> Change Photo
+                                </Button>
+                                <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+                            </div>
+                        )}
+                    </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="name">Name</Label>
-                                <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                            </div>
-                            <div>
-                                <Label htmlFor="role">Role</Label>
-                                 <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
-                                        <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
-                                        <SelectItem value="Admin">Admin</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div>
-                                <Label htmlFor="location">Location</Label>
-                                <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                            </div>
-                             <div>
-                                <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" name="email" type="email" value={profile.email} disabled />
-                                 {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
-                            </div>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
                         </div>
-                        
-                        <div className="mt-6 flex flex-col gap-2">
-                             {isEditMode ? (
-                                <>
-                                    <Button onClick={handleSave} disabled={isLoading}>
-                                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        {isLoading ? 'Saving...' : 'Save Profile'}
-                                    </Button>
-                                    <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
-                                </>
-                            ) : isOwnProfile ? (
-                                <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
-                            ) : (
-                                 <Button>Message {profile.name}</Button>
-                            )}
+                        <div>
+                            <Label htmlFor="role">Role</Label>
+                                <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
+                                    <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </CardContent>
-                </Card>
+                            <div>
+                            <Label htmlFor="location">Location</Label>
+                            <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
+                        </div>
+                            <div>
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input id="email" name="email" type="email" value={profile.email} disabled />
+                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 flex flex-col gap-2">
+                            {isEditMode ? (
+                            <>
+                                <Button onClick={handleSave} disabled={isLoading}>
+                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isLoading ? 'Saving...' : 'Save Profile'}
+                                </Button>
+                                <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                            </>
+                        ) : isOwnProfile ? (
+                            <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
+                        ) : (
+                                <Button>Message {profile.name}</Button>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Right Column */}
@@ -222,9 +227,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 placeholder="Select what you're looking for..."
                             />
                         </div>
-                         <div>
+                            <div>
                             <Label>Interests</Label>
-                             <MultiSelect
+                                <MultiSelect
                                 options={interestsOptions}
                                 selected={profile.interests}
                                 onChange={(selected) => handleMultiSelectChange('interests', selected)}
@@ -240,7 +245,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         {galleryPreviews.map((img, i) => (
                             <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
                         ))}
-                         {isEditMode && (
+                            {isEditMode && (
                             <div 
                                 className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
                                 onClick={() => galleryInputRef.current?.click()}

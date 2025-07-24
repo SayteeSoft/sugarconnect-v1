@@ -5,9 +5,8 @@ import { notFound } from "next/navigation";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Card, CardContent } from "@/components/ui/card";
 
-// This function will run on the server to find a user by their ID.
-// It directly accesses the data store instead of making a network request.
 async function findUserById(userId: string): Promise<UserProfile | null> {
     const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
     const { blobs } = await userStore.list();
@@ -28,17 +27,9 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
   try {
     const user = await findUserById(id);
-    if (user) {
-        return user;
-    }
-    // Fallback to mock data only if not found in the primary store
-    console.warn(`User with ID ${id} not found in blob store. Falling back to mock data.`);
-    // In a real app, you might not want to fall back to mock data here.
-    const { mockUsers } = await import('@/lib/mock-data');
-    return mockUsers.find(u => u.id === id);
+    return user ?? undefined;
   } catch (e) {
     console.error(`Error fetching profile by id ${id}, falling back to mock:`, e);
-    // Fallback to mock data on any other error
     const { mockUsers } = await import('@/lib/mock-data');
     return mockUsers.find(u => u.id === id);
   }
@@ -53,7 +44,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   }
 
   // In a real app, you would fetch the current user from session/auth context.
-  // For this demo, we'll use the fetched profile as the current user.
   const currentUser = profile;
 
   return (
@@ -65,7 +55,11 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Your Profile</h1>
                     <p className="text-lg text-muted-foreground">View and manage your profile information.</p>
                 </div>
-                 <ProfileForm initialProfile={profile} currentUser={currentUser} />
+                 <Card className="max-w-6xl mx-auto shadow-xl">
+                    <CardContent className="p-8 md:p-12">
+                        <ProfileForm initialProfile={profile} currentUser={currentUser} />
+                    </CardContent>
+                </Card>
             </div>
         </main>
         <Footer />
