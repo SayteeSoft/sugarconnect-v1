@@ -105,7 +105,8 @@ export function Header() {
                   ))}
                 </nav>
                  <div className="mt-8 pt-6 border-t border-border flex flex-col gap-4">
-                     <UserNav user={user} mounted={mounted} />
+                    <CreditsButton />
+                    <UserNav user={user} mounted={mounted} />
                 </div>
               </div>
             </SheetContent>
