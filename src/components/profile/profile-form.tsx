@@ -74,6 +74,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setIsLoading(true);
         const formData = new FormData();
 
+        // Ensure email is always present for lookup
+        formData.append('email', profile.email);
+
         Object.entries(profile).forEach(([key, value]) => {
             if (key === 'interests' || key === 'wants' || key === 'gallery') {
                  if (Array.isArray(value)) {
