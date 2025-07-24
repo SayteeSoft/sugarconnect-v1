@@ -74,7 +74,7 @@ export default function Home() {
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
             fill
-            className="absolute inset-0 z-0 object-cover object-top"
+            className="absolute inset-0 z-0 object-cover object-center"
             style={{ transform: `translateY(${offsetY}px)` }}
             data-ai-hint="couple relationship"
           />
