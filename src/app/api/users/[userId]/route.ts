@@ -50,21 +50,12 @@ export async function PUT(
     const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
     try {
-        const email = formData.get('email') as string;
-        if (!email) {
-            return NextResponse.json({ message: 'Email is required to find user' }, { status: 400 });
-        }
-
-        let existingUser: UserProfile;
-        try {
-            existingUser = await userStore.get(email, { type: 'json' });
-        } catch (error) {
+        const result = await findUserByKey(userStore, userId);
+        if (!result) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
         
-        if (existingUser.id !== userId) {
-             return NextResponse.json({ message: 'User ID mismatch' }, { status: 400 });
-        }
+        const { key: userKey, user: existingUser } = result;
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
@@ -105,7 +96,7 @@ export async function PUT(
 
 
         const updatedUser = { ...existingUser, ...updatedData };
-        await userStore.setJSON(email, updatedUser);
+        await userStore.setJSON(userKey, updatedUser);
         
         const { password, ...userToReturn } = updatedUser;
         return NextResponse.json(userToReturn);
