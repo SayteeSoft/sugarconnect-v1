@@ -71,7 +71,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Looking for a hot young girl...',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Mark',
+    image: 'public/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
   },
   {
     id: '7',
