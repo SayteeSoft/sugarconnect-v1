@@ -60,7 +60,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <CardContent className="p-6">
                         <div className="relative group mb-6">
                             <Image
-                                src={profile.image || '/placeholder.jpg'}
+                                src={profile.image || 'https://placehold.co/500x500.png'}
                                 alt={profile.name}
                                 width={500}
                                 height={500}
@@ -156,7 +156,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                 <FormSection title="Gallery">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {(profile.gallery || ['/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg', '/user-profiles/Female_Gemini_Generated_Image(small)-002.jpg', '/user-profiles/Female_Gemini_Generated_Image(small)-003.jpg']).map((img, i) => (
+                        {(profile.gallery || ['https://placehold.co/200x200.png', 'https://placehold.co/200x200.png', 'https://placehold.co/200x200.png']).map((img, i) => (
                             <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
                         ))}
                          {isEditMode && (

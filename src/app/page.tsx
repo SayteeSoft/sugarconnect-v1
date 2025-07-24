@@ -71,7 +71,7 @@ export default function Home() {
       <main className="flex-grow">
         <section className="relative h-[85vh] md:h-[85vh] flex items-center justify-center text-white text-center overflow-hidden">
           <Image
-            src="/sd-connect-hero-background.jpg"
+            src="https://placehold.co/1920x1080.png"
             alt="Couple"
             fill
             className="absolute inset-0 z-0 object-cover object-center"
