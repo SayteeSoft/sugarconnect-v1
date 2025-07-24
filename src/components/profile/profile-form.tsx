@@ -218,7 +218,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
                         <CardHeader><CardTitle>{`About ${profile.name}`}</CardTitle></CardHeader>
-                        <CardContent>
+                        <CardContent className="p-6">
                             {isEditMode ? (
                                 <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
                             ) : (
@@ -229,7 +229,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     
                     <Card className="shadow-xl">
                         <CardHeader><CardTitle>Wants & Interests</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="p-6 space-y-4">
                             <div>
                                 <Label>Wants</Label>
                                 <MultiSelect
@@ -255,7 +255,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                     <Card className="shadow-xl">
                         <CardHeader><CardTitle>Gallery</CardTitle></CardHeader>
-                        <CardContent>
+                        <CardContent className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
                                     <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
@@ -285,7 +285,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                      <Card className="shadow-xl">
                         <CardHeader><CardTitle>Attributes</CardTitle></CardHeader>
-                        <CardContent>
+                        <CardContent className="p-6">
                             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                                 <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
                                 <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'0"`, `5'1"`, `5'2"`, `5'3"`, `5'4"`, `5'5"`, `5'6"`, `5'7"`, `5'8"`, `5'9"`, `5'10"`, `5'11"`, `6'0"+`]} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>

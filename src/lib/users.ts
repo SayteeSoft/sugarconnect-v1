@@ -7,7 +7,7 @@ export type UserProfile = {
   age: number;
   location: string;
   role: 'Admin' | 'Sugar Daddy' | 'Sugar Baby';
-  sex: 'Male' | 'Female' | 'Other';
+  sex: 'Male' | 'Female';
   bio: string;
   interests: string[];
   image: string;
