@@ -3,53 +3,53 @@ import { UserProfile } from "@/lib/users";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { mockUsers } from "@/lib/mock-data";
+import { getStore, type Store } from '@netlify/blobs';
 
-type ProfilePageProps = {
-  params: {
-    id: string;
-  };
-};
-
-// Helper function to get the base URL
-const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_URL) {
-    return process.env.NEXT_PUBLIC_URL;
-  }
-  if (process.env.URL) {
-    return `https://${process.env.URL}`;
-  }
-  return 'http://localhost:3000';
-};
-
+// This function will run on the server to find a user by their ID.
+// It directly accesses the data store instead of making a network request.
+async function findUserById(userId: string): Promise<UserProfile | null> {
+    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const { blobs } = await userStore.list();
+    for (const blob of blobs) {
+      try {
+        const user = await userStore.get(blob.key, { type: 'json' });
+        if (user.id === userId) {
+          const { password, ...userToReturn } = user;
+          return userToReturn as UserProfile;
+        }
+      } catch (e) {
+        console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
+      }
+    }
+    return null;
+}
 
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
-  // Always fetch from the API to get the most up-to-date data
   try {
-    const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/users/${id}`, { cache: 'no-store' });
-    if (!res.ok) {
-        console.error(`API fetch failed with ${res.status}. Falling back to mock data for user ${id}.`);
-        return mockUsers.find(u => u.id === id);
+    const user = await findUserById(id);
+    if (user) {
+        return user;
     }
-    return res.json();
+    // Fallback to mock data only if not found in the primary store
+    console.warn(`User with ID ${id} not found in blob store. Falling back to mock data.`);
+    return mockUsers.find(u => u.id === id);
   } catch (e) {
     console.error(`Error fetching profile by id ${id}, falling back to mock:`, e);
-    // Fallback to mock data on error
+    // Fallback to mock data on any other error
     return mockUsers.find(u => u.id === id);
   }
 };
 
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
+export default async function ProfilePage({ params }: { params: { id: string } }) {
   const profile = await getProfileById(params.id);
 
   if (!profile) {
     notFound();
   }
 
-  // In a real app, you would fetch the current user from session/auth context
-  // For now, we'll just pass the fetched profile as the current user if it matches a known pattern,
-  // or a default mock user. This part is for demonstration.
+  // In a real app, you would fetch the current user from session/auth context.
+  // For this demo, we'll use the fetched profile as the current user.
   const currentUser = profile;
 
   return (
