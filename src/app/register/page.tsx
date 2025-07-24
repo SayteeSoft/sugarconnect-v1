@@ -93,7 +93,7 @@ export default function RegisterPage() {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="Sugar Daddy" id="r2" />
-                                    <Label htmlFor="r2">Sugar Daddy/Mommy</Label>
+                                    <Label htmlFor="r2">Sugar Daddy</Label>
                                     </div>
                                 </RadioGroup>
                             </div>
