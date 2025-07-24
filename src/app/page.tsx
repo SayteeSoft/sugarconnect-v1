@@ -86,7 +86,7 @@ export default function Home() {
             <p className="max-w-2xl mx-auto text-xl md:text-2xl font-light mb-6">
               For Sugar Daddy and Sugar Baby
             </p>
-            <p className="max-w-3xl mx-auto text-sm md:text-base mb-8">
+            <p className="max-w-3xl mx-auto text-base md:text-lg mb-8">
               An exclusive platform for ambitious and attractive individuals
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
