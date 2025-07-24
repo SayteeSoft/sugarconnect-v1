@@ -83,7 +83,7 @@ export default function Home() {
             <h1 className="text-8xl md:text-9xl font-headline font-bold tracking-tighter mb-4">
               Sugar Connect
             </h1>
-            <p className="max-w-2xl mx-auto text-xl md:text-2xl font-light mb-6">
+            <p className="max-w-2xl mx-auto text-3xl md:text-4xl font-light mb-6">
               For Sugar Daddy and Sugar Baby
             </p>
             <p className="max-w-3xl mx-auto text-base md:text-lg mb-8">
