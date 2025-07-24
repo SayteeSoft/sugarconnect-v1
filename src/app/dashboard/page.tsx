@@ -6,13 +6,13 @@ import { Search, User } from "lucide-react";
 
 export default function DashboardPage() {
   return (
-    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto max-w-4xl">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold font-headline">Welcome to your Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Manage your profile and find connections.</p>
+        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Welcome to your Dashboard</h1>
+        <p className="text-lg text-muted-foreground mt-2">Manage your profile and find connections.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="hover:shadow-primary/10 transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
