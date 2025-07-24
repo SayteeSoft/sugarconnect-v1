@@ -35,7 +35,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Recent graduate starting my career in marketing. Im ambitious, fun-loving, and enjoy nights out as much as quiet nights in. Looking for a confident and established man to learn from.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Kateryna',
+    image: '/user-profiles/Kateryna_Gemini_Generated_Image(small)-001.jpg',
   },
   {
     id: '4',
