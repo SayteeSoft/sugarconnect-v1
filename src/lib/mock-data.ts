@@ -71,8 +71,8 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Looking for a hot young girl...',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'public/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
-  },
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
+  }, 
   {
     id: '7',
     email: 'Cecilia7gmail.com',
@@ -126,7 +126,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Mark',
     role: 'Sugar Daddy',
     quote: 'Investor and lover of the great outdoors.',
-    image: 'https://placehold.co/100x100.png?text=M',
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
     rating: 5,
   },
     {
