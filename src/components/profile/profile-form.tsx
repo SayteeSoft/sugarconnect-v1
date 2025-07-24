@@ -138,12 +138,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     };
 
     return (
-        <Card className="max-w-6xl mx-auto shadow-xl">
-             <CardContent className="p-8 md:p-12">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Left Column */}
-                    <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
-                        <div className="space-y-8">
+        <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                {/* Left Column */}
+                <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
+                    <Card className="shadow-xl">
+                        <CardContent className="p-4">
                             <div className="relative group">
                                 <Image
                                     src={imagePreview || 'https://placehold.co/500x500.png'}
@@ -163,91 +163,96 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                     </div>
                                 )}
                             </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="role">Role</Label>
-                                        <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
-                                            <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
-                                            <SelectItem value="Admin">Admin</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                    <div>
-                                    <Label htmlFor="location">Location</Label>
-                                    <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                                </div>
-                                    <div>
-                                    <Label htmlFor="email">Email Address</Label>
-                                    <Input id="email" name="email" type="email" value={profile.email} disabled />
-                                    {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
-                                </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="shadow-xl">
+                         <CardContent className="p-6 space-y-4">
+                            <div>
+                                <Label htmlFor="name">Name</Label>
+                                <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
                             </div>
-                        </div>
-                        
-                        <div className="mt-6 flex flex-col gap-2">
-                                {isEditMode ? (
-                                <>
-                                    <Button onClick={handleSave} disabled={isLoading}>
-                                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        {isLoading ? 'Saving...' : 'Save Profile'}
-                                    </Button>
-                                    <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
-                                </>
-                            ) : isOwnProfile || currentUser.role === 'Admin' ? (
-                                <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
-                            ) : (
-                                    <Button>Message {profile.name}</Button>
-                            )}
-                        </div>
+                            <div>
+                                <Label htmlFor="role">Role</Label>
+                                    <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
+                                        <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
+                                        <SelectItem value="Admin">Admin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                                <div>
+                                <Label htmlFor="location">Location</Label>
+                                <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
+                            </div>
+                                <div>
+                                <Label htmlFor="email">Email Address</Label>
+                                <Input id="email" name="email" type="email" value={profile.email} disabled />
+                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                    
+                    <div className="mt-6 flex flex-col gap-2">
+                            {isEditMode ? (
+                            <>
+                                <Button onClick={handleSave} disabled={isLoading}>
+                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isLoading ? 'Saving...' : 'Save Profile'}
+                                </Button>
+                                <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
+                            </>
+                        ) : isOwnProfile || currentUser.role === 'Admin' ? (
+                            <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
+                        ) : (
+                                <Button>Message {profile.name}</Button>
+                        )}
                     </div>
+                </div>
 
-                    {/* Right Column */}
-                    <div className="md:col-span-2 space-y-8">
-                         <div className="space-y-4">
-                            <h2 className="text-2xl font-headline font-bold text-primary mb-4">{`About ${profile.name}`}</h2>
+                {/* Right Column */}
+                <div className="md:col-span-2 space-y-8">
+                     <Card className="shadow-xl">
+                        <CardHeader><CardTitle>{`About ${profile.name}`}</CardTitle></CardHeader>
+                        <CardContent>
                             {isEditMode ? (
                                 <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
                             ) : (
                                 <p className="text-muted-foreground whitespace-pre-wrap">{profile.bio || 'No bio provided.'}</p>
                             )}
-                        </div>
-                        
-                         <div className="space-y-4">
-                             <h2 className="text-2xl font-headline font-bold text-primary mb-4">Wants & Interests</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label>Wants</Label>
-                                    <MultiSelect
-                                        options={wantsOptions}
-                                        selected={profile.wants || []}
-                                        onChange={(selected) => handleMultiSelectChange('wants', selected)}
-                                        disabled={!isEditMode || isLoading}
-                                        placeholder="Select what you're looking for..."
-                                    />
-                                </div>
-                                    <div>
-                                    <Label>Interests</Label>
-                                        <MultiSelect
-                                        options={interestsOptions}
-                                        selected={profile.interests}
-                                        onChange={(selected) => handleMultiSelectChange('interests', selected)}
-                                        disabled={!isEditMode || isLoading}
-                                        placeholder="Select your interests..."
-                                    />
-                                </div>
+                        </CardContent>
+                    </Card>
+                    
+                    <Card className="shadow-xl">
+                        <CardHeader><CardTitle>Wants & Interests</CardTitle></CardHeader>
+                        <CardContent className="space-y-4">
+                            <div>
+                                <Label>Wants</Label>
+                                <MultiSelect
+                                    options={wantsOptions}
+                                    selected={profile.wants || []}
+                                    onChange={(selected) => handleMultiSelectChange('wants', selected)}
+                                    disabled={!isEditMode || isLoading}
+                                    placeholder="Select what you're looking for..."
+                                />
                             </div>
-                        </div>
+                                <div>
+                                <Label>Interests</Label>
+                                    <MultiSelect
+                                    options={interestsOptions}
+                                    selected={profile.interests}
+                                    onChange={(selected) => handleMultiSelectChange('interests', selected)}
+                                    disabled={!isEditMode || isLoading}
+                                    placeholder="Select your interests..."
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                        <div className="space-y-4">
-                            <h2 className="text-2xl font-headline font-bold text-primary mb-4">Gallery</h2>
+                    <Card className="shadow-xl">
+                        <CardHeader><CardTitle>Gallery</CardTitle></CardHeader>
+                        <CardContent>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
                                     <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
@@ -272,10 +277,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </CardContent>
+                    </Card>
 
-                         <div className="space-y-4">
-                            <h2 className="text-2xl font-headline font-bold text-primary mb-4">Attributes</h2>
+                     <Card className="shadow-xl">
+                        <CardHeader><CardTitle>Attributes</CardTitle></CardHeader>
+                        <CardContent>
                             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                                 <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
                                 <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'0"`, `5'1"`, `5'2"`, `5'3"`, `5'4"`, `5'5"`, `5'6"`, `5'7"`, `5'8"`, `5'9"`, `5'10"`, `5'11"`, `6'0"+`]} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
@@ -290,11 +297,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <AttributeSelect label="Relationship Status" value={profile.relationshipStatus || 'Single'} name="relationshipStatus" options={relationshipStatusOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
                                 <AttributeSelect label="Children" value={profile.children || 'No'} name="children" options={childrenOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
