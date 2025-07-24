@@ -41,9 +41,14 @@ export default function RegisterPage() {
       
       toast({
         title: "Registration Successful",
-        description: "Your account has been created. Please log in.",
+        description: "Welcome! We're taking you to your new profile.",
       });
-      router.push('/login');
+
+      // Log the user in by saving their data to localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to their new profile page
+      window.location.href = `/dashboard/profile/${data.user.id}`;
 
     } catch (error: any) {
       toast({

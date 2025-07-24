@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
             role,
             age: 0,
             location: '',
-            sex: 'Female',
+            sex: 'Male',
             bio: '',
             interests: [],
             image: '',
