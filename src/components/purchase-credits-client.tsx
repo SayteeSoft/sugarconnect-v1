@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from 'react';
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { UserProfile } from '@/lib/users';
-import { Skeleton } from './ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 type CreditPackage = {
     id: string;
@@ -26,120 +25,23 @@ type PurchaseCreditsClientProps = {
 
 export function PurchaseCreditsClient({ packages, user }: PurchaseCreditsClientProps) {
     const { toast } = useToast();
+    const router = useRouter();
     const [selectedPackage, setSelectedPackage] = useState<CreditPackage>(packages[0]);
     const [paymentMethod, setPaymentMethod] = useState('paypal');
-    const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleCreateOrder = async (data: any, actions: any) => {
-        try {
-            const response = await fetch("/api/paypal/create-order", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    packageId: selectedPackage.id,
-                }),
-            });
-            const order = await response.json();
-            if (order.id) {
-                return order.id;
-            } else {
-                const errorDetail = order?.details?.[0];
-                const errorMessage = errorDetail ? `${errorDetail.issue} ${errorDetail.description}` : JSON.stringify(order);
-                throw new Error(errorMessage);
-            }
-        } catch (error) {
-            console.error("Create Order Error:", error);
+    const handleContinue = () => {
+        if (!selectedPackage) {
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: `Could not initiate PayPal Checkout. ${error}`,
+                title: 'No Package Selected',
+                description: 'Please select a credit package to continue.',
             });
-            return '';
+            return;
         }
+        // Store selected package in local storage to be picked up by the payment page
+        localStorage.setItem('selectedCreditPackage', JSON.stringify(selectedPackage));
+        router.push('/payment');
     };
-    
-    const handleOnApprove = async (data: any, actions: any) => {
-        setIsProcessing(true);
-        try {
-            const response = await fetch(`/api/paypal/capture-order`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderID: data.orderID }),
-            });
-            
-            const orderData = await response.json();
-            
-            const errorDetail = orderData?.details?.[0];
-
-            if (errorDetail?.issue === 'INSTRUMENT_DECLINED') {
-                setIsProcessing(false);
-                return actions.restart();
-            } else if (errorDetail) {
-                throw new Error(`${errorDetail.description} (${orderData.debug_id})`);
-            } else {
-                toast({
-                    title: 'Payment Successful!',
-                    description: `Transaction ID: ${orderData.id}. Your ${selectedPackage.credits} credits have been added.`,
-                });
-                // Here you would typically update the user's credit balance in your database
-            }
-        } catch (error) {
-            console.error("Capture Order Error:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Payment Error',
-                description: `Your transaction could not be processed. ${error}`,
-            });
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const PaymentForm = () => {
-        const [{ isPending }] = usePayPalScriptReducer();
-        
-        return (
-            <div className="space-y-4 pt-6">
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
-                    <Label htmlFor="paypal-option" className="flex items-center p-4 border rounded-md has-[:checked]:border-primary">
-                        <RadioGroupItem value="paypal" id="paypal-option" />
-                        <span className="ml-4 font-medium">PayPal</span>
-                    </Label>
-                    <Label htmlFor="credit-card-option" className="flex items-center p-4 border rounded-md cursor-not-allowed opacity-50">
-                        <RadioGroupItem value="credit-card" id="credit-card-option" disabled />
-                        <span className="ml-4 font-medium">Credit Card</span>
-                    </Label>
-                    <Label htmlFor="debit-card-option" className="flex items-center p-4 border rounded-md cursor-not-allowed opacity-50">
-                        <RadioGroupItem value="debit-card" id="debit-card-option" disabled />
-                        <span className="ml-4 font-medium">Debit Card</span>
-                    </Label>
-                </RadioGroup>
-                
-                {paymentMethod === 'paypal' && (
-                    <div className="pt-4">
-                        {isPending ? (
-                            <div className="space-y-2">
-                                <Skeleton className="h-10 w-full" />
-                                <Skeleton className="h-10 w-full" />
-                            </div>
-                        ) : isProcessing ? (
-                            <Button disabled className="w-full">Processing...</Button>
-                        ) : (
-                            <PayPalButtons
-                                key={selectedPackage.id} // Re-render buttons when package changes
-                                style={{ layout: "vertical", label: "pay" }}
-                                createOrder={handleCreateOrder}
-                                onApprove={handleOnApprove}
-                                forceReRender={[selectedPackage]}
-                            />
-                        )}
-                    </div>
-                )}
-            </div>
-        )
-    }
 
     return (
         <div className="container mx-auto max-w-4xl">
@@ -176,10 +78,24 @@ export function PurchaseCreditsClient({ packages, user }: PurchaseCreditsClientP
                 <Card className="flex flex-col">
                     <CardHeader>
                         <CardTitle>2. Payment Method</CardTitle>
-                        <CardDescription>All transactions are secure and encrypted.</CardDescription>
+                        <CardDescription>You will be redirected to complete your purchase.</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-grow">
-                        <PaymentForm />
+                    <CardContent className="flex-grow flex flex-col justify-between">
+                         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                            <Label htmlFor="paypal-option" className="flex items-center p-4 border rounded-md has-[:checked]:border-primary">
+                                <RadioGroupItem value="paypal" id="paypal-option" />
+                                <span className="ml-4 font-medium">PayPal</span>
+                            </Label>
+                            <Label htmlFor="credit-card-option" className="flex items-center p-4 border rounded-md cursor-pointer has-[:checked]:border-primary">
+                                <RadioGroupItem value="credit-card" id="credit-card-option" />
+                                <span className="ml-4 font-medium">Credit Card</span>
+                            </Label>
+                            <Label htmlFor="debit-card-option" className="flex items-center p-4 border rounded-md cursor-pointer has-[:checked]:border-primary">
+                                <RadioGroupItem value="debit-card" id="debit-card-option" />
+                                <span className="ml-4 font-medium">Debit Card</span>
+                            </Label>
+                        </RadioGroup>
+                        <Button onClick={handleContinue} className="w-full mt-6">Continue</Button>
                     </CardContent>
                 </Card>
             </div>

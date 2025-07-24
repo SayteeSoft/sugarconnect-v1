@@ -1,27 +1,30 @@
 
 "use client";
 
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { PurchaseCreditsClient } from "@/components/purchase-credits-client";
 import { useState, useEffect } from "react";
 import { UserProfile } from "@/lib/users";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const creditPackages = [
-    { id: 'PKG100', credits: 100, price: '49.99', bonus: 'Most Popular' },
-    { id: 'PKG250', credits: 250, price: '99.99', bonus: '+25 Bonus' },
+    { id: 'PKG100', credits: 100, price: '49.99', bonus: 'Starter Pack' },
     { id: 'PKG500', credits: 500, price: '179.99', bonus: '+75 Bonus' },
     { id: 'PKG1000', credits: 1000, price: '299.99', bonus: '+200 Bonus' },
 ];
 
-const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AfJ7bhG_VDx0Z2o_EtExWS_Ps2eUiZKS0lABsQCbQC02V-c_Z59cOw8xq3yNqO763BAKwSRAf8n7fob8';
-
 export default function PurchaseCreditsPage() {
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedPackage, setSelectedPackage] = useState(creditPackages[0]);
+    const [paymentMethod, setPaymentMethod] = useState('paypal');
+    const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -35,6 +38,20 @@ export default function PurchaseCreditsPage() {
         }
         setLoading(false);
     }, []);
+
+    const handleContinue = () => {
+        if (!selectedPackage) {
+            toast({
+                variant: 'destructive',
+                title: 'No Package Selected',
+                description: 'Please select a credit package to continue.',
+            });
+            return;
+        }
+        // Store selected package in local storage to be picked up by the payment page
+        localStorage.setItem('selectedCreditPackage', JSON.stringify(selectedPackage));
+        router.push('/payment');
+    };
 
     if (loading) {
         return (
@@ -70,12 +87,57 @@ export default function PurchaseCreditsPage() {
     }
     
     return (
-        <PayPalScriptProvider options={{ 
-            clientId: PAYPAL_CLIENT_ID,
-            currency: "USD",
-            intent: "capture"
-        }}>
-            <PurchaseCreditsClient packages={creditPackages} user={currentUser} />
-        </PayPalScriptProvider>
+        <div className="container mx-auto max-w-4xl">
+            <div className="text-center mb-10">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Purchase Credits</h1>
+                <p className="text-lg text-muted-foreground">Unlock conversations by choosing one of our credit packages.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle>1. Select a Package</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <RadioGroup value={selectedPackage.id} onValueChange={(id) => setSelectedPackage(creditPackages.find(p => p.id === id) || creditPackages[0])}>
+                            {creditPackages.map((pkg) => (
+                                <Label key={pkg.id} htmlFor={pkg.id} className="flex items-center justify-between p-4 border rounded-md mb-4 has-[:checked]:border-primary cursor-pointer">
+                                    <div className="flex items-center">
+                                        <RadioGroupItem value={pkg.id} id={pkg.id} />
+                                        <div className="ml-4">
+                                            <span className="font-semibold">{pkg.credits} Credits</span>
+                                            <p className="text-sm text-primary">{pkg.bonus}</p>
+                                        </div>
+                                    </div>
+                                    <span className="font-semibold">${pkg.price}</span>
+                                </Label>
+                            ))}
+                        </RadioGroup>
+                    </CardContent>
+                </Card>
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle>2. Payment Method</CardTitle>
+                        <CardDescription>You will be redirected to complete your purchase.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col justify-between">
+                         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                            <Label htmlFor="paypal-option" className="flex items-center p-4 border rounded-md has-[:checked]:border-primary">
+                                <RadioGroupItem value="paypal" id="paypal-option" />
+                                <span className="ml-4 font-medium">PayPal</span>
+                            </Label>
+                            <Label htmlFor="credit-card-option" className="flex items-center p-4 border rounded-md cursor-pointer has-[:checked]:border-primary">
+                                <RadioGroupItem value="credit-card" id="credit-card-option" />
+                                <span className="ml-4 font-medium">Credit Card</span>
+                            </Label>
+                            <Label htmlFor="debit-card-option" className="flex items-center p-4 border rounded-md cursor-pointer has-[:checked]:border-primary">
+                                <RadioGroupItem value="debit-card" id="debit-card-option" />
+                                <span className="ml-4 font-medium">Debit Card</span>
+                            </Label>
+                        </RadioGroup>
+                        <Button onClick={handleContinue} className="w-full mt-6">Continue</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
     );
 }
