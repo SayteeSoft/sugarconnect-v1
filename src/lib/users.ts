@@ -1,3 +1,4 @@
+
 export type UserProfile = {
   id: string;
   email: string;
@@ -11,4 +12,17 @@ export type UserProfile = {
   interests: string[];
   image: string;
   summary?: string;
+  wants?: string[];
+  gallery?: string[];
+  height?: string;
+  bodyType?: string;
+  ethnicity?: string;
+  hairColor?: string;
+  eyeColor?: string;
+  smoker?: string;
+  drinker?: string;
+  piercings?: string;
+  tattoos?: string;
+  relationshipStatus?: string;
+  children?: string;
 };
