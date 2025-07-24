@@ -2,7 +2,6 @@
 import { UserProfile } from "@/lib/users";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
-import { mockUsers } from "@/lib/mock-data";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -34,10 +33,13 @@ const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
     }
     // Fallback to mock data only if not found in the primary store
     console.warn(`User with ID ${id} not found in blob store. Falling back to mock data.`);
+    // In a real app, you might not want to fall back to mock data here.
+    const { mockUsers } = await import('@/lib/mock-data');
     return mockUsers.find(u => u.id === id);
   } catch (e) {
     console.error(`Error fetching profile by id ${id}, falling back to mock:`, e);
     // Fallback to mock data on any other error
+    const { mockUsers } = await import('@/lib/mock-data');
     return mockUsers.find(u => u.id === id);
   }
 };
