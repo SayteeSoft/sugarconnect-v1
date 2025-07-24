@@ -1,3 +1,4 @@
+
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Metadata } from "next";
@@ -15,7 +16,7 @@ export default function PurchaseCreditsLayout({
   return (
     <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
         <Header />
-        <main className="flex-grow pt-36 pb-16">
+        <main className="flex-grow flex items-center pt-36 pb-16">
             {children}
         </main>
         <Footer />
