@@ -40,7 +40,6 @@ const sitemapSections = [
             { icon: User, text: "My Profile", description: "View and edit your profile.", href: "/dashboard/profile" },
             { icon: LogIn, text: "Login", description: "Access your account.", href: "/login" },
             { icon: UserPlus, text: "Sign Up", description: "Create a new account for free.", href: "/login" },
-            { icon: CreditCard, text: "Purchase Credits", description: "Buy credits to connect with others.", href: "/purchase-credits" },
         ]
     },
     {
