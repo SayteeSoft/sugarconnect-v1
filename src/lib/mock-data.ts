@@ -23,7 +23,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Art student with a love for adventure and exploring new cultures. I enjoy gallery openings, weekend getaways, and trying new restaurants. Seeking a mentor and partner to share lifes beautiful moments with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Darianna',
+    image: '/user-profiles/Darianna_Gemini_Generated_Image(small)-001.jpg',
   },
   {
     id: '3',
