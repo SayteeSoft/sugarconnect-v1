@@ -4,7 +4,6 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
@@ -60,7 +59,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           <ProfileForm initialProfile={profile} currentUser={currentUser} />
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
