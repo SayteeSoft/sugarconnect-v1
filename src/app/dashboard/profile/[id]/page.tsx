@@ -14,7 +14,7 @@ type ProfilePageProps = {
 
 const getAllProfiles = async (): Promise<UserProfile[]> => {
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:9002';
         const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
         if (!res.ok) {
           console.error(`Failed to fetch profiles, falling back to mock. Status: ${res.status}`);
@@ -33,7 +33,7 @@ const getProfileById = async (id: string, allProfiles: UserProfile[]): Promise<U
   if (profile) return profile;
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:9002';
     const res = await fetch(`${baseUrl}/api/users/${id}`, { cache: 'no-store' });
     if (!res.ok) return undefined;
     return res.json();
