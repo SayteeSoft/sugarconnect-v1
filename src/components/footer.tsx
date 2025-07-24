@@ -142,7 +142,7 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center mb-8">
           <Logo isScrolled={true} />
-          <p className="mt-4 text-base text-muted-foreground max-w-md">
+          <p className="mt-4 text-xl text-muted-foreground max-w-md">
             For Sugar Daddy and Sugar Baby
           </p>
         </div>
