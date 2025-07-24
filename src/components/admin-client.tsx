@@ -133,7 +133,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                           </Link>
                         </Button>
                         <Button asChild variant="ghost" size="icon">
-                          <Link href={`/dashboard/profile/${user.id}`}>
+                          <Link href={`/dashboard/profile/${user.id}?edit=true`}>
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>

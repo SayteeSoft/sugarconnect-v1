@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, PlusCircle, Loader2 } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 
 type ProfileFormProps = {
@@ -35,7 +35,10 @@ const FormSection = ({ title, children }: { title: string, children: React.React
 
 export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const router = useRouter();
-    const [isEditMode, setIsEditMode] = useState(false);
+    const searchParams = useSearchParams();
+    const isEditModeFromQuery = searchParams.get('edit') === 'true';
+
+    const [isEditMode, setIsEditMode] = useState(isEditModeFromQuery || false);
     const [profile, setProfile] = useState(initialProfile);
     const [imagePreview, setImagePreview] = useState<string | null>(profile.image);
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -121,6 +124,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
             
+            // Remove edit=true from URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+
             router.refresh();
 
         } catch (error: any) {
@@ -137,13 +144,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setGalleryPreviews(initialProfile.gallery || []);
         setGalleryFiles([]);
         setIsEditMode(false);
+        // Remove edit=true from URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     };
 
     return (
         <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Left Column */}
-                <div className="md:col-span-1 space-y-8">
+                <div className="md:col-span-1 space-y-8 sticky top-28 self-start">
                     <Card>
                         <CardContent className="pt-6">
                             <div className="relative group">
@@ -208,7 +218,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 </Button>
                                 <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
                             </>
-                        ) : isOwnProfile ? (
+                        ) : isOwnProfile || currentUser.role === 'Admin' ? (
                             <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
                         ) : (
                              <Button>Message {profile.name}</Button>
