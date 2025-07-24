@@ -146,7 +146,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 {/* Left Column */}
                 <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
                     <Card className="shadow-xl">
-                        <CardContent className="p-4">
+                        <CardContent className="p-6">
                             <div className="relative group">
                                 <Image
                                     src={imagePreview || 'https://placehold.co/500x500.png'}
