@@ -83,7 +83,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Musician and free spirit. My life is filled with melodies, travel, and laughter. Im searching for a patron and partner who appreciates the arts and has a zest for life.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Cecilia',
+    image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
   },
   {
     id: '8',
