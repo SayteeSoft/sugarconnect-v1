@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
+    if (!userId) return null;
     const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
     const { blobs } = await userStore.list();
     for (const blob of blobs) {
@@ -18,7 +19,7 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
           return userToReturn as UserProfile;
         }
       } catch (e) {
-        console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
+        // Silently ignore blobs that are not valid JSON or don't match the user profile structure.
       }
     }
     return null;
@@ -27,7 +28,11 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
   try {
     const user = await findUserById(id);
-    return user ?? undefined;
+    if (user) return user;
+    
+    // Fallback to mock data if user not found in blob store
+    const { mockUsers } = await import('@/lib/mock-data');
+    return mockUsers.find(u => u.id === id);
   } catch (e) {
     console.error(`Error fetching profile by id ${id}, falling back to mock:`, e);
     const { mockUsers } = await import('@/lib/mock-data');
