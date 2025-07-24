@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { UserProfile } from '@/lib/users';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle } from 'lucide-react';
+import { Camera, PlusCircle, Loader2 } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { FormSection } from './form-section';
 import { MultiSelect } from '../ui/multi-select';
+import { useRouter } from 'next/navigation';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
@@ -22,9 +23,14 @@ type ProfileFormProps = {
 };
 
 export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
+    const router = useRouter();
     const [isEditMode, setIsEditMode] = useState(false);
     const [profile, setProfile] = useState(initialProfile);
+    const [imagePreview, setImagePreview] = useState<string | null>(profile.image);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isOwnProfile = initialProfile.id === currentUser.id;
 
@@ -40,15 +46,64 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const handleMultiSelectChange = (name: string, values: string[]) => {
         setProfile(prev => ({ ...prev, [name]: values }));
     };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
     
     const handleSave = async () => {
-        toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
-        setIsEditMode(false);
-        // Here you would typically make an API call to save the profile data
+        setIsLoading(true);
+        const formData = new FormData();
+
+        // Append all profile fields to formData
+        Object.entries(profile).forEach(([key, value]) => {
+            if (key === 'interests' || key === 'wants') {
+                formData.append(key, (value as string[]).join(','));
+            } else if (value !== undefined && value !== null) {
+                formData.append(key, String(value));
+            }
+        });
+
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        try {
+            const response = await fetch(`/api/users/${profile.id}`, {
+                method: 'PUT',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save profile.');
+            }
+            
+            const updatedProfile = await response.json();
+
+            toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
+            setIsEditMode(false);
+            setProfile(updatedProfile); // Update state with saved data
+            setImagePreview(updatedProfile.image); // Update image preview
+            
+            // Refresh the page to get latest server data
+            router.refresh();
+
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: "Save Failed", description: error.message });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleCancel = () => {
         setProfile(initialProfile); // Reset changes
+        setImagePreview(initialProfile.image);
+        setImageFile(null);
         setIsEditMode(false);
     };
 
@@ -60,18 +115,20 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <CardContent className="p-6">
                         <div className="relative group mb-6">
                             <Image
-                                src={profile.image || 'https://placehold.co/500x500.png'}
+                                src={imagePreview || 'https://placehold.co/500x500.png'}
                                 alt={profile.name}
                                 width={500}
                                 height={500}
                                 className="rounded-lg object-cover aspect-square"
                                 data-ai-hint="profile photo"
+                                key={imagePreview} // Force re-render on image change
                             />
                             {isEditMode && (
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" className="text-white hover:bg-white/20">
+                                    <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
                                         <Camera className="mr-2 h-4 w-4" /> Change Photo
                                     </Button>
+                                    <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                                 </div>
                             )}
                         </div>
@@ -79,11 +136,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <div className="space-y-4">
                             <div>
                                 <Label htmlFor="name">Name</Label>
-                                <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode} />
+                                <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
                             </div>
                             <div>
                                 <Label htmlFor="role">Role</Label>
-                                 <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode}>
+                                 <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
@@ -94,20 +151,23 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                              <div>
                                 <Label htmlFor="location">Location</Label>
-                                <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode} />
+                                <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
                             </div>
                              <div>
                                 <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" name="email" type="email" value={profile.email} onChange={handleInputChange} disabled={!isEditMode} />
-                                 {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email is not verified. <a href="#" className="text-primary hover:underline">Change here.</a></p>}
+                                <Input id="email" name="email" type="email" value={profile.email} disabled />
+                                 {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
                             </div>
                         </div>
                         
                         <div className="mt-6 flex flex-col gap-2">
                              {isEditMode ? (
                                 <>
-                                    <Button onClick={handleSave}>Save Profile</Button>
-                                    <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+                                    <Button onClick={handleSave} disabled={isLoading}>
+                                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        {isLoading ? 'Saving...' : 'Save Profile'}
+                                    </Button>
+                                    <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
                                 </>
                             ) : isOwnProfile ? (
                                 <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
@@ -123,9 +183,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             <div className="md:col-span-2 space-y-8">
                 <FormSection title={`About ${profile.name}`}>
                     {isEditMode ? (
-                        <Textarea name="bio" value={profile.bio} onChange={handleInputChange} rows={5} />
+                        <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
                     ) : (
-                        <p className="text-muted-foreground">{profile.bio}</p>
+                        <p className="text-muted-foreground whitespace-pre-wrap">{profile.bio || 'No bio provided.'}</p>
                     )}
                 </FormSection>
                 
@@ -137,7 +197,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 options={wantsOptions}
                                 selected={profile.wants || []}
                                 onChange={(selected) => handleMultiSelectChange('wants', selected)}
-                                disabled={!isEditMode}
+                                disabled={!isEditMode || isLoading}
                                 placeholder="Select what you're looking for..."
                             />
                         </div>
@@ -147,7 +207,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 options={interestsOptions}
                                 selected={profile.interests}
                                 onChange={(selected) => handleMultiSelectChange('interests', selected)}
-                                disabled={!isEditMode}
+                                disabled={!isEditMode || isLoading}
                                 placeholder="Select your interests..."
                             />
                         </div>
@@ -156,7 +216,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                 <FormSection title="Gallery">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {(profile.gallery || ['https://placehold.co/200x200.png', 'https://placehold.co/200x200.png', 'https://placehold.co/200x200.png']).map((img, i) => (
+                        {(profile.gallery || []).map((img, i) => (
                             <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
                         ))}
                          {isEditMode && (
@@ -172,18 +232,18 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                 <FormSection title="Attributes">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                        <AttributeSelect label="Age" value={profile.age.toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'8"`, `5'9"`, `5'10"`]} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Body Type" value={profile.bodyType || 'Slim'} name="bodyType" options={bodyTypeOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Ethnicity" value={profile.ethnicity || 'Caucasian'} name="ethnicity" options={ethnicityOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Hair Color" value={profile.hairColor || 'Black'} name="hairColor" options={hairColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Eye Color" value={profile.eyeColor || 'Brown'} name="eyeColor" options={eyeColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Smoker" value={profile.smoker || 'No'} name="smoker" options={smokerOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Drinker" value={profile.drinker || 'Socially'} name="drinker" options={drinkerOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Piercings" value={profile.piercings || 'No'} name="piercings" options={piercingsOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Tattoos" value={profile.tattoos || 'No'} name="tattoos" options={tattoosOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Relationship Status" value={profile.relationshipStatus || 'Single'} name="relationshipStatus" options={relationshipStatusOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
-                        <AttributeSelect label="Children" value={profile.children || 'No'} name="children" options={childrenOptions} isEditMode={isEditMode} onChange={handleSelectChange} />
+                        <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
+                        <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'0"`, `5'1"`, `5'2"`, `5'3"`, `5'4"`, `5'5"`, `5'6"`, `5'7"`, `5'8"`, `5'9"`, `5'10"`, `5'11"`, `6'0"+`]} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Body Type" value={profile.bodyType || 'Slim'} name="bodyType" options={bodyTypeOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Ethnicity" value={profile.ethnicity || 'Caucasian'} name="ethnicity" options={ethnicityOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Hair Color" value={profile.hairColor || 'Black'} name="hairColor" options={hairColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Eye Color" value={profile.eyeColor || 'Brown'} name="eyeColor" options={eyeColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Smoker" value={profile.smoker || 'No'} name="smoker" options={smokerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Drinker" value={profile.drinker || 'Socially'} name="drinker" options={drinkerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Piercings" value={profile.piercings || 'No'} name="piercings" options={piercingsOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Tattoos" value={profile.tattoos || 'No'} name="tattoos" options={tattoosOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Relationship Status" value={profile.relationshipStatus || 'Single'} name="relationshipStatus" options={relationshipStatusOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        <AttributeSelect label="Children" value={profile.children || 'No'} name="children" options={childrenOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
                     </div>
                 </FormSection>
             </div>
@@ -191,18 +251,18 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     );
 }
 
-const AttributeSelect = ({ label, value, name, options, isEditMode, onChange }: { label: string, value: string, name: string, options: string[], isEditMode: boolean, onChange: (name: string, value: string) => void }) => (
+const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, disabled }: { label: string, value: string, name: string, options: string[], isEditMode: boolean, onChange: (name: string, value: string) => void, disabled: boolean }) => (
     <div>
         <Label>{label}</Label>
         {isEditMode ? (
-            <Select value={value} onValueChange={(val) => onChange(name, val)}>
+            <Select value={value} onValueChange={(val) => onChange(name, val)} disabled={disabled}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                     {options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
                 </SelectContent>
             </Select>
         ) : (
-            <p className="text-muted-foreground">{value}</p>
+            <p className="text-muted-foreground h-10 flex items-center">{value || '-'}</p>
         )}
     </div>
 );
