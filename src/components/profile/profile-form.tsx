@@ -28,9 +28,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [profile, setProfile] = useState(initialProfile);
     const [imagePreview, setImagePreview] = useState<string | null>(profile.image);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(profile.gallery || []);
+    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
     const isOwnProfile = initialProfile.id === currentUser.id;
 
@@ -55,14 +58,25 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
     };
     
+    const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            setGalleryFiles(prev => [...prev, ...files]);
+            
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setGalleryPreviews(prev => [...prev, ...newPreviews]);
+        }
+    };
+
     const handleSave = async () => {
         setIsLoading(true);
         const formData = new FormData();
 
-        // Append all profile fields to formData
         Object.entries(profile).forEach(([key, value]) => {
-            if (key === 'interests' || key === 'wants') {
-                formData.append(key, (value as string[]).join(','));
+            if (key === 'interests' || key === 'wants' || key === 'gallery') {
+                 if (Array.isArray(value)) {
+                    formData.append(key, value.join(','));
+                }
             } else if (value !== undefined && value !== null) {
                 formData.append(key, String(value));
             }
@@ -71,6 +85,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         if (imageFile) {
             formData.append('image', imageFile);
         }
+        
+        galleryFiles.forEach(file => {
+            formData.append('galleryImages', file);
+        });
 
         try {
             const response = await fetch(`/api/users/${profile.id}`, {
@@ -87,10 +105,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
-            setProfile(updatedProfile); // Update state with saved data
-            setImagePreview(updatedProfile.image); // Update image preview
+            setProfile(updatedProfile);
+            setImagePreview(updatedProfile.image);
+            setGalleryPreviews(updatedProfile.gallery || []);
+            setGalleryFiles([]);
             
-            // Refresh the page to get latest server data
             router.refresh();
 
         } catch (error: any) {
@@ -101,9 +120,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     };
 
     const handleCancel = () => {
-        setProfile(initialProfile); // Reset changes
+        setProfile(initialProfile);
         setImagePreview(initialProfile.image);
         setImageFile(null);
+        setGalleryPreviews(initialProfile.gallery || []);
+        setGalleryFiles([]);
         setIsEditMode(false);
     };
 
@@ -121,7 +142,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 height={500}
                                 className="rounded-lg object-cover aspect-square"
                                 data-ai-hint="profile photo"
-                                key={imagePreview} // Force re-render on image change
+                                key={imagePreview}
                             />
                             {isEditMode && (
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
@@ -216,15 +237,26 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
                 <FormSection title="Gallery">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {(profile.gallery || []).map((img, i) => (
+                        {galleryPreviews.map((img, i) => (
                             <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
                         ))}
                          {isEditMode && (
-                            <div className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent">
+                            <div 
+                                className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
+                                onClick={() => galleryInputRef.current?.click()}
+                            >
                                 <div className="text-center text-muted-foreground">
                                     <PlusCircle className="mx-auto h-8 w-8" />
                                     <p>Add Photo</p>
                                 </div>
+                                <input 
+                                    type="file" 
+                                    ref={galleryInputRef} 
+                                    onChange={handleGalleryImageChange} 
+                                    accept="image/*" 
+                                    multiple 
+                                    className="hidden" 
+                                />
                             </div>
                         )}
                     </div>
