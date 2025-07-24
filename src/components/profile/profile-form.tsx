@@ -131,7 +131,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left Column */}
-            <div className="md:col-span-1 space-y-8">
+            <div className="md:col-span-1 space-y-8 self-start sticky top-28">
                 <Card>
                     <CardContent className="p-6">
                         <div className="relative group mb-6">
