@@ -16,7 +16,7 @@ export function FeaturedProfileCard({ user }: FeaturedProfileCardProps) {
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
         <div className="relative aspect-square">
           <Image
-            src={user.image || 'https://placehold.co/400x400.png'}
+            src={user.image ? user.image : 'https://placehold.co/400x400.png'}
             alt={user.name}
             fill
             className="object-cover"
