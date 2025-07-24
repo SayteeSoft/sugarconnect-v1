@@ -6,13 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { UserNav } from '@/components/user-nav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Heart } from 'lucide-react';
-import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { UserProfile } from '@/lib/users';
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [mounted, setMounted] = useState(false);
   const navLinkClasses = "transition-colors hover:text-primary text-foreground text-base";
   const mobileNavLinkClasses = "block py-2 text-lg transition-colors hover:text-primary";
+
+  useEffect(() => {
+    setMounted(true);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+        try {
+            setUser(JSON.parse(storedUser));
+        } catch (e) {
+            localStorage.removeItem("user");
+            setUser(null);
+        }
+    }
+  }, []);
 
   const navLinks = [
     { href: "/dashboard", label: "Profile" },
@@ -20,6 +36,33 @@ export function Header() {
     { href: "/matches", label: "Matches" },
     { href: "/search", label: "Search" },
   ];
+
+  const CreditsButton = () => {
+    if (!mounted || !user) return null;
+
+    if (user.role === 'Admin' || user.role === 'Sugar Baby') {
+      return (
+        <Button variant="secondary" asChild>
+          <Link href="/purchase-credits">Unlimited Credits</Link>
+        </Button>
+      );
+    }
+
+    if (user.role === 'Sugar Daddy') {
+      return (
+        <Button variant="secondary" asChild>
+          <Link href="/purchase-credits">
+            <span>Buy Credits</span>
+            <div className="ml-2 bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">
+              10
+            </div>
+          </Link>
+        </Button>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all bg-white dark:bg-[#22252a] shadow-md">
@@ -62,7 +105,7 @@ export function Header() {
                   ))}
                 </nav>
                  <div className="mt-8 pt-6 border-t border-border flex flex-col gap-4">
-                     <UserNav />
+                     <UserNav user={user} mounted={mounted} />
                 </div>
               </div>
             </SheetContent>
@@ -71,7 +114,8 @@ export function Header() {
 
         {/* Desktop User Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <UserNav />
+          <CreditsButton />
+          <UserNav user={user} mounted={mounted} />
         </div>
       </div>
     </header>

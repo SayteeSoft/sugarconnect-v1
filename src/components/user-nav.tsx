@@ -22,29 +22,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserProfile } from "@/lib/users";
 
-export function UserNav() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<UserProfile | null>(null);
+type UserNavProps = {
+  user: UserProfile | null;
+  mounted: boolean;
+};
 
-  useEffect(() => {
-    setMounted(true);
-    // Check for user session
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-        try {
-            setUser(JSON.parse(storedUser));
-        } catch (e) {
-            // If parsing fails, remove the invalid item
-            localStorage.removeItem("user");
-            setUser(null);
-        }
-    }
-  }, []);
+export function UserNav({ user, mounted }: UserNavProps) {
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    setUser(null);
     window.location.href = '/login';
   };
 
