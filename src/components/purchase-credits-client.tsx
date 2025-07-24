@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Landmark } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 type CreditPackage = {
     id: number;
@@ -25,7 +27,10 @@ type PurchaseCreditsClientProps = {
     paypalClientId: string;
 };
 
-export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCreditsClientProps) {
+// This new component will be rendered inside PayPalScriptProvider
+// and can use the usePayPalScriptReducer hook.
+const PaymentForm = ({ packages }: { packages: CreditPackage[] }) => {
+    const [{ isPending }] = usePayPalScriptReducer();
     const [selectedPackage, setSelectedPackage] = useState<CreditPackage>(packages.find(p => p.popular) || packages[0]);
     const [paymentMethod, setPaymentMethod] = useState("paypal");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -79,68 +84,69 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
     };
 
     return (
-        <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD", intent: "capture", components: "buttons" }}>
-            <div className="container mx-auto max-w-5xl">
-                <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Purchase Credits</h1>
-                    <p className="text-lg text-muted-foreground">Unlock conversations by choosing one of our credit packages.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-                    {/* Package Selection */}
-                    <Card className="shadow-lg flex flex-col">
-                        <CardHeader>
-                            <CardTitle>1. Select a Package</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                            <RadioGroup value={selectedPackage.id.toString()} onValueChange={(id) => setSelectedPackage(packages.find(p => p.id === parseInt(id))!)}>
-                                <div className="space-y-4">
-                                    {packages.map((pkg) => (
-                                        <Label key={pkg.id} htmlFor={`pkg-${pkg.id}`} className={cn(
-                                            "flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all",
-                                            selectedPackage.id === pkg.id ? "border-primary ring-2 ring-primary" : "border-border"
-                                        )}>
-                                            <div className="flex items-center gap-4">
-                                                <RadioGroupItem value={pkg.id.toString()} id={`pkg-${pkg.id}`} />
-                                                <div>
-                                                    <div className="font-semibold">{pkg.credits} Credits</div>
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        {pkg.bonus > 0 && <Badge variant="secondary">+{pkg.bonus} Bonus</Badge>}
-                                                        {pkg.popular && <Badge>Most Popular</Badge>}
-                                                    </div>
-                                                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            {/* Package Selection */}
+            <Card className="shadow-lg flex flex-col">
+                <CardHeader>
+                    <CardTitle>1. Select a Package</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                    <RadioGroup value={selectedPackage.id.toString()} onValueChange={(id) => setSelectedPackage(packages.find(p => p.id === parseInt(id))!)}>
+                        <div className="space-y-4">
+                            {packages.map((pkg) => (
+                                <Label key={pkg.id} htmlFor={`pkg-${pkg.id}`} className={cn(
+                                    "flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all",
+                                    selectedPackage.id === pkg.id ? "border-primary ring-2 ring-primary" : "border-border"
+                                )}>
+                                    <div className="flex items-center gap-4">
+                                        <RadioGroupItem value={pkg.id.toString()} id={`pkg-${pkg.id}`} />
+                                        <div>
+                                            <div className="font-semibold">{pkg.credits} Credits</div>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                {pkg.bonus > 0 && <Badge variant="secondary">+{pkg.bonus} Bonus</Badge>}
+                                                {pkg.popular && <Badge>Most Popular</Badge>}
                                             </div>
-                                            <div className="font-bold text-lg">${pkg.price.toFixed(2)}</div>
-                                        </Label>
-                                    ))}
-                                </div>
-                            </RadioGroup>
-                        </CardContent>
-                    </Card>
-
-                    {/* Payment Method */}
-                    <Card className="shadow-lg flex flex-col">
-                        <CardHeader>
-                            <CardTitle>2. Payment Method</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-grow flex flex-col">
-                             <p className="text-sm text-muted-foreground mb-6">All transactions are secure and encrypted.</p>
-                             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
-                                <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'paypal' && 'border-primary ring-2 ring-primary')}>
-                                    <RadioGroupItem value="paypal" id="paypal" />
-                                    <Landmark className="h-5 w-5" />
-                                    <span>PayPal</span>
+                                        </div>
+                                    </div>
+                                    <div className="font-bold text-lg">${pkg.price.toFixed(2)}</div>
                                 </Label>
-                                <Label htmlFor="credit-card" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer text-muted-foreground", paymentMethod === 'credit-card' && 'border-primary ring-2 ring-primary')}>
-                                    <RadioGroupItem value="credit-card" id="credit-card" disabled />
-                                    <CreditCard className="h-5 w-5" />
-                                    <span>Credit Card (coming soon)</span>
-                                </Label>
-                            </RadioGroup>
+                            ))}
+                        </div>
+                    </RadioGroup>
+                </CardContent>
+            </Card>
 
-                            <div className="mt-auto pt-6">
-                                {paymentMethod === 'paypal' ? (
-                                    isProcessing ? (
+            {/* Payment Method */}
+            <Card className="shadow-lg flex flex-col">
+                <CardHeader>
+                    <CardTitle>2. Payment Method</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col">
+                        <p className="text-sm text-muted-foreground mb-6">All transactions are secure and encrypted.</p>
+                        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                        <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer", paymentMethod === 'paypal' && 'border-primary ring-2 ring-primary')}>
+                            <RadioGroupItem value="paypal" id="paypal" />
+                            <Landmark className="h-5 w-5" />
+                            <span>PayPal</span>
+                        </Label>
+                        <Label htmlFor="credit-card" className={cn("flex items-center gap-4 p-4 border rounded-lg cursor-pointer text-muted-foreground", paymentMethod === 'credit-card' && 'border-primary ring-2 ring-primary')}>
+                            <RadioGroupItem value="credit-card" id="credit-card" disabled />
+                            <CreditCard className="h-5 w-5" />
+                            <span>Credit Card (coming soon)</span>
+                        </Label>
+                    </RadioGroup>
+
+                    <div className="mt-auto pt-6">
+                        {paymentMethod === 'paypal' ? (
+                            <>
+                                {isPending && (
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-10 w-full" />
+                                        <Skeleton className="h-10 w-full" />
+                                    </div>
+                                )}
+                                <div style={{ display: isPending ? 'none' : 'block' }}>
+                                    {isProcessing ? (
                                         <Button disabled className="w-full">Processing...</Button>
                                     ) : (
                                         <PayPalButtons
@@ -151,16 +157,31 @@ export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCred
                                             onError={handleOnError}
                                             disabled={!selectedPackage || isProcessing}
                                         />
-                                    )
-                                ) : (
-                                     <Button className="w-full" disabled>
-                                        Coming Soon
-                                     </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                                <Button className="w-full" disabled>
+                                Coming Soon
+                                </Button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+
+export function PurchaseCreditsClient({ packages, paypalClientId }: PurchaseCreditsClientProps) {
+    return (
+        <PayPalScriptProvider options={{ clientId: paypalClientId, currency: "USD", intent: "capture", components: "buttons" }}>
+            <div className="container mx-auto max-w-5xl">
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Purchase Credits</h1>
+                    <p className="text-lg text-muted-foreground">Unlock conversations by choosing one of our credit packages.</p>
                 </div>
+                <PaymentForm packages={packages} />
             </div>
         </PayPalScriptProvider>
     );
