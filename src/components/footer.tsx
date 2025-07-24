@@ -1,12 +1,30 @@
+
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Logo } from './logo';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { UserProfile } from '@/lib/users';
+import { Shield } from 'lucide-react';
 
 export function Footer() {
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        // Handle potential parsing error
+        setUser(null);
+      }
+    }
+  }, []);
+  
   const footerSections = [
     {
       title: 'Site',
@@ -32,6 +50,18 @@ export function Footer() {
       ],
     },
   ];
+
+  // Conditionally add the Admin link if the user is an admin
+  if (user && user.role === 'Admin') {
+    const helpSection = footerSections.find(section => section.title === 'Help');
+    if (helpSection) {
+        // Add Admin link if it doesn't already exist
+        if (!helpSection.links.some(link => link.label === 'Admin')) {
+            helpSection.links.push({ label: 'Admin', href: '/admin' });
+        }
+    }
+  }
+
 
   const cookiePolicyContent = (
       <div className="prose dark:prose-invert max-w-none space-y-6 text-foreground/80">
