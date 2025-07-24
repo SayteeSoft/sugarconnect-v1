@@ -4,6 +4,8 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { mockUsers } from "@/lib/mock-data";
 import { getStore, type Store } from '@netlify/blobs';
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 // This function will run on the server to find a user by their ID.
 // It directly accesses the data store instead of making a network request.
@@ -54,7 +56,8 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
-        <main className="flex-grow pt-24 pb-16">
+        <Header />
+        <main className="flex-grow pt-36 pb-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                  <div className="text-center mb-10">
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Your Profile</h1>
@@ -63,6 +66,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
                  <ProfileForm initialProfile={profile} currentUser={currentUser} />
             </div>
         </main>
+        <Footer />
     </div>
   );
 }
