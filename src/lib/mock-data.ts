@@ -47,7 +47,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Fashion designer with an eye for beauty and a heart for adventure. Im looking for a sophisticated gentleman to share elegant evenings and exciting journeys with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Sofia',
+    image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
   },
   {
     id: '5',
