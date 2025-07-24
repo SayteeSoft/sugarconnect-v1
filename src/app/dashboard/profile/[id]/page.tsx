@@ -3,7 +3,7 @@ import { UserProfile } from "@/lib/users";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { mockUsers } from "@/lib/mock-data";
-import { DashboardHeader } from "@/components/profile/dashboard-header";
+import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
 type ProfilePageProps = {
@@ -57,8 +57,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
-        <DashboardHeader />
-        <main className="flex-grow pt-24 pb-16">
+        <Header />
+        <main className="flex-grow pt-36 pb-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                  <ProfileForm initialProfile={profile} currentUser={currentUser} />
             </div>
@@ -67,4 +67,3 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     </div>
   );
 }
-
