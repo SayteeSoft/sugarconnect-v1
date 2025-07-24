@@ -145,20 +145,22 @@ const PaymentForm = ({ packages }: { packages: CreditPackage[] }) => {
                                         <Skeleton className="h-10 w-full" />
                                     </div>
                                 )}
-                                <div style={{ display: isPending ? 'none' : 'block' }}>
-                                    {isProcessing ? (
-                                        <Button disabled className="w-full">Processing...</Button>
-                                    ) : (
-                                        <PayPalButtons
-                                            key={selectedPackage.id}
-                                            style={{ layout: "vertical", label: "pay" }}
-                                            createOrder={handleCreateOrder}
-                                            onApprove={handleOnApprove}
-                                            onError={handleOnError}
-                                            disabled={!selectedPackage || isProcessing}
-                                        />
-                                    )}
-                                </div>
+                                {!isPending && (
+                                    <div>
+                                        {isProcessing ? (
+                                            <Button disabled className="w-full">Processing...</Button>
+                                        ) : (
+                                            <PayPalButtons
+                                                key={selectedPackage.id}
+                                                style={{ layout: "vertical", label: "pay" }}
+                                                createOrder={handleCreateOrder}
+                                                onApprove={handleOnApprove}
+                                                onError={handleOnError}
+                                                disabled={!selectedPackage || isProcessing}
+                                            />
+                                        )}
+                                    </div>
+                                )}
                             </>
                         ) : (
                                 <Button className="w-full" disabled>
