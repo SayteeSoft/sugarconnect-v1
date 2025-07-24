@@ -11,7 +11,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Adminitrator',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Admin',
   },
   {
     id: '2',
@@ -23,7 +23,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Art student with a love for adventure and exploring new cultures. I enjoy gallery openings, weekend getaways, and trying new restaurants. Seeking a mentor and partner to share lifes beautiful moments with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Darianna',
   },
   {
     id: '3',
@@ -35,7 +35,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Recent graduate starting my career in marketing. Im ambitious, fun-loving, and enjoy nights out as much as quiet nights in. Looking for a confident and established man to learn from.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Kateryna',
   },
   {
     id: '4',
@@ -47,7 +47,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Fashion designer with an eye for beauty and a heart for adventure. Im looking for a sophisticated gentleman to share elegant evenings and exciting journeys with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Sofia',
   },
   {
     id: '5',
@@ -59,7 +59,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'University student studying literature. Im a romantic at heart and love poetry, long walks, and deep conversations. Hoping to find a kind, generous man to create beautiful memories with.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Vanessa',
   },
   {
     id: '6',
@@ -71,7 +71,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Looking for a hot young girl...',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Mark',
   },
   {
     id: '7',
@@ -83,7 +83,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Musician and free spirit. My life is filled with melodies, travel, and laughter. Im searching for a patron and partner who appreciates the arts and has a zest for life.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Cecilia',
   },
   {
     id: '8',
@@ -95,7 +95,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Yoga instructor and nature lover. I find peace in the outdoors and joy in healthy living. Seeking a grounded, successful partner who values wellness and authenticity.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png',
+    image: 'https://placehold.co/400x400.png?text=Olivia',
   },
 ];
 
@@ -112,35 +112,35 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Darianna',
     role: 'Sugar Baby',
     quote: 'Art student with a love for adventure and exploring new cultures.',
-    image: 'https://placehold.co/100x100.png',
+    image: 'https://placehold.co/100x100.png?text=D',
     rating: 5,
   },
   {
     name: 'Kateryna',
     role: 'Sugar Baby',
     quote: 'Recent graduate starting my career in marketing.',
-    image: 'https://placehold.co/100x100.png',
+    image: 'https://placehold.co/100x100.png?text=K',
     rating: 5,
   },
   {
     name: 'Mark',
     role: 'Sugar Daddy',
     quote: 'Investor and lover of the great outdoors.',
-    image: 'https://placehold.co/100x100.png',
+    image: 'https://placehold.co/100x100.png?text=M',
     rating: 5,
   },
     {
     name: 'Sofia',
     role: 'Sugar Baby',
     quote: 'A perfect platform to meet genuine people.',
-    image: 'https://placehold.co/100x100.png',
+    image: 'https://placehold.co/100x100.png?text=S',
     rating: 5,
   },
   {
     name: 'John',
     role: 'Sugar Daddy',
     quote: 'Found exactly what I was looking for. Highly recommend.',
-    image: 'https://placehold.co/100x100.png',
+    image: 'https://placehold.co/100x100.png?text=J',
     rating: 5,
   },
 ];
