@@ -16,22 +16,26 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const navLinkClasses = "transition-colors hover:text-primary text-foreground text-base";
   const mobileNavLinkClasses = "block py-2 text-lg transition-colors hover:text-primary";
+  const [profileUrl, setProfileUrl] = useState('/login');
 
   useEffect(() => {
     setMounted(true);
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
         try {
-            setUser(JSON.parse(storedUser));
+            const parsedUser: UserProfile = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setProfileUrl(`/dashboard/profile/${parsedUser.id}`);
         } catch (e) {
             localStorage.removeItem("user");
             setUser(null);
+            setProfileUrl('/login');
         }
     }
   }, []);
 
   const navLinks = [
-    { href: "/dashboard/profile", label: "Profile" },
+    { href: profileUrl, label: "Profile" },
     { href: "/messages", label: "Messages" },
     { href: "/matches", label: "Matches" },
     { href: "/search", label: "Search" },
