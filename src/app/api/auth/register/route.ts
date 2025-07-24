@@ -12,8 +12,8 @@ const getBlobStore = (): Store => {
     return getStore({
         name: 'users',
         consistency: 'strong',
-        siteID: process.env.NETLIFY ? undefined : 'studio-mock-site-id',
-        token: process.env.NETLIFY ? undefined : 'studio-mock-token',
+        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
     });
 };
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
             role,
             age: 0,
             location: '',
-            sex: 'Other',
+            sex: 'Female',
             bio: '',
             interests: [],
             image: '',
