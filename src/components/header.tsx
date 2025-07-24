@@ -31,7 +31,7 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { href: "/dashboard", label: "Profile" },
+    { href: "/dashboard/profile", label: "Profile" },
     { href: "/messages", label: "Messages" },
     { href: "/matches", label: "Matches" },
     { href: "/search", label: "Search" },
