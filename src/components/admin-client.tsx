@@ -132,8 +132,10 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
+                        <Button asChild variant="ghost" size="icon">
+                          <Link href={`/dashboard/profile/${user.id}`}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
