@@ -54,7 +54,7 @@ export function Header() {
           <Link href="/purchase-credits">
             <span>Buy Credits</span>
             <div className="ml-2 bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">
-              10
+              {user.credits ?? 10}
             </div>
           </Link>
         </Button>

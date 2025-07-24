@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getStore, type Store } from '@netlify/blobs';
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
             bio: '',
             interests: [],
             image: '',
+            credits: role === 'Sugar Daddy' ? 10 : undefined,
         };
 
         await store.setJSON(email, newUser);

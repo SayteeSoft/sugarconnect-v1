@@ -25,4 +25,5 @@ export type UserProfile = {
   tattoos?: string;
   relationshipStatus?: string;
   children?: string;
+  credits?: number;
 };
