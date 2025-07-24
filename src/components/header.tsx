@@ -16,7 +16,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const navLinkClasses = "transition-colors hover:text-primary text-foreground text-base";
   const mobileNavLinkClasses = "block py-2 text-lg transition-colors hover:text-primary";
-  const [profileUrl, setProfileUrl] = useState('/login');
+  const [profileUrl, setProfileUrl] = useState('/dashboard/profile');
 
   useEffect(() => {
     setMounted(true);
@@ -25,11 +25,13 @@ export function Header() {
         try {
             const parsedUser: UserProfile = JSON.parse(storedUser);
             setUser(parsedUser);
-            setProfileUrl(`/dashboard/profile/${parsedUser.id}`);
+            if (parsedUser && parsedUser.id) {
+                setProfileUrl(`/dashboard/profile/${parsedUser.id}`);
+            }
         } catch (e) {
             localStorage.removeItem("user");
             setUser(null);
-            setProfileUrl('/login');
+            setProfileUrl('/dashboard/profile');
         }
     }
   }, []);
