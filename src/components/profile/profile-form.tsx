@@ -22,10 +22,14 @@ type ProfileFormProps = {
 };
 
 const FormSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
-    <div className="space-y-4">
-        <h2 className="text-2xl font-headline font-bold text-primary mb-4">{title}</h2>
-        {children}
-    </div>
+    <Card>
+        <CardHeader>
+            <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            {children}
+        </CardContent>
+    </Card>
 );
 
 
@@ -136,59 +140,67 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left Column */}
-            <div className="md:col-span-1 space-y-8 self-start sticky top-28">
-                <div className="space-y-6">
-                    <div className="relative group">
-                        <Image
-                            src={imagePreview || 'https://placehold.co/500x500.png'}
-                            alt={profile.name}
-                            width={500}
-                            height={500}
-                            className="rounded-lg object-cover aspect-square"
-                            data-ai-hint="profile photo"
-                            key={imagePreview}
-                        />
-                        {isEditMode && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
-                                    <Camera className="mr-2 h-4 w-4" /> Change Photo
-                                </Button>
-                                <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+        <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Left Column */}
+                <div className="md:col-span-1 space-y-8">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="relative group">
+                                <Image
+                                    src={imagePreview || 'https://placehold.co/500x500.png'}
+                                    alt={profile.name}
+                                    width={500}
+                                    height={500}
+                                    className="rounded-lg object-cover aspect-square"
+                                    data-ai-hint="profile photo"
+                                    key={imagePreview}
+                                />
+                                {isEditMode && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
+                                            <Camera className="mr-2 h-4 w-4" /> Change Photo
+                                        </Button>
+                                        <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </CardContent>
+                    </Card>
 
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="name">Name</Label>
-                            <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                        </div>
-                        <div>
-                            <Label htmlFor="role">Role</Label>
-                                <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
-                                    <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
-                                    <SelectItem value="Admin">Admin</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                            <div>
-                            <Label htmlFor="location">Location</Label>
-                            <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
-                        </div>
-                            <div>
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" name="email" type="email" value={profile.email} disabled />
-                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
-                        </div>
-                    </div>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="name">Name</Label>
+                                    <Input id="name" name="name" value={profile.name} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
+                                </div>
+                                <div>
+                                    <Label htmlFor="role">Role</Label>
+                                     <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
+                                            <SelectItem value="Sugar Daddy">Sugar Daddy</SelectItem>
+                                            <SelectItem value="Admin">Admin</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                 <div>
+                                    <Label htmlFor="location">Location</Label>
+                                    <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
+                                </div>
+                                 <div>
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input id="email" name="email" type="email" value={profile.email} disabled />
+                                    {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                     
                     <div className="mt-6 flex flex-col gap-2">
-                            {isEditMode ? (
+                         {isEditMode ? (
                             <>
                                 <Button onClick={handleSave} disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -199,90 +211,90 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         ) : isOwnProfile ? (
                             <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
                         ) : (
-                                <Button>Message {profile.name}</Button>
+                             <Button>Message {profile.name}</Button>
                         )}
                     </div>
                 </div>
-            </div>
 
-            {/* Right Column */}
-            <div className="md:col-span-2 space-y-8">
-                <FormSection title={`About ${profile.name}`}>
-                    {isEditMode ? (
-                        <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
-                    ) : (
-                        <p className="text-muted-foreground whitespace-pre-wrap">{profile.bio || 'No bio provided.'}</p>
-                    )}
-                </FormSection>
-                
-                <FormSection title="Wants & Interests">
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Wants</Label>
-                            <MultiSelect
-                                options={wantsOptions}
-                                selected={profile.wants || []}
-                                onChange={(selected) => handleMultiSelectChange('wants', selected)}
-                                disabled={!isEditMode || isLoading}
-                                placeholder="Select what you're looking for..."
-                            />
-                        </div>
+                {/* Right Column */}
+                <div className="md:col-span-2 space-y-8">
+                    <FormSection title={`About ${profile.name}`}>
+                        {isEditMode ? (
+                            <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
+                        ) : (
+                            <p className="text-muted-foreground whitespace-pre-wrap">{profile.bio || 'No bio provided.'}</p>
+                        )}
+                    </FormSection>
+                    
+                    <FormSection title="Wants & Interests">
+                        <div className="space-y-4">
                             <div>
-                            <Label>Interests</Label>
+                                <Label>Wants</Label>
                                 <MultiSelect
-                                options={interestsOptions}
-                                selected={profile.interests}
-                                onChange={(selected) => handleMultiSelectChange('interests', selected)}
-                                disabled={!isEditMode || isLoading}
-                                placeholder="Select your interests..."
-                            />
-                        </div>
-                    </div>
-                </FormSection>
-
-                <FormSection title="Gallery">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {galleryPreviews.map((img, i) => (
-                            <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
-                        ))}
-                            {isEditMode && (
-                            <div 
-                                className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
-                                onClick={() => galleryInputRef.current?.click()}
-                            >
-                                <div className="text-center text-muted-foreground">
-                                    <PlusCircle className="mx-auto h-8 w-8" />
-                                    <p>Add Photo</p>
-                                </div>
-                                <input 
-                                    type="file" 
-                                    ref={galleryInputRef} 
-                                    onChange={handleGalleryImageChange} 
-                                    accept="image/*" 
-                                    multiple 
-                                    className="hidden" 
+                                    options={wantsOptions}
+                                    selected={profile.wants || []}
+                                    onChange={(selected) => handleMultiSelectChange('wants', selected)}
+                                    disabled={!isEditMode || isLoading}
+                                    placeholder="Select what you're looking for..."
                                 />
                             </div>
-                        )}
-                    </div>
-                </FormSection>
+                             <div>
+                                <Label>Interests</Label>
+                                 <MultiSelect
+                                    options={interestsOptions}
+                                    selected={profile.interests}
+                                    onChange={(selected) => handleMultiSelectChange('interests', selected)}
+                                    disabled={!isEditMode || isLoading}
+                                    placeholder="Select your interests..."
+                                />
+                            </div>
+                        </div>
+                    </FormSection>
 
-                <FormSection title="Attributes">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                        <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
-                        <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'0"`, `5'1"`, `5'2"`, `5'3"`, `5'4"`, `5'5"`, `5'6"`, `5'7"`, `5'8"`, `5'9"`, `5'10"`, `5'11"`, `6'0"+`]} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Body Type" value={profile.bodyType || 'Slim'} name="bodyType" options={bodyTypeOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Ethnicity" value={profile.ethnicity || 'Caucasian'} name="ethnicity" options={ethnicityOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Hair Color" value={profile.hairColor || 'Black'} name="hairColor" options={hairColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Eye Color" value={profile.eyeColor || 'Brown'} name="eyeColor" options={eyeColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Smoker" value={profile.smoker || 'No'} name="smoker" options={smokerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Drinker" value={profile.drinker || 'Socially'} name="drinker" options={drinkerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Piercings" value={profile.piercings || 'No'} name="piercings" options={piercingsOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Tattoos" value={profile.tattoos || 'No'} name="tattoos" options={tattoosOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Relationship Status" value={profile.relationshipStatus || 'Single'} name="relationshipStatus" options={relationshipStatusOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                        <AttributeSelect label="Children" value={profile.children || 'No'} name="children" options={childrenOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
-                    </div>
-                </FormSection>
+                    <FormSection title="Gallery">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {galleryPreviews.map((img, i) => (
+                                <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
+                            ))}
+                             {isEditMode && (
+                                <div 
+                                    className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
+                                    onClick={() => galleryInputRef.current?.click()}
+                                >
+                                    <div className="text-center text-muted-foreground">
+                                        <PlusCircle className="mx-auto h-8 w-8" />
+                                        <p>Add Photo</p>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        ref={galleryInputRef} 
+                                        onChange={handleGalleryImageChange} 
+                                        accept="image/*" 
+                                        multiple 
+                                        className="hidden" 
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </FormSection>
+
+                    <FormSection title="Attributes">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                            <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
+                            <AttributeSelect label="Height" value={profile.height || `5'8"`} name="height" options={[`5'0"`, `5'1"`, `5'2"`, `5'3"`, `5'4"`, `5'5"`, `5'6"`, `5'7"`, `5'8"`, `5'9"`, `5'10"`, `5'11"`, `6'0"+`]} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Body Type" value={profile.bodyType || 'Slim'} name="bodyType" options={bodyTypeOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Ethnicity" value={profile.ethnicity || 'Caucasian'} name="ethnicity" options={ethnicityOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Hair Color" value={profile.hairColor || 'Black'} name="hairColor" options={hairColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Eye Color" value={profile.eyeColor || 'Brown'} name="eyeColor" options={eyeColorOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Smoker" value={profile.smoker || 'No'} name="smoker" options={smokerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Drinker" value={profile.drinker || 'Socially'} name="drinker" options={drinkerOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Piercings" value={profile.piercings || 'No'} name="piercings" options={piercingsOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Tattoos" value={profile.tattoos || 'No'} name="tattoos" options={tattoosOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Relationship Status" value={profile.relationshipStatus || 'Single'} name="relationshipStatus" options={relationshipStatusOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                            <AttributeSelect label="Children" value={profile.children || 'No'} name="children" options={childrenOptions} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading}/>
+                        </div>
+                    </FormSection>
+                </div>
             </div>
         </div>
     );
