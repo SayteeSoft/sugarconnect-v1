@@ -50,11 +50,21 @@ export async function PUT(
     const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
     try {
-        const result = await findUserByKey(userStore, userId);
-        if (!result) {
+        const email = formData.get('email') as string;
+        if (!email) {
+            return NextResponse.json({ message: 'Email is required to find user' }, { status: 400 });
+        }
+
+        let existingUser: UserProfile;
+        try {
+            existingUser = await userStore.get(email, { type: 'json' });
+        } catch (error) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
-        const { key: userKey, user: existingUser } = result;
+        
+        if (existingUser.id !== userId) {
+             return NextResponse.json({ message: 'User ID mismatch' }, { status: 400 });
+        }
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
@@ -63,7 +73,7 @@ export async function PUT(
                     updatedData[key as keyof UserProfile] = value.split(',').filter(Boolean) as any;
                  } else if (key === 'age' && typeof value === 'string') {
                     updatedData[key] = Number(value);
-                } else if (typeof value === 'string') {
+                } else if (typeof value === 'string' && key !== 'email') { // Do not update email
                     updatedData[key as keyof UserProfile] = value as any;
                 }
             }
@@ -80,7 +90,7 @@ export async function PUT(
         }
 
         const galleryImageFiles = formData.getAll('galleryImages') as File[];
-        if (galleryImageFiles && galleryImageFiles.length > 0) {
+        if (galleryImageFiles && galleryImageFiles.length > 0 && galleryImageFiles.some(f => f.size > 0)) {
             const galleryUrls = existingUser.gallery || [];
             for (const file of galleryImageFiles) {
                  if (file.size > 0) {
@@ -95,7 +105,7 @@ export async function PUT(
 
 
         const updatedUser = { ...existingUser, ...updatedData };
-        await userStore.setJSON(userKey, updatedUser);
+        await userStore.setJSON(email, updatedUser);
         
         const { password, ...userToReturn } = updatedUser;
         return NextResponse.json(userToReturn);
