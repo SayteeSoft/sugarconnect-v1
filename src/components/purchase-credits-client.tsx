@@ -139,13 +139,12 @@ const PaymentForm = ({ packages }: { packages: CreditPackage[] }) => {
                     <div className="mt-auto pt-6">
                         {paymentMethod === 'paypal' ? (
                             <>
-                                {isPending && (
+                                {isPending ? (
                                     <div className="space-y-2">
                                         <Skeleton className="h-10 w-full" />
                                         <Skeleton className="h-10 w-full" />
                                     </div>
-                                )}
-                                {!isPending && (
+                                ) : (
                                     <div>
                                         {isProcessing ? (
                                             <Button disabled className="w-full">Processing...</Button>
