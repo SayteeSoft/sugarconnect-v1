@@ -113,7 +113,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                     <TableCell>
                       <Avatar>
                         <AvatarImage src={user.image || `https://placehold.co/100x100.png`} alt={user.name} data-ai-hint="avatar person" />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
                       </Avatar>
                     </TableCell>
                     <TableCell className="font-medium">
