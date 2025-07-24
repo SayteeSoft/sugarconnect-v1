@@ -112,14 +112,14 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Darianna',
     role: 'Sugar Baby',
     quote: 'Art student with a love for adventure and exploring new cultures.',
-    image: 'https://placehold.co/100x100.png?text=D',
+    image: '/user-profiles/Darianna_Gemini_Generated_Image(small)-001.jpg',
     rating: 5,
   },
   {
     name: 'Kateryna',
     role: 'Sugar Baby',
     quote: 'Recent graduate starting my career in marketing.',
-    image: 'https://placehold.co/100x100.png?text=K',
+    image: '/user-profiles/Kateryna_Gemini_Generated_Image(small)-001.jpg',
     rating: 5,
   },
   {
@@ -133,7 +133,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Sofia',
     role: 'Sugar Baby',
     quote: 'A perfect platform to meet genuine people.',
-    image: 'https://placehold.co/100x100.png?text=S',
+    image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
     rating: 5,
   },
   {
