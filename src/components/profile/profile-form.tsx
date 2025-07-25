@@ -550,11 +550,17 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             </div>
 
              <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
-                <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center">
-                    <DialogHeader className="sr-only">
-                        <RadixDialogTitle>Image Gallery</RadixDialogTitle>
-                    </DialogHeader>
-
+                <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center" showCloseButton={false}>
+                    <DialogClose asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-4 top-4 z-10 text-white bg-black/20 hover:bg-white/20 hover:text-white"
+                        >
+                            <X className="h-8 w-8" />
+                            <span className="sr-only">Close</span>
+                        </Button>
+                    </DialogClose>
                     {allImages.length > 0 && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
@@ -570,7 +576,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 hover:text-white"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white"
                         onClick={prevImage}
                         disabled={allImages.length <= 1}
                     >
@@ -580,7 +586,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 hover:text-white"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white"
                         onClick={nextImage}
                         disabled={allImages.length <= 1}
                     >
@@ -613,10 +619,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-    
-
-    
-
-    
-
