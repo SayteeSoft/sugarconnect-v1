@@ -176,7 +176,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                             <div>
                                 <Label htmlFor="role">Role</Label>
-                                    <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading}>
+                                    <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading || currentUser.role !== 'Admin'}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
@@ -218,7 +218,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
                         <CardHeader><CardTitle>{`About ${profile.name}`}</CardTitle></CardHeader>
-                        <CardContent className="p-6">
+                        <CardContent>
                             {isEditMode ? (
                                 <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
                             ) : (
@@ -323,3 +323,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
