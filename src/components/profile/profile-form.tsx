@@ -579,7 +579,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
              <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
                 <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center" showCloseButton={false}>
-                    <DialogHeader className="sr-only">
+                     <DialogHeader className="sr-only">
                         <DialogTitle>Image Gallery</DialogTitle>
                     </DialogHeader>
                     <DialogClose asChild>
