@@ -10,14 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { NotificationToast } from '../ui/notification-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle as RadixDialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle as RadixDialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
@@ -99,7 +99,26 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const allImages = [imagePreview, ...galleryPreviews].filter((img): img is string => !!img);
+
+    const openGallery = (index: number) => {
+        setCurrentImageIndex(index);
+        setIsGalleryOpen(true);
+    };
+
+    const closeGallery = () => setIsGalleryOpen(false);
+
+    const nextImage = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % allImages.length);
+    };
+
+    const prevImage = () => {
+        setCurrentImageIndex((prevIndex) => (prevIndex - 1 + allImages.length) % allImages.length);
+    };
 
     const isOwnProfile = initialProfile.id === currentUser.id;
     const isVerified = profile.verifiedUntil && new Date(profile.verifiedUntil) > new Date();
@@ -300,7 +319,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Card className="shadow-xl">
                         <CardContent className="p-6">
                             <div className="relative group">
-                                <button className="w-full" onClick={() => imagePreview && setSelectedImage(imagePreview)}>
+                                <button className="w-full" onClick={() => openGallery(0)}>
                                     <Image
                                         key={imagePreview}
                                         src={imagePreview || 'https://placehold.co/500x500.png'}
@@ -418,7 +437,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
-                                    <button key={i} className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => setSelectedImage(img)}>
+                                    <button key={i} className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => openGallery(i + 1)}>
                                         <Image src={img} alt={`Gallery image ${i+1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="gallery photo" />
                                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </button>
@@ -468,14 +487,59 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 </div>
             </div>
 
-            <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
-                <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
-                    <DialogHeader>
-                        <RadixDialogTitle className="sr-only">Image Viewer</RadixDialogTitle>
+             <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
+                <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center">
+                    <DialogHeader className="sr-only">
+                        <RadixDialogTitle>Image Gallery</RadixDialogTitle>
                     </DialogHeader>
-                    {selectedImage && (
-                        <Image src={selectedImage} alt="Gallery image" width={1024} height={1024} className="rounded-lg object-contain" />
+
+                    {allImages.length > 0 && (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            <Image
+                                key={allImages[currentImageIndex]}
+                                src={allImages[currentImageIndex]}
+                                alt={`Gallery image ${currentImageIndex + 1}`}
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
                     )}
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-4 right-4 text-white hover:bg-white/20 hover:text-white"
+                        onClick={closeGallery}
+                    >
+                        <X className="h-8 w-8" />
+                    </Button>
+                    
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 hover:text-white"
+                        onClick={prevImage}
+                        disabled={allImages.length <= 1}
+                    >
+                        <ChevronLeft className="h-10 w-10" />
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 hover:text-white"
+                        onClick={nextImage}
+                        disabled={allImages.length <= 1}
+                    >
+                        <ChevronRight className="h-10 w-10" />
+                    </Button>
+                    
+                    {allImages.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1 rounded-full">
+                            {currentImageIndex + 1} / {allImages.length}
+                        </div>
+                    )}
+
                 </DialogContent>
             </Dialog>
         </div>
@@ -497,6 +561,8 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
 
     
 
