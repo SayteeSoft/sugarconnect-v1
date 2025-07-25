@@ -7,14 +7,7 @@ import { Header } from "@/components/header";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
-    const userStore = getStore( 
-      process.env.NETLIFY ? 'users' : { 
-        name: 'users', 
-        consistency: 'strong', 
-        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
-        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
-      }
-    );
+    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
     const { blobs } = await userStore.list();
     for (const blob of blobs) {
       try {
