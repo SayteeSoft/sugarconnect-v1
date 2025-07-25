@@ -220,16 +220,16 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         {isDeleting ? 'Deleting...' : 'Delete Account'}
                     </Button>
                 </div>
-                 <div className="text-center pt-8">
-                    <Button size="lg" asChild>
-                        <Link href="/dashboard">
-                            Back to Dashboard
-                        </Link>
-                    </Button>
-                </div>
             </div>
         </CardContent>
       </Card>
+      <div className="text-center mt-8">
+          <Button size="lg" asChild>
+              <Link href="/dashboard">
+                  Back to Dashboard
+              </Link>
+          </Button>
+      </div>
     </div>
   );
 }
