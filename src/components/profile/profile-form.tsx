@@ -326,7 +326,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 throw new Error(errorData.message || 'Failed to save profile.');
             }
             
-            const updatedProfile = await response.json();
+            const updatedProfile: UserProfile = await response.json();
+
+            // Force image refresh with a timestamp
+            if (updatedProfile.image && (imageFile || (updatedProfile.image !== profile.image))) {
+                updatedProfile.image = `${updatedProfile.image.split('?')[0]}?t=${new Date().getTime()}`;
+            }
 
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
@@ -472,9 +477,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 </Button>
                                 <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
                             </>
-                        ) : isOwnProfile && currentUser.role !== 'Admin' ? (
-                            <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
-                        ) : currentUser.role === 'Admin' ? (
+                        ) : isOwnProfile ? (
                             <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
                         ) : (
                             <Button>Message {profile.name}</Button>
@@ -687,3 +690,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
     
 
+
+
+    
