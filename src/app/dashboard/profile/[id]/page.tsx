@@ -4,45 +4,52 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
+import { mockUsers } from "@/lib/mock-data";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
     
     let userStore: Store;
-    if (process.env.NETLIFY) {
-        userStore = getStore('users');
-    } else {
-        userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-    }
-
-    const { blobs } = await userStore.list();
-    for (const blob of blobs) {
-      try {
-        const user = await userStore.get(blob.key, { type: 'json' });
-        if (user.id === userId) {
-          const { password, ...userToReturn } = user;
-          return userToReturn as UserProfile;
-        }
-      } catch (e) {
-        // Silently ignore blobs that are not valid JSON or don't match the user profile structure.
+    try {
+      if (process.env.NETLIFY) {
+          userStore = getStore('users');
+      } else {
+          userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
       }
+
+      const { blobs } = await userStore.list();
+      for (const blob of blobs) {
+        try {
+          const user = await userStore.get(blob.key, { type: 'json' });
+          if (user.id === userId) {
+            const { password, ...userToReturn } = user;
+            return userToReturn as UserProfile;
+          }
+        } catch (e) {
+          // Silently ignore blobs that are not valid JSON or don't match the user profile structure.
+        }
+      }
+    } catch (e) {
+      console.error("Error connecting to blob store in findUserById:", e);
     }
     return null;
 }
 
 const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
+  let user: UserProfile | null | undefined = null;
   try {
-    const user = await findUserById(id);
-    if (user) return user;
-    
-    // Fallback to mock data if user not found in blob store
-    const { mockUsers } = await import('@/lib/mock-data');
-    return mockUsers.find(u => u.id === id);
+    user = await findUserById(id);
   } catch (e) {
-    console.error(`Error fetching profile by id ${id}, falling back to mock:`, e);
-    const { mockUsers } = await import('@/lib/mock-data');
-    return mockUsers.find(u => u.id === id);
+    console.error(`Error fetching profile by id ${id} from primary source:`, e);
   }
+
+  if (user) {
+    return user;
+  }
+  
+  // Fallback to mock data if user not found in blob store or if there was an error
+  console.warn(`User with id ${id} not found in primary store, falling back to mock data.`);
+  return mockUsers.find(u => u.id === id);
 };
 
 
