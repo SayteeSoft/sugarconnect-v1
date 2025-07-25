@@ -264,7 +264,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const VerificationBadge = () => {
         if (isVerified) {
             return (
-                <Badge className="absolute bottom-4 left-4 bg-blue-500 hover:bg-blue-600 text-white">
+                <Badge className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white">
                     <ShieldCheck className="mr-1 h-3 w-3" />
                     Verified
                 </Badge>
@@ -272,7 +272,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
         if (isOwnProfile) {
             return (
-                <Button asChild className="absolute bottom-4 left-4" size="sm">
+                <Button asChild className="absolute top-4 left-4" size="sm">
                     <Link href="/get-verified">
                         Unverified
                     </Link>
@@ -280,7 +280,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             );
         }
         return (
-             <Badge variant="secondary" className="absolute bottom-4 left-4">
+             <Badge variant="secondary" className="absolute top-4 left-4">
                 Unverified
             </Badge>
         );
