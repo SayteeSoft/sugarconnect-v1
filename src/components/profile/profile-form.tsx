@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { UserProfile } from '@/lib/users';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle as RadixDialogTitle, D
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
@@ -83,6 +84,35 @@ const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onActio
     );
 };
 
+const completionSections = {
+    about: ['bio'],
+    wantsAndInterests: ['wants', 'interests'],
+    gallery: ['gallery'],
+    attributes: ['height', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'smoker', 'drinker', 'piercings', 'tattoos', 'relationshipStatus', 'children'],
+    main: ['image', 'name', 'location']
+};
+
+const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 'all') => {
+    const fieldsToCheck = sections === 'all'
+        ? Object.values(completionSections).flat()
+        : sections.flatMap(sec => completionSections[sec as keyof typeof completionSections] || []);
+
+    let completedCount = 0;
+    
+    fieldsToCheck.forEach(field => {
+        const value = profile[field as keyof UserProfile];
+        if (Array.isArray(value)) {
+            if (value.length > 0) completedCount++;
+        } else if (typeof value === 'string') {
+            if (value.trim() !== '' && !value.includes('placehold.co')) completedCount++;
+        } else if (value) {
+            completedCount++;
+        }
+    });
+
+    return fieldsToCheck.length > 0 ? Math.round((completedCount / fieldsToCheck.length) * 100) : 0;
+};
+
 
 export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const router = useRouter();
@@ -122,6 +152,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const isOwnProfile = initialProfile.id === currentUser.id;
     const isVerified = profile.verifiedUntil && new Date(profile.verifiedUntil) > new Date();
+    
+    const completionPercentages = useMemo(() => ({
+        about: calculateCompletion(profile, ['about']),
+        wantsAndInterests: calculateCompletion(profile, ['wantsAndInterests']),
+        gallery: calculateCompletion(profile, ['gallery']),
+        attributes: calculateCompletion(profile, ['attributes']),
+        total: calculateCompletion(profile, 'all'),
+    }), [profile]);
 
     useEffect(() => {
         if (!isOwnProfile) {
@@ -339,6 +377,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                         <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
                                     </div>
                                 )}
+                                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
+                                    <div className="flex items-center gap-2">
+                                        <Progress value={completionPercentages.total} className="h-2 w-full" />
+                                        <span className="text-white text-xs font-bold">{completionPercentages.total}%</span>
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -393,8 +437,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 {/* Right Column */}
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
-                        <CardHeader className="flex flex-row items-start justify-between">
-                            <CardTitle>{`About ${profile.name}`}</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div className='flex items-center gap-2'>
+                                <CardTitle>{`About ${profile.name}`}</CardTitle>
+                                <Badge variant="outline">{completionPercentages.about}%</Badge>
+                            </div>
                             {!isOwnProfile && <ProfileActionButtons onAction={handleAction} onCuteMessage={handleSendCuteMessage} viewerRole={currentUser.role} /> }
                         </CardHeader>
                         <CardContent>
@@ -407,7 +454,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     </Card>
                     
                     <Card className="shadow-xl">
-                        <CardHeader><CardTitle>Wants & Interests</CardTitle></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                             <div className='flex items-center gap-2'>
+                                <CardTitle>Wants & Interests</CardTitle>
+                                <Badge variant="outline">{completionPercentages.wantsAndInterests}%</Badge>
+                            </div>
+                        </CardHeader>
                         <CardContent className="p-6 space-y-4">
                             <div>
                                 <Label>Wants</Label>
@@ -433,7 +485,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     </Card>
 
                     <Card className="shadow-xl">
-                        <CardHeader><CardTitle>Gallery</CardTitle></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                             <div className='flex items-center gap-2'>
+                                <CardTitle>Gallery</CardTitle>
+                                <Badge variant="outline">{completionPercentages.gallery}%</Badge>
+                            </div>
+                        </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
@@ -466,7 +523,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     </Card>
 
                      <Card className="shadow-xl">
-                        <CardHeader><CardTitle>Attributes</CardTitle></CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                           <div className='flex items-center gap-2'>
+                                <CardTitle>Attributes</CardTitle>
+                                <Badge variant="outline">{completionPercentages.attributes}%</Badge>
+                            </div>
+                        </CardHeader>
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                                 <AttributeSelect label="Age" value={(profile.age || 18).toString()} name="age" options={Array.from({length: 53}, (_, i) => (i + 18).toString())} isEditMode={isEditMode} onChange={handleSelectChange} disabled={isLoading} />
@@ -557,3 +619,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
     
+
