@@ -20,12 +20,26 @@ async function findUserByKey(store: Store, userId: string): Promise<{key: string
     return null;
 }
 
+const getBlobStore = (name: 'users' | 'images'): Store => {
+    if (process.env.NETLIFY) {
+        return getStore(name);
+    }
+    // For local development, use a consistent setup
+    return getStore({
+        name,
+        consistency: 'strong',
+        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
+    });
+};
+
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
-  const store = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  const store = getBlobStore('users');
 
   try {
     const result = await findUserByKey(store, userId);
@@ -47,8 +61,8 @@ export async function PUT(
     const { userId } = params;
     const formData = await request.formData();
     
-    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-    const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const userStore = getBlobStore('users');
+    const imageStore = getBlobStore('images');
 
     try {
         const userEmail = formData.get('email') as string;

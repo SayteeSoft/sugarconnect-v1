@@ -13,8 +13,8 @@ const getBlobStore = (): Store => {
   return getStore({
     name: 'users',
     consistency: 'strong',
-    siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
-    token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
+    siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+    token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
   });
 };
 
