@@ -264,7 +264,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const VerificationBadge = () => {
         if (isVerified) {
             return (
-                <Badge className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white">
+                <Badge className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white z-10">
                     <ShieldCheck className="mr-1 h-3 w-3" />
                     Verified
                 </Badge>
@@ -272,7 +272,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
         if (isOwnProfile) {
             return (
-                <Button asChild className="absolute top-4 left-4" size="sm">
+                <Button asChild className="absolute top-4 left-4 z-10" size="sm">
                     <Link href="/get-verified">
                         Unverified
                     </Link>
@@ -280,7 +280,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             );
         }
         return (
-             <Badge variant="secondary" className="absolute top-4 left-4">
+             <Badge variant="secondary" className="absolute top-4 left-4 z-10">
                 Unverified
             </Badge>
         );
@@ -300,15 +300,17 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Card className="shadow-xl">
                         <CardContent className="p-6">
                             <div className="relative group">
-                                <Image
-                                    key={imagePreview}
-                                    src={imagePreview || 'https://placehold.co/500x500.png'}
-                                    alt={profile.name}
-                                    width={500}
-                                    height={500}
-                                    className="rounded-lg object-cover aspect-square"
-                                    data-ai-hint="profile photo"
-                                />
+                                <button className="w-full" onClick={() => imagePreview && setSelectedImage(imagePreview)}>
+                                    <Image
+                                        key={imagePreview}
+                                        src={imagePreview || 'https://placehold.co/500x500.png'}
+                                        alt={profile.name}
+                                        width={500}
+                                        height={500}
+                                        className="rounded-lg object-cover aspect-square"
+                                        data-ai-hint="profile photo"
+                                    />
+                                </button>
                                  <VerificationBadge />
                                 {isEditMode && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
@@ -492,3 +494,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
