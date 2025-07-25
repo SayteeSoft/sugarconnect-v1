@@ -56,6 +56,12 @@ export default function Home() {
   const [featuredProfiles, setFeaturedProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [offsetY, setOffsetY] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    setIsLoggedIn(!!user);
+  }, []);
 
   const handleScroll = () => {
     setOffsetY(window.scrollY * 0.4);
@@ -126,7 +132,7 @@ export default function Home() {
               ) : featuredProfiles.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {featuredProfiles.map((profile) => (
-                    <FeaturedProfileCard key={profile.id} user={profile} />
+                    <FeaturedProfileCard key={profile.id} user={profile} isLoggedIn={isLoggedIn} />
                   ))}
                 </div>
               ) : (

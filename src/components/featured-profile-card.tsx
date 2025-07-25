@@ -3,18 +3,23 @@ import Image from "next/image";
 import { UserProfile } from "@/lib/users";
 import { Card } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type FeaturedProfileCardProps = {
   user: UserProfile;
+  isLoggedIn: boolean;
 };
 
-export function FeaturedProfileCard({ user }: FeaturedProfileCardProps) {
+export function FeaturedProfileCard({ user, isLoggedIn }: FeaturedProfileCardProps) {
   const isOnline = Math.random() > 0.5; // Simulate online status
 
   return (
     <Link href={`/dashboard/profile/${user.id}`}>
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
-        <div className="relative aspect-square">
+        <div className={cn(
+            "relative aspect-square",
+            !isLoggedIn && "after:absolute after:inset-0 after:bg-white/50 dark:after:bg-black/50 after:backdrop-blur-sm"
+        )}>
           <Image
             src={user.image ? user.image : 'https://placehold.co/400x400.png'}
             alt={user.name}
