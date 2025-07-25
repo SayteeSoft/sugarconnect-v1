@@ -504,16 +504,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             />
                         </div>
                     )}
-
-                    <DialogClose asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-4 right-4 text-white hover:bg-white/20 hover:text-white"
-                        >
-                            <X className="h-8 w-8" />
-                        </Button>
-                    </DialogClose>
                     
                     <Button
                         variant="ghost"
@@ -568,3 +558,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
     
+
