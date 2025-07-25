@@ -17,7 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { NotificationToast } from '../ui/notification-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle as RadixDialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
@@ -572,7 +572,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
              <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
                 <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center" showCloseButton={false}>
                     <DialogHeader className="sr-only">
-                        <RadixDialogTitle>Image Gallery</RadixDialogTitle>
+                        <DialogTitle>Image Gallery</DialogTitle>
                     </DialogHeader>
                     <DialogClose asChild>
                         <Button
