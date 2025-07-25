@@ -283,7 +283,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const VerificationBadge = () => {
         if (isVerified) {
             return (
-                <Badge className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white z-10">
+                <Badge className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white z-10 text-xs px-2 py-1 h-auto">
                     <ShieldCheck className="mr-1 h-3 w-3" />
                     Verified
                 </Badge>
@@ -291,7 +291,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
         if (isOwnProfile) {
             return (
-                <Button asChild className="absolute top-4 left-4 z-10" size="sm">
+                <Button asChild className="absolute top-4 left-4 z-10 h-auto px-2 py-1 text-xs" size="sm">
                     <Link href="/get-verified">
                         Unverified
                     </Link>
@@ -299,7 +299,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             );
         }
         return (
-             <Badge variant="secondary" className="absolute top-4 left-4 z-10">
+             <Badge variant="secondary" className="absolute top-4 left-4 z-10 text-xs px-2 py-1 h-auto">
                 Unverified
             </Badge>
         );
@@ -530,7 +530,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             {currentImageIndex + 1} / {allImages.length}
                         </div>
                     )}
-
                 </DialogContent>
             </Dialog>
         </div>
@@ -558,4 +557,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
     
-
