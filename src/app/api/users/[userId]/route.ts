@@ -3,6 +3,7 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 async function findUserByKey(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
     const { blobs } = await store.list();
@@ -69,7 +70,7 @@ export async function PUT(
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
-            if (key !== 'image' && key !== 'galleryImages' && value !== null) {
+            if (key !== 'image' && key !== 'galleryImages' && value !== null && key !== 'password') {
                  if ((key === 'interests' || key === 'wants' || key === 'gallery') && typeof value === 'string') {
                     updatedData[key as keyof UserProfile] = value.split(',').filter(Boolean) as any;
                  } else if (key === 'age' && typeof value === 'string') {
@@ -80,6 +81,12 @@ export async function PUT(
             }
         }
         
+        const newPassword = formData.get('password') as string | null;
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            updatedData.password = hashedPassword;
+        }
+
         const imageFile = formData.get('image') as File | null;
         if (imageFile && imageFile.size > 0) {
             const imageBuffer = await imageFile.arrayBuffer();
