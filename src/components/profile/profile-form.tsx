@@ -10,16 +10,46 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2 } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
     currentUser: UserProfile;
 };
+
+const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void }) => {
+    const actions = [
+        { id: 'favorite', icon: <Heart className="h-5 w-5" />, label: 'Add to Favorites' },
+        { id: 'message', icon: <MessageSquare className="h-5 w-5" />, label: 'Send Message' },
+        { id: 'report', icon: <Flag className="h-5 w-5" />, label: 'Report Profile' },
+        { id: 'block', icon: <Ban className="h-5 w-5" />, label: 'Block User' },
+    ];
+
+    return (
+        <div className="flex items-center gap-1">
+            <TooltipProvider>
+                {actions.map(action => (
+                    <Tooltip key={action.id}>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => onAction(action.id)}>
+                                {action.icon}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{action.label}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ))}
+            </TooltipProvider>
+        </div>
+    );
+};
+
 
 export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const router = useRouter();
@@ -38,6 +68,13 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const galleryInputRef = useRef<HTMLInputElement>(null);
 
     const isOwnProfile = initialProfile.id === currentUser.id;
+
+    const handleAction = (action: string) => {
+        toast({
+            title: "Action Triggered",
+            description: `You clicked: ${action}`
+        })
+    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -217,7 +254,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 {/* Right Column */}
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
-                        <CardHeader><CardTitle>{`About ${profile.name}`}</CardTitle></CardHeader>
+                        <CardHeader className="flex flex-row items-start justify-between">
+                            <CardTitle>{`About ${profile.name}`}</CardTitle>
+                            {!isOwnProfile && <ProfileActionButtons onAction={handleAction}/> }
+                        </CardHeader>
                         <CardContent>
                             {isEditMode ? (
                                 <Textarea name="bio" value={profile.bio || ''} onChange={handleInputChange} rows={5} disabled={isLoading} />
@@ -325,3 +365,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 );
 
     
+
