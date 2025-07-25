@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { UserProfile } from "@/lib/users";
 import { ProfileCard } from "./profile-card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ type SearchClientProps = {
 
 export function SearchClient({ initialProfiles }: SearchClientProps) {
   const [profiles] = useState(initialProfiles);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [locationFilter, setLocationFilter] = useState("");
   const [ageRange, setAgeRange] = useState([18, 65]);
   const [heightRange, setHeightRange] = useState([150, 200]); // in cm
@@ -25,20 +26,44 @@ export function SearchClient({ initialProfiles }: SearchClientProps) {
   const [isOnline, setIsOnline] = useState(false);
   const [withPhoto, setWithPhoto] = useState(true);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        try {
+            setCurrentUser(JSON.parse(storedUser));
+        } catch (e) {
+            console.error("Failed to parse user from local storage", e);
+            setCurrentUser(null);
+        }
+    }
+  }, []);
+
   const filteredProfiles = useMemo(() => {
-    return profiles.filter((profile) => {
+    let roleFilteredProfiles = profiles;
+
+    if (currentUser) {
+        if (currentUser.role === 'Sugar Baby') {
+            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
+        } else if (currentUser.role === 'Sugar Daddy') {
+            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Baby');
+        }
+        // Admin sees everyone, so no role filter needed for admin
+    } else {
+        // Not logged in, show everyone except admin
+        roleFilteredProfiles = profiles.filter(p => p.role !== 'Admin');
+    }
+
+    return roleFilteredProfiles.filter((profile) => {
       const locationMatch = locationFilter === "" || profile.location.toLowerCase().includes(locationFilter.toLowerCase());
       const ageMatch = profile.age >= ageRange[0] && profile.age <= ageRange[1];
       const photoMatch = !withPhoto || (!!profile.image && !profile.image.includes('placeholder'));
       
-      // Note: 'isNew' and 'isOnline' are simulated as there's no data for them yet.
-      // In a real app, you would have this data in your UserProfile model.
-      const newMatch = !isNew || Math.random() > 0.8; // Simulating 20% of profiles are "new"
-      const onlineMatch = !isOnline || Math.random() > 0.5; // Simulating 50% of profiles are "online"
+      const newMatch = !isNew || Math.random() > 0.8; 
+      const onlineMatch = !isOnline || Math.random() > 0.5;
 
       return locationMatch && ageMatch && photoMatch && newMatch && onlineMatch;
     });
-  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline]);
+  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser]);
   
   const formatHeight = (cm: number) => {
     const totalInches = cm / 2.54;

@@ -5,10 +5,9 @@ import { mockUsers } from "@/lib/mock-data";
 
 async function getProfiles(): Promise<UserProfile[]> {
   // In a real app, you'd fetch this from your API
-  // For this example, we'll use mock data to ensure we have profiles to display
-  const users = await Promise.resolve(mockUsers.filter(u => u.role !== 'Admin'));
+  const allUsers = [...mockUsers.filter(u => u.role !== 'Admin')];
   
-  // Add some placeholder users to match the design
+  // Add some placeholder users to match the design, ensuring no duplicates
   const placeholderUsers: UserProfile[] = [
     {
         id: 'olivia-placeholder',
@@ -36,7 +35,22 @@ async function getProfiles(): Promise<UserProfile[]> {
     }
   ];
 
-  return [...users, ...placeholderUsers];
+  const uniqueProfiles = new Map<string, UserProfile>();
+
+  allUsers.forEach(user => {
+    if (!uniqueProfiles.has(user.id)) {
+      uniqueProfiles.set(user.id, user);
+    }
+  });
+
+  placeholderUsers.forEach(user => {
+     if (!uniqueProfiles.has(user.id)) {
+      uniqueProfiles.set(user.id, user);
+    }
+  });
+
+
+  return Array.from(uniqueProfiles.values());
 }
 
 
