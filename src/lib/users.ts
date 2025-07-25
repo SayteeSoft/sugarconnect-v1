@@ -26,4 +26,5 @@ export type UserProfile = {
   relationshipStatus?: string;
   children?: string;
   credits?: number;
+  verifiedUntil?: string;
 };

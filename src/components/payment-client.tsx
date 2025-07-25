@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/lib/users';
 import { Skeleton } from './ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 type CreditPackage = {
     id: string;
     credits: number;
     price: string;
     bonus: string;
+    name?: string;
 };
 
 type PaymentClientProps = {
@@ -23,6 +25,7 @@ type PaymentClientProps = {
 
 export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
     const { toast } = useToast();
+    const router = useRouter();
     const [{ isPending }] = usePayPalScriptReducer();
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -55,7 +58,7 @@ export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
             const response = await fetch(`/api/paypal/capture-order`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderID: data.orderID }),
+                body: JSON.stringify({ orderID: data.orderID, userEmail: user.email }),
             });
             
             const orderData = await response.json();
@@ -63,9 +66,21 @@ export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
             if (response.ok) {
                 toast({
                     title: 'Payment Successful!',
-                    description: `Transaction ID: ${orderData.id}. Your ${selectedPackage.credits} credits have been added.`,
+                    description: `Transaction ID: ${orderData.id}. Your purchase is complete.`,
                 });
-                // In a real app, you would update user credits in DB and redirect
+                
+                // Refresh user data from "DB"
+                const res = await fetch(`/api/users/${user.id}`);
+                const updatedUser = await res.json();
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                
+                // Manually dispatch a storage event to trigger header update
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'user',
+                    newValue: JSON.stringify(updatedUser),
+                }));
+                
+                router.push(`/dashboard/profile/${user.id}`);
             } else {
                  throw new Error(orderData.message || 'Failed to capture payment');
             }
@@ -89,7 +104,7 @@ export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
                 </CardHeader>
                 <CardContent>
                     <div className="bg-muted/50 p-4 rounded-md mb-6 text-center">
-                        <p className="font-semibold">{selectedPackage.credits} Credits</p>
+                        <p className="font-semibold">{selectedPackage.name || `${selectedPackage.credits} Credits`}</p>
                         <p className="text-2xl font-bold">${selectedPackage.price}</p>
                         <p className="text-sm text-primary">{selectedPackage.bonus}</p>
                     </div>
@@ -114,4 +129,3 @@ export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
         </div>
     );
 }
-

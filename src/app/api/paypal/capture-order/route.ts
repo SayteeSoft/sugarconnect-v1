@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import paypal from '@paypal/checkout-server-sdk';
+import { getStore } from '@netlify/blobs';
 
 const Environment = process.env.NODE_ENV === 'production' 
     ? paypal.core.LiveEnvironment 
@@ -15,28 +16,58 @@ const paypalClient = new paypal.core.PayPalHttpClient(
 
 export async function POST(request: NextRequest) {
     try {
-        const { orderID } = await request.json();
+        const { orderID, userEmail } = await request.json();
 
-        if (!orderID) {
-            return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+        if (!orderID || !userEmail) {
+            return NextResponse.json({ error: 'Order ID and User Email are required' }, { status: 400 });
         }
 
         const paypalRequest = new paypal.orders.OrdersCaptureRequest(orderID);
-        paypalRequest.requestBody({} as any); // Empty body required for capture
+        paypalRequest.requestBody({} as any);
 
         const capture = await paypalClient.execute(paypalRequest);
         
-        // You can save the capture details to your database here
-        // For example, linking the transaction to the user's account and adding credits.
         const transactionId = capture.result.purchase_units[0].payments.captures[0].id;
+        const packageId = capture.result.purchase_units[0].custom_id;
+
+        const store = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token'});
+        
+        try {
+            const user = await store.get(userEmail, { type: 'json' });
+            let updatedData = {};
+
+            if (packageId.startsWith('VERIFY')) {
+                const now = new Date();
+                let verifiedUntil;
+                if (packageId === 'VERIFY1W') {
+                    verifiedUntil = new Date(now.setDate(now.getDate() + 7));
+                } else if (packageId === 'VERIFY2W') {
+                    verifiedUntil = new Date(now.setDate(now.getDate() + 14));
+                } else if (packageId === 'VERIFY4W') {
+                    verifiedUntil = new Date(now.setDate(now.getDate() + 28));
+                }
+                updatedData = { verifiedUntil: verifiedUntil?.toISOString() };
+            } else if (packageId.startsWith('PKG')) {
+                 const creditsToAdd = parseInt(packageId.replace('PKG', ''), 10);
+                 const currentCredits = user.credits || 0;
+                 updatedData = { credits: currentCredits + creditsToAdd };
+            }
+
+            const updatedUser = { ...user, ...updatedData };
+            await store.setJSON(userEmail, updatedUser);
+
+            // Update user in local storage on the client
+            
+        } catch (dbError) {
+            console.error('Failed to update user in DB after payment:', dbError);
+            // Even if DB update fails, we should still return success to user but log error
+        }
 
 
         return NextResponse.json({ id: transactionId, status: capture.result.status });
 
     } catch (error: any) {
         console.error("Failed to capture order:", error);
-        // The error from PayPal's SDK can be complex
-        // Check if it's a PayPal specific error object to provide more details
         if (error.statusCode) {
              return NextResponse.json({ error: "Failed to capture order.", details: error.message }, { status: error.statusCode });
         }

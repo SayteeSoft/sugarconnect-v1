@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2 } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,6 +19,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { NotificationToast } from '../ui/notification-toast';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { Badge } from '../ui/badge';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
@@ -100,6 +102,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const isOwnProfile = initialProfile.id === currentUser.id;
+    const isVerified = profile.verifiedUntil && new Date(profile.verifiedUntil) > new Date();
 
     useEffect(() => {
         if (!isOwnProfile) {
@@ -258,9 +261,34 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     };
 
+    const VerificationBadge = () => {
+        if (isVerified) {
+            return (
+                <Badge className="absolute bottom-4 left-4 bg-blue-500 hover:bg-blue-600 text-white">
+                    <ShieldCheck className="mr-1 h-3 w-3" />
+                    Verified
+                </Badge>
+            );
+        }
+        if (isOwnProfile) {
+            return (
+                <Button asChild className="absolute bottom-4 left-4" size="sm">
+                    <Link href="/get-verified">
+                        Unverified
+                    </Link>
+                </Button>
+            );
+        }
+        return (
+             <Badge variant="secondary" className="absolute bottom-4 left-4">
+                Unverified
+            </Badge>
+        );
+    };
+
     return (
         <div className="max-w-6xl mx-auto">
-            {isOwnProfile && (
+            {isOwnProfile && !isEditMode &&(
                 <div className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Your Profile</h1>
                     <p className="text-lg text-muted-foreground mt-2">This is how other members see you. Keep it up to date!</p>
@@ -281,6 +309,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                     className="rounded-lg object-cover aspect-square"
                                     data-ai-hint="profile photo"
                                 />
+                                 <VerificationBadge />
                                 {isEditMode && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
@@ -463,5 +492,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-    
