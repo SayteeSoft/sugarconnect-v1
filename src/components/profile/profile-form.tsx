@@ -17,7 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { NotificationToast } from '../ui/notification-toast';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle as RadixDialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
@@ -470,6 +470,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
             <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
                 <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
+                    <DialogHeader>
+                        <RadixDialogTitle className="sr-only">Image Viewer</RadixDialogTitle>
+                    </DialogHeader>
                     {selectedImage && (
                         <Image src={selectedImage} alt="Gallery image" width={1024} height={1024} className="rounded-lg object-contain" />
                     )}
@@ -494,5 +497,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
 
     
