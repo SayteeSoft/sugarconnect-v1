@@ -160,7 +160,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Account Settings</h1>
         <p className="text-lg text-muted-foreground">Manage your profile, password, and account details.</p>
       </div>
-      <Card className="max-w-2xl mx-auto shadow-xl">
+      <Card className="max-w-lg mx-auto shadow-xl">
         <CardContent className="p-8 md:p-12">
             <div className="prose dark:prose-invert max-w-none space-y-12 text-foreground/80">
 
@@ -208,21 +208,17 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 {/* Delete Account Section */}
                 <div>
                     <h2 className="text-3xl font-headline font-bold text-primary mb-6">Danger Zone</h2>
-                    <Alert variant="destructive" className="max-w-xl">
+                    <Alert variant="destructive">
                         <Terminal className="h-4 w-4" />
                         <AlertTitle>Delete Your Account</AlertTitle>
                         <AlertDescription>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div>
-                                    <p>This action is permanent and cannot be undone. This will permanently delete your account and all associated data.</p>
-                                </div>
-                                <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting} className="flex-shrink-0">
-                                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                                    {isDeleting ? 'Deleting...' : 'Delete Account'}
-                                </Button>
-                            </div>
+                            This action is permanent and cannot be undone. This will permanently delete your account and all associated data.
                         </AlertDescription>
                     </Alert>
+                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting} className="mt-4">
+                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                        {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </Button>
                 </div>
                  <div className="text-center pt-8">
                     <Button size="lg" asChild>
