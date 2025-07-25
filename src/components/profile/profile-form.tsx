@@ -154,6 +154,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const isOwnProfile = initialProfile.id === currentUser.id;
     const isVerified = profile.verifiedUntil && new Date(profile.verifiedUntil) > new Date();
     
+    const canViewSensitiveInfo = isOwnProfile || currentUser.role === 'Admin';
+    
     const completionPercentages = useMemo(() => ({
         about: calculateCompletion(profile, ['about']),
         wantsAndInterests: calculateCompletion(profile, ['wantsAndInterests']),
@@ -427,11 +429,17 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <Label htmlFor="location">Location</Label>
                                 <Input id="location" name="location" value={profile.location} onChange={handleInputChange} disabled={!isEditMode || isLoading} />
                             </div>
+                            {canViewSensitiveInfo && (
                                 <div>
-                                <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" name="email" type="email" value={profile.email} disabled />
-                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here. <Link href="/settings" className="underline text-primary">Change here</Link>.</p>}
-                            </div>
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input id="email" name="email" type="email" value={profile.email} disabled />
+                                    {isOwnProfile && !isEditMode && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Email cannot be changed here. <Link href="/settings" className="underline text-primary">Change here</Link>.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                     
@@ -642,3 +650,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
