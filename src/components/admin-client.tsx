@@ -41,7 +41,12 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
   const router = useRouter();
 
   useEffect(() => {
-    setUsers(initialUsers);
+    // This ensures that any updates to initialUsers from the server are reflected.
+    // For example, if the page is re-rendered via router.refresh().
+    const adminUser = initialUsers.find(u => u.role === 'Admin');
+    const otherUsers = initialUsers.filter(u => u.role !== 'Admin');
+    const sortedUsers = adminUser ? [adminUser, ...otherUsers] : otherUsers;
+    setUsers(sortedUsers);
   }, [initialUsers]);
 
   const handleDelete = async (userId: string) => {
@@ -60,7 +65,8 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
         title: "User Deleted",
         description: "The user has been successfully removed.",
       });
-      router.refresh();
+      // No need to call router.refresh() as we are updating state locally.
+      // Call it only if you want to re-fetch all data from the server.
     } catch (error: any) {
       console.error("Deletion failed:", error);
       toast({

@@ -19,24 +19,35 @@ import { SugarRelationshipSection } from '@/components/sugar-relationship-sectio
 import { WhatIsSection } from '@/components/what-is-section';
 
 async function getFeaturedProfiles(): Promise<UserProfile[]> {
-  // Use mock data in development, and fetch from API in production
-  if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockUsers.filter(user => user.role !== 'Admin').slice(0, 4));
-  }
-
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL || 'http://localhost:9002';
-    const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
-    if (!res.ok) {
-      console.error("Failed to fetch profiles:", res.statusText);
-      return [];
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
+    let users: UserProfile[];
+
+    if (!baseUrl) {
+      // Fallback for local dev or environments where URL is not set
+      users = [...mockUsers];
+    } else {
+        const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+        if (!res.ok) {
+            console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
+            users = [...mockUsers];
+        } else {
+            const apiUsers = await res.json();
+            // In case the API returns empty, we still have a fallback.
+            if (apiUsers && apiUsers.length > 0) {
+                 users = apiUsers;
+            } else {
+                 console.warn(`API returned no users, falling back to mock users.`);
+                 users = [...mockUsers];
+            }
+        }
     }
-    const users = await res.json();
     // Filter out admin users and take the first 4 non-admin profiles
     return users.filter((user: UserProfile) => user.role !== 'Admin').slice(0, 4);
   } catch (error) {
-    console.error("Error fetching profiles:", error);
-    return [];
+    console.error("Error fetching profiles, falling back to mock data:", error);
+    // Return mock data on any fetch error
+    return mockUsers.filter(user => user.role !== 'Admin').slice(0, 4);
   }
 }
 
