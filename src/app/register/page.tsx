@@ -47,7 +47,7 @@ export default function RegisterPage() {
       // Log the user in by saving their data to localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirect to their new profile page
+      // Redirect to their new profile page in view mode
       window.location.href = `/dashboard/profile/${data.user.id}`;
 
     } catch (error: any) {
