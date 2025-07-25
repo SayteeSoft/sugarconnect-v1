@@ -47,7 +47,7 @@ export default function LoginPage() {
       });
       
       // Force a re-render of the header by reloading the page
-      window.location.href = data.user.role === 'Admin' ? '/admin' : '/dashboard';
+      window.location.href = `/dashboard/profile/${data.user.id}`;
 
     } catch (error: any) {
       toast({
