@@ -18,7 +18,7 @@ export function FeaturedProfileCard({ user, isLoggedIn }: FeaturedProfileCardPro
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
         <div className={cn(
             "relative aspect-square",
-            !isLoggedIn && "after:absolute after:inset-0 after:bg-white/50 dark:after:bg-black/50 after:backdrop-blur-sm"
+            !isLoggedIn && "after:absolute after:inset-0 after:backdrop-blur-sm"
         )}>
           <Image
             src={user.image ? user.image : 'https://placehold.co/400x400.png'}
