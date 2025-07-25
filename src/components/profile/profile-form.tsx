@@ -579,14 +579,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
              <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
                 <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center" showCloseButton={false}>
-                     <DialogHeader className="sr-only">
+                    <DialogHeader className="sr-only">
                         <DialogTitle>Image Gallery</DialogTitle>
                     </DialogHeader>
                     <DialogClose asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute right-4 top-4 z-10 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
+                            className="absolute right-4 top-4 z-10 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full h-12 w-12"
                         >
                             <X className="h-8 w-8" />
                             <span className="sr-only">Close</span>
@@ -607,7 +607,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full h-14 w-14"
                         onClick={prevImage}
                         disabled={allImages.length <= 1}
                     >
@@ -617,7 +617,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full h-14 w-14"
                         onClick={nextImage}
                         disabled={allImages.length <= 1}
                     >
