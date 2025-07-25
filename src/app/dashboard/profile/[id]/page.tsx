@@ -40,7 +40,8 @@ const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
 
 
 export default async function ProfilePage({ params }: { params: { id: string } }) {
-  const profile = await getProfileById(params.id);
+  const { id } = await params;
+  const profile = await getProfileById(id);
 
   if (!profile) {
     notFound();
