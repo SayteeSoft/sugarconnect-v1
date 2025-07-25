@@ -17,6 +17,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { NotificationToast } from '../ui/notification-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
@@ -95,6 +97,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const isOwnProfile = initialProfile.id === currentUser.id;
 
@@ -376,7 +379,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
-                                    <Image key={i} src={img} alt={`Gallery image ${i+1}`} width={200} height={200} className="rounded-lg object-cover aspect-square" data-ai-hint="gallery photo" />
+                                    <button key={i} className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => setSelectedImage(img)}>
+                                        <Image src={img} alt={`Gallery image ${i+1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="gallery photo" />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </button>
                                 ))}
                                 {isEditMode && (
                                     <div 
@@ -422,6 +428,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     </Card>
                 </div>
             </div>
+
+            <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+                <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
+                    {selectedImage && (
+                        <Image src={selectedImage} alt="Gallery image" width={1024} height={1024} className="rounded-lg object-contain" />
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -441,5 +455,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
 
     
