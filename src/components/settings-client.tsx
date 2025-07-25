@@ -160,7 +160,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
         <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Account Settings</h1>
         <p className="text-lg text-muted-foreground">Manage your profile, password, and account details.</p>
       </div>
-      <Card className="max-w-lg mx-auto shadow-xl">
+      <Card className="max-w-2xl mx-auto shadow-xl">
         <CardContent className="p-8 md:p-12">
             <div className="prose dark:prose-invert max-w-none space-y-12 text-foreground/80">
 
@@ -170,13 +170,13 @@ export function SettingsClient({ user }: SettingsClientProps) {
                     <form onSubmit={handleProfileUpdate} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="username" className="text-base">Username</Label>
-                            <Input id="username" value={name} onChange={(e) => setName(e.target.value)} className="max-w-md"/>
+                            <Input id="username" value={name} onChange={(e) => setName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-base">Email Address</Label>
-                            <Input id="email" type="email" value={user.email} disabled className="max-w-md" />
+                            <Input id="email" type="email" value={user.email} disabled />
                             <p className="text-xs text-muted-foreground pt-1">
-                                Email cannot be changed. Please <Link href="/contact" className="underline text-primary">contact support</Link> for assistance.
+                                Email cannot be changed. <Link href="/contact" className="underline text-primary">Contact support</Link> for assistance.
                             </p>
                         </div>
                         <Button type="submit" disabled={isSavingProfile}>
@@ -192,11 +192,11 @@ export function SettingsClient({ user }: SettingsClientProps) {
                      <form onSubmit={handlePasswordUpdate} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="new-password">New Password</Label>
-                            <Input id="new-password" type="password" className="max-w-md" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 8 characters"/>
+                            <Input id="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 8 characters"/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="confirm-password">Confirm New Password</Label>
-                            <Input id="confirm-password" type="password" className="max-w-md" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                            <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                         </div>
                         <Button type="submit" disabled={isSavingPassword}>
                              {isSavingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
