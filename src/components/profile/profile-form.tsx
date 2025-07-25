@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { UserProfile } from '@/lib/users';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -10,30 +10,59 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2 } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { NotificationToast } from '../ui/notification-toast';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
     currentUser: UserProfile;
 };
 
-const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void }) => {
+const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onAction: (action: string) => void, onCuteMessage: () => void, viewerRole?: UserProfile['role'] }) => {
     const actions = [
         { id: 'favorite', icon: <Heart className="h-5 w-5" />, label: 'Add to Favorites' },
         { id: 'message', icon: <MessageSquare className="h-5 w-5" />, label: 'Send Message' },
+    ];
+    
+    const secondaryActions = [
         { id: 'report', icon: <Flag className="h-5 w-5" />, label: 'Report Profile' },
         { id: 'block', icon: <Ban className="h-5 w-5" />, label: 'Block User' },
-    ];
+    ]
 
     return (
         <div className="flex items-center gap-1">
             <TooltipProvider>
                 {actions.map(action => (
+                    <Tooltip key={action.id}>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => onAction(action.id)}>
+                                {action.icon}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{action.label}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ))}
+                 {viewerRole === 'Sugar Baby' && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={onCuteMessage}>
+                                <Wand2 className="h-5 w-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Send Cute Message</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+                 <div className="border-l h-6 mx-2"></div>
+                 {secondaryActions.map(action => (
                     <Tooltip key={action.id}>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => onAction(action.id)}>
@@ -69,11 +98,60 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const isOwnProfile = initialProfile.id === currentUser.id;
 
+    useEffect(() => {
+        if (!isOwnProfile) {
+            toast({
+                duration: 5000,
+                component: (
+                    <NotificationToast
+                        user={currentUser}
+                        actionText="just viewed your profile!"
+                        profileUrl={`/dashboard/profile/${currentUser.id}`}
+                    />
+                )
+            });
+        }
+    }, [isOwnProfile, currentUser, toast]);
+
     const handleAction = (action: string) => {
+        const actionTextMap: Record<string, string> = {
+            favorite: "just favorited your profile!",
+            message: "just sent you a message!",
+            report: "just reported your profile.",
+            block: "just blocked you."
+        }
+        
         toast({
-            title: "Action Triggered",
-            description: `You clicked: ${action}`
+            duration: 5000,
+            component: (
+                 <NotificationToast
+                    user={currentUser}
+                    actionText={actionTextMap[action] || `performed action: ${action}`}
+                    profileUrl={`/dashboard/profile/${currentUser.id}`}
+                />
+            )
         })
+    }
+    
+    const handleSendCuteMessage = () => {
+        const cuteMessages = [
+            "I love your style! That watch in your photo is stunning.",
+            "You have amazing taste. We should go shopping on Rodeo Drive sometime!",
+            "Your profile has such a classy vibe. I'm already picturing our first elegant dinner.",
+            "Just wanted to say you have a fantastic sense of fashion. ✨"
+        ];
+        const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+        
+        toast({
+            duration: 5000,
+            component: (
+                <NotificationToast
+                    user={currentUser}
+                    actionText={`sent you a message: "${randomMessage}"`}
+                    profileUrl={`/dashboard/profile/${currentUser.id}`}
+                />
+            )
+        });
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -256,7 +334,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                      <Card className="shadow-xl">
                         <CardHeader className="flex flex-row items-start justify-between">
                             <CardTitle>{`About ${profile.name}`}</CardTitle>
-                            {!isOwnProfile && <ProfileActionButtons onAction={handleAction}/> }
+                            {!isOwnProfile && <ProfileActionButtons onAction={handleAction} onCuteMessage={handleSendCuteMessage} viewerRole={currentUser.role} /> }
                         </CardHeader>
                         <CardContent>
                             {isEditMode ? (
@@ -363,3 +441,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
