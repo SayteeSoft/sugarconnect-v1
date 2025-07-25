@@ -324,10 +324,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 </Button>
                                 <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>Cancel</Button>
                             </>
-                        ) : isOwnProfile || currentUser.role === 'Admin' ? (
+                        ) : isOwnProfile && currentUser.role !== 'Admin' ? (
+                            <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
+                        ) : currentUser.role === 'Admin' ? (
                             <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
                         ) : (
-                                <Button>Message {profile.name}</Button>
+                            <Button>Message {profile.name}</Button>
                         )}
                     </div>
                 </div>
