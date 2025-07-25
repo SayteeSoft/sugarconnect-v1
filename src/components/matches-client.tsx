@@ -1,18 +1,59 @@
+
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Users, Eye, MessageSquare, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type MatchesClientProps = {
   initialMatches: UserProfile[];
 };
 
-const MatchItem = ({ user }: { user: UserProfile }) => {
+type ListType = 'favorites' | 'visitors' | 'viewed';
+
+export function MatchesClient({ initialMatches }: MatchesClientProps) {
+  const [favorites, setFavorites] = useState(initialMatches.slice(0, 2));
+  const [visitors, setVisitors] = useState(initialMatches.slice(1, 4));
+  const [viewed, setViewed] = useState(initialMatches.slice(2, 3));
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleDelete = (userId: string, list: ListType) => {
+    switch (list) {
+      case 'favorites':
+        setFavorites(favorites.filter(u => u.id !== userId));
+        break;
+      case 'visitors':
+        setVisitors(visitors.filter(u => u.id !== userId));
+        break;
+      case 'viewed':
+        setViewed(viewed.filter(u => u.id !== userId));
+        break;
+    }
+    toast({
+      title: "Profile Removed",
+      description: "The profile has been removed from your list.",
+    });
+  };
+
+  const MatchItem = ({ user, listType }: { user: UserProfile, listType: ListType }) => {
     const isOnline = Math.random() > 0.5;
     return (
         <Card className="p-4 flex items-center justify-between">
@@ -30,28 +71,40 @@ const MatchItem = ({ user }: { user: UserProfile }) => {
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => router.push('/messages')}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Chat
                 </Button>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove {user.name} from your {listType} list.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(user.id, listType)}>
+                        Remove
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
         </Card>
-    )
-};
+    );
+  };
 
-
-export function MatchesClient({ initialMatches }: MatchesClientProps) {
-  const [favorites] = useState(initialMatches.slice(0, 2));
-  const [visitors] = useState(initialMatches.slice(1, 4));
-  const [viewed] = useState(initialMatches.slice(2, 3));
-
-  const tabContent = (title: string, profiles: UserProfile[]) => (
+  const tabContent = (title: string, profiles: UserProfile[], listType: ListType) => (
      profiles.length > 0 ? (
         <div className="space-y-4">
-            {profiles.map(profile => <MatchItem key={profile.id} user={profile} />)}
+            {profiles.map(profile => <MatchItem key={profile.id} user={profile} listType={listType} />)}
         </div>
     ) : (
         <div className="text-center py-16 text-muted-foreground">
@@ -74,13 +127,13 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
                 <TabsTrigger value="viewed"><Eye className="mr-2 h-4 w-4" />Viewed</TabsTrigger>
             </TabsList>
             <TabsContent value="favorites">
-                {tabContent("Favorites", favorites)}
+                {tabContent("Favorites", favorites, 'favorites')}
             </TabsContent>
             <TabsContent value="visitors">
-                {tabContent("Visitors", visitors)}
+                {tabContent("Visitors", visitors, 'visitors')}
             </TabsContent>
             <TabsContent value="viewed">
-                {tabContent("Viewed", viewed)}
+                {tabContent("Viewed", viewed, 'viewed')}
             </TabsContent>
         </Tabs>
     </div>
