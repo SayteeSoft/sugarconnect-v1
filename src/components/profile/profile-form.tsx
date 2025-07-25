@@ -260,6 +260,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     return (
         <div className="max-w-6xl mx-auto">
+            {isOwnProfile && (
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Your Profile</h1>
+                    <p className="text-lg text-muted-foreground mt-2">This is how other members see you. Keep it up to date!</p>
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 {/* Left Column */}
                 <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
@@ -457,3 +463,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
