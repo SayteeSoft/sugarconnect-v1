@@ -67,7 +67,7 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
         }
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if ((newMessage.trim() === "" && !imageFile) || !selectedConversation) return;
 
         if (localUser.role === 'Sugar Daddy') {
@@ -85,10 +85,25 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
             setLocalUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
+            // Dispatch a storage event to notify other components (like the header) of the change
             window.dispatchEvent(new StorageEvent('storage', {
                 key: 'user',
                 newValue: JSON.stringify(updatedUser),
             }));
+            
+            // Persist the credit change to the backend without blocking the UI
+            const formData = new FormData();
+            formData.append('email', updatedUser.email);
+            formData.append('credits', updatedUser.credits.toString());
+            try {
+                await fetch(`/api/users/${updatedUser.id}`, {
+                    method: 'PUT',
+                    body: formData,
+                });
+            } catch (error) {
+                console.error("Failed to update credits on the server:", error);
+                // Optionally, handle this error, e.g., by trying to revert the local change or notifying the user.
+            }
         }
 
         const message: Message = {
