@@ -7,7 +7,14 @@ import { Header } from "@/components/header";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
-    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    
+    let userStore: Store;
+    if (process.env.NETLIFY) {
+        userStore = getStore('users');
+    } else {
+        userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    }
+
     const { blobs } = await userStore.list();
     for (const blob of blobs) {
       try {
