@@ -38,14 +38,14 @@ async function getProfiles(): Promise<UserProfile[]> {
   const uniqueProfiles = new Map<string, UserProfile>();
 
   allUsers.forEach(user => {
-    if (!uniqueProfiles.has(user.id)) {
-      uniqueProfiles.set(user.id, user);
+    if (!uniqueProfiles.has(user.name)) {
+      uniqueProfiles.set(user.name, user);
     }
   });
 
   placeholderUsers.forEach(user => {
-     if (!uniqueProfiles.has(user.id)) {
-      uniqueProfiles.set(user.id, user);
+     if (!uniqueProfiles.has(user.name)) {
+      uniqueProfiles.set(user.name, user);
     }
   });
 
