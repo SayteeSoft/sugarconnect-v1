@@ -490,7 +490,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <CardTitle>{`About ${profile.name}`}</CardTitle>
                                 <Badge variant="outline">{completionPercentages.about}%</Badge>
                             </div>
-                            {!isOwnProfile && <ProfileActionButtons onAction={handleAction} onCuteMessage={handleSendCuteMessage} viewerRole={currentUser.role} /> }
+                           <ProfileActionButtons onAction={handleAction} onCuteMessage={handleSendCuteMessage} viewerRole={currentUser.role} />
                         </CardHeader>
                         <CardContent>
                             {isEditMode ? (
@@ -686,3 +686,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
     
+
