@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -269,6 +269,21 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
         }
     };
+    
+    const handleRemoveGalleryImage = (index: number) => {
+        const newPreviews = [...galleryPreviews];
+        const removedImage = newPreviews.splice(index, 1)[0];
+
+        // Check if the removed image was a newly uploaded file (blob URL)
+        if(removedImage.startsWith('blob:')) {
+            // Find the corresponding file in galleryFiles and remove it
+            const newFiles = galleryFiles.filter(file => URL.createObjectURL(file) !== removedImage);
+            setGalleryFiles(newFiles);
+        }
+
+        setGalleryPreviews(newPreviews);
+        setProfile(prev => ({...prev, gallery: newPreviews.filter(p => !p.startsWith('blob:'))}))
+    }
 
     const handleSave = async () => {
         setIsLoading(true);
@@ -280,7 +295,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         Object.entries(profile).forEach(([key, value]) => {
             if (key === 'interests' || key === 'wants' || key === 'gallery') {
                  if (Array.isArray(value)) {
-                    formData.append(key, value.join(','));
+                    // Send only non-blob urls for existing gallery images
+                    if (key === 'gallery') {
+                         formData.append(key, value.filter(v => !v.startsWith('blob:')).join(','));
+                    } else {
+                        formData.append(key, value.join(','));
+                    }
                 }
             } else if (value !== undefined && value !== null) {
                 formData.append(key, String(value));
@@ -522,10 +542,22 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
-                                    <button key={i} className="relative aspect-square rounded-lg overflow-hidden group" onClick={() => openGallery(i + 1)}>
-                                        <Image src={img} alt={`Gallery image ${i+1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="gallery photo" />
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </button>
+                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
+                                        <button className="w-full h-full" onClick={() => openGallery(i + 1)}>
+                                            <Image src={img} alt={`Gallery image ${i+1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="gallery photo" />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+                                        {isEditMode && (
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                                onClick={() => handleRemoveGalleryImage(i)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
                                 ))}
                                 {isEditMode && (
                                     <div 
@@ -650,5 +682,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+    
 
     
