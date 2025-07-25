@@ -410,7 +410,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <div>
                                 <Label htmlFor="email">Email Address</Label>
                                 <Input id="email" name="email" type="email" value={profile.email} disabled />
-                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed.</p>}
+                                {!isEditMode && <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here. <Link href="/settings" className="underline text-primary">Change here</Link>.</p>}
                             </div>
                         </CardContent>
                     </Card>
