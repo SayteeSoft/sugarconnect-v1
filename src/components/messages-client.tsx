@@ -111,13 +111,17 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
         
         sendEmail({
             to: selectedConversation.user.email,
+            recipientName: selectedConversation.user.name,
             subject: `You have a new message from ${currentUser.name}`,
-            html: `
-                <p>You have a new message from ${currentUser.name}:</p>
+            body: `
+                <p>You have received a new message from ${currentUser.name}:</p>
                 <p><i>"${newMessage}"</i></p>
                 ${imagePreview ? '<p>(An image was attached)</p>' : ''}
-                <p><a href="/messages">Click here</a> to reply.</p>
-            `
+            `,
+            callToAction: {
+                text: 'Click here to reply',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages`
+            }
         });
 
         setNewMessage("");

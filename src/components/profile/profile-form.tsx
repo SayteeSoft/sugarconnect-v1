@@ -179,11 +179,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
             sendEmail({
                 to: profile.email,
+                recipientName: profile.name,
                 subject: 'Someone viewed your profile!',
-                html: `${currentUser.name} just viewed your profile. Check them out <a href="/dashboard/profile/${currentUser.id}">here</a>.`
+                body: `${currentUser.name} just viewed your profile.`,
+                callToAction: {
+                    text: 'View Their Profile',
+                    url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
+                }
             });
         }
-    }, [isOwnProfile, currentUser, profile.email, toast]);
+    }, [isOwnProfile, currentUser, profile.email, profile.name, toast]);
 
     const handleAction = (action: string) => {
         const actionTextMap: Record<string, string> = {
@@ -213,8 +218,13 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
         sendEmail({
             to: profile.email,
+            recipientName: profile.name,
             subject: subjectMap[action] || 'New activity on your profile',
-            html: `${currentUser.name} ${actionTextMap[action]}. Check out their profile <a href="/dashboard/profile/${currentUser.id}">here</a>.`
+            body: `${currentUser.name} ${actionTextMap[action]}.`,
+            callToAction: {
+                text: 'View Their Profile',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
+            }
         });
     }
     

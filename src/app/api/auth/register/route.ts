@@ -78,19 +78,18 @@ export async function POST(request: NextRequest) {
         await store.setJSON(email, newUser);
 
         // Send welcome email
-        const emailHtml = `
-            Welcome to ${name} to 'Sugar Connect'.<br />
-            We are happy to have you!<br />
-            <br />
-            <br />
-            <br />
-            Regards, Larry<br />
-            saytee.software@gmail.com
-        `;
         await sendEmail({
             to: email,
+            recipientName: name,
             subject: 'Welcome to Sugar Connect!',
-            html: emailHtml
+            body: `
+                <p>We are thrilled to have you join our community!</p>
+                <p>Get started by completing your profile to find your perfect match.</p>
+            `,
+            callToAction: {
+                text: 'Complete Your Profile',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${newUser.id}?edit=true`
+            }
         });
         
         const { password: _, ...userToReturn } = newUser;
