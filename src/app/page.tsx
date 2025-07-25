@@ -64,7 +64,7 @@ export default function Home() {
   }, []);
 
   const handleScroll = () => {
-    setOffsetY(window.scrollY * 0.4);
+    setOffsetY(window.scrollY * 0.5);
   };
   
   useEffect(() => {
