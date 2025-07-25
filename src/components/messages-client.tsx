@@ -11,6 +11,8 @@ import { Card } from '@/components/ui/card';
 import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 type Conversation = {
     user: UserProfile;
@@ -27,6 +29,8 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0] || null);
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
+    const [localUser, setLocalUser] = useState<UserProfile>(currentUser);
+    const { toast } = useToast();
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -34,6 +38,29 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
 
     const handleSendMessage = () => {
         if (newMessage.trim() === "" || !selectedConversation) return;
+
+        if (localUser.role === 'Sugar Daddy') {
+            if ((localUser.credits ?? 0) < 1) {
+                toast({
+                    variant: 'destructive',
+                    title: 'No Credits Remaining',
+                    description: 'You must purchase more credits to send messages.',
+                    action: <Button asChild><Link href="/purchase-credits">Buy Credits</Link></Button>,
+                });
+                return;
+            }
+            
+            const updatedUser = { ...localUser, credits: (localUser.credits ?? 0) - 1 };
+            setLocalUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            // Manually dispatch a storage event to trigger header update
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'user',
+                newValue: JSON.stringify(updatedUser),
+            }));
+        }
+
 
         const message: Message = {
             id: Date.now().toString(),

@@ -18,8 +18,7 @@ export function Header() {
   const mobileNavLinkClasses = "block py-2 text-lg transition-colors hover:text-primary";
   const [profileUrl, setProfileUrl] = useState('/dashboard/profile');
 
-  useEffect(() => {
-    setMounted(true);
+  const updateUserFromStorage = () => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
         try {
@@ -33,6 +32,21 @@ export function Header() {
             setUser(null);
             setProfileUrl('/dashboard/profile');
         }
+    } else {
+        setUser(null);
+        setProfileUrl('/dashboard/profile');
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    updateUserFromStorage();
+
+    // Listen for storage changes to update credits in real-time
+    window.addEventListener('storage', updateUserFromStorage);
+
+    return () => {
+        window.removeEventListener('storage', updateUserFromStorage);
     }
   }, []);
 
