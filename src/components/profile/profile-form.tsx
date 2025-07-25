@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
+import { sendEmail } from '@/lib/email';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
@@ -173,8 +174,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     />
                 )
             });
+
+            sendEmail({
+                to: profile.email,
+                subject: 'Someone viewed your profile!',
+                html: `${currentUser.name} just viewed your profile. Check them out <a href="/dashboard/profile/${currentUser.id}">here</a>.`
+            });
         }
-    }, [isOwnProfile, currentUser, toast]);
+    }, [isOwnProfile, currentUser, profile.email, toast]);
 
     const handleAction = (action: string) => {
         const actionTextMap: Record<string, string> = {
@@ -182,7 +189,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             message: "just sent you a message!",
             report: "just reported your profile.",
             block: "just blocked you."
-        }
+        };
+
+        const subjectMap: Record<string, string> = {
+            favorite: "You have a new favorite!",
+            message: "You have a new message!",
+            report: "Your profile has been reported",
+            block: "A user has blocked you"
+        };
         
         toast({
             duration: 5000,
@@ -193,7 +207,13 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     profileUrl={`/dashboard/profile/${currentUser.id}`}
                 />
             )
-        })
+        });
+
+        sendEmail({
+            to: profile.email,
+            subject: subjectMap[action] || 'New activity on your profile',
+            html: `${currentUser.name} ${actionTextMap[action]}. Check out their profile <a href="/dashboard/profile/${currentUser.id}">here</a>.`
+        });
     }
     
     const handleSendCuteMessage = () => {
@@ -551,11 +571,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
              <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
                 <DialogContent className="p-0 m-0 w-screen h-screen max-w-none border-0 bg-black/90 flex items-center justify-center" showCloseButton={false}>
+                    <DialogHeader className="sr-only">
+                        <RadixDialogTitle>Image Gallery</RadixDialogTitle>
+                    </DialogHeader>
                     <DialogClose asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute right-4 top-4 z-10 text-white bg-black/20 hover:bg-white/20 hover:text-white"
+                            className="absolute right-4 top-4 z-10 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
                         >
                             <X className="h-8 w-8" />
                             <span className="sr-only">Close</span>
@@ -576,7 +599,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
                         onClick={prevImage}
                         disabled={allImages.length <= 1}
                     >
@@ -586,7 +609,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/20 hover:bg-white/20 hover:text-white rounded-full"
                         onClick={nextImage}
                         disabled={allImages.length <= 1}
                     >

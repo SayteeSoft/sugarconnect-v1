@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
+import { sendEmail } from '@/lib/email';
 
 const getBlobStore = (): Store => {
     return getStore({
@@ -75,6 +76,22 @@ export async function POST(request: NextRequest) {
         };
 
         await store.setJSON(email, newUser);
+
+        // Send welcome email
+        const emailHtml = `
+            Welcome to ${name} to 'Sugar Connect'.<br />
+            We are happy to have you!<br />
+            <br />
+            <br />
+            <br />
+            Regards, Larry<br />
+            saytee.software@gmail.com
+        `;
+        await sendEmail({
+            to: email,
+            subject: 'Welcome to Sugar Connect!',
+            html: emailHtml
+        });
         
         const { password: _, ...userToReturn } = newUser;
 

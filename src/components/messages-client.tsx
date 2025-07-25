@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { sendEmail } from '@/lib/email';
 
 type Conversation = {
     user: UserProfile;
@@ -78,6 +79,17 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
 
         setConversations(updatedConversations);
         setSelectedConversation(updatedConversations.find(c => c.user.id === selectedConversation.user.id) || null);
+        
+        sendEmail({
+            to: selectedConversation.user.email,
+            subject: `You have a new message from ${currentUser.name}`,
+            html: `
+                <p>You have a new message from ${currentUser.name}:</p>
+                <p><i>"${newMessage}"</i></p>
+                <p><a href="/messages">Click here</a> to reply.</p>
+            `
+        });
+
         setNewMessage("");
     };
 
