@@ -92,7 +92,7 @@ export default function Home() {
             alt="Couple"
             fill
             className="absolute inset-0 z-0 object-cover object-center"
-            style={{ transform: `translateY(${offsetY}px)` }}
+            style={{ transform: `translateY(${offsetY + 5}px)` }}
             data-ai-hint="couple relationship"
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
