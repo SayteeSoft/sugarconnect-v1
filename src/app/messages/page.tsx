@@ -1,56 +1,116 @@
 
+"use client";
+
 import { MessagesClient } from "@/components/messages-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
 import { Message } from "@/lib/messages";
-import { Metadata } from "next";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { LogIn } from "lucide-react";
 
-export const metadata: Metadata = {
-    title: "Messages - Sugar Connect",
-    description: "Your private conversations with potential matches.",
-};
 
-async function getConversations(): Promise<{user: UserProfile, messages: Message[]}[]> {
-    const adminUser: UserProfile = {
-        id: 'admin-user',
-        email: 'admin@sugarconnect.com',
-        name: 'Admin',
-        age: 99,
-        location: 'Cloud',
-        role: 'Admin',
-        sex: 'Female',
-        bio: 'I am the support administrator for Sugar Connect.',
-        interests: [],
-        image: 'https://placehold.co/100x100.png',
-    };
+export default function MessagesPage() {
+    const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+    const [conversations, setConversations] = useState<{user: UserProfile, messages: Message[]}[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const conversations = mockUsers.slice(0, 4).map((user, index) => ({
-        user: user,
-        messages: [
-            {
-                id: `${index}-1`,
-                senderId: user.id,
-                text: "Hi Admin, I had a question about my profile visibility. Can you help?",
-                timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-            },
-            {
-                id: `${index}-2`,
-                senderId: adminUser.id,
-                text: `Hello ${user.name}, of course. What seems to be the issue?`,
-                timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                const parsedUser: UserProfile = JSON.parse(storedUser);
+                setCurrentUser(parsedUser);
+
+                // Filter out the current user and admin from potential conversations
+                const otherUsers = mockUsers.filter(u => u.id !== parsedUser.id && u.role !== 'Admin');
+
+                // Create mock conversations
+                const generatedConversations = otherUsers.slice(0, 5).map((user, index) => {
+                    const messages: Message[] = [];
+                    if (parsedUser.role === 'Sugar Baby' && user.role === 'Sugar Daddy') {
+                        messages.push({
+                            id: `${user.id}-${index}-1`,
+                            senderId: user.id,
+                            text: `Hello ${parsedUser.name}, I was impressed by your profile.`,
+                            timestamp: new Date(Date.now() - 1000 * 60 * (10 - index)).toISOString(),
+                        });
+                        messages.push({
+                            id: `${user.id}-${index}-2`,
+                            senderId: parsedUser.id,
+                            text: `Thank you, ${user.name}! I appreciate that.`,
+                            timestamp: new Date(Date.now() - 1000 * 60 * (8 - index)).toISOString(),
+                        });
+                    } else if (parsedUser.role === 'Sugar Daddy' && user.role === 'Sugar Baby') {
+                         messages.push({
+                            id: `${user.id}-${index}-1`,
+                            senderId: parsedUser.id,
+                            text: `Hi ${user.name}, you have a lovely profile.`,
+                            timestamp: new Date(Date.now() - 1000 * 60 * (12 - index)).toISOString(),
+                        });
+                        messages.push({
+                            id: `${user.id}-${index}-2`,
+                            senderId: user.id,
+                            text: `Thanks! I'm glad you think so.`,
+                            timestamp: new Date(Date.now() - 1000 * 60 * (7 - index)).toISOString(),
+                        });
+                    } else {
+                         messages.push({
+                            id: `${user.id}-${index}-1`,
+                            senderId: user.id,
+                            text: `Hi there!`,
+                            timestamp: new Date(Date.now() - 1000 * 60 * (5 - index)).toISOString(),
+                        });
+                    }
+                    return { user, messages };
+                });
+                
+                setConversations(generatedConversations);
+
+            } catch(e) {
+                console.error("Error parsing user from storage", e);
+                setCurrentUser(null);
             }
-        ]
-    }));
+        }
+        setLoading(false);
+    }, []);
 
-    return Promise.resolve(conversations);
-}
+    if (loading) {
+        return (
+            <div className="container mx-auto text-center">
+                <p>Loading messages...</p>
+            </div>
+        );
+    }
 
-
-export default async function MessagesPage() {
-  const conversations = await getConversations();
-  const currentUser = mockUsers.find(u => u.email === 'alex.doe@example.com') || mockUsers[0];
+    if (!currentUser) {
+        return (
+            <div className="container mx-auto text-center">
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Messages</h1>
+                    <p className="text-lg text-muted-foreground">Please log in to view your conversations.</p>
+                </div>
+                <Card className="max-w-md mx-auto">
+                    <CardContent className="p-8">
+                        <h3 className="text-xl font-semibold mb-4">Authentication Required</h3>
+                        <p className="text-muted-foreground mb-6">
+                            You need to be signed in to view your messages.
+                        </p>
+                        <Button asChild>
+                            <Link href="/login">
+                                <LogIn className="mr-2 h-4 w-4" />
+                                Go to Login Page
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
   
-  return (
-    <MessagesClient initialConversations={conversations} currentUser={currentUser} />
-  );
+    return (
+        <MessagesClient initialConversations={conversations} currentUser={currentUser} />
+    );
 }
