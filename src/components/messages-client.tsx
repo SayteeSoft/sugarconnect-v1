@@ -1,19 +1,22 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send } from 'lucide-react';
+import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { sendEmail } from '@/lib/email';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import Image from 'next/image';
 
 type Conversation = {
     user: UserProfile;
@@ -31,14 +34,41 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
     const [localUser, setLocalUser] = useState<UserProfile>(currentUser);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [conversations, searchTerm]);
 
+    const handleEmojiClick = (emojiData: EmojiClickData) => {
+        setNewMessage(prevMessage => prevMessage + emojiData.emoji);
+    };
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    variant: 'destructive',
+                    title: 'Image Too Large',
+                    description: 'Please select an image smaller than 2MB.',
+                });
+                return;
+            }
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSendMessage = () => {
-        if (newMessage.trim() === "" || !selectedConversation) return;
+        if ((newMessage.trim() === "" && !imageFile) || !selectedConversation) return;
 
         if (localUser.role === 'Sugar Daddy') {
             if ((localUser.credits ?? 0) < 1) {
@@ -55,19 +85,18 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
             setLocalUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            // Manually dispatch a storage event to trigger header update
             window.dispatchEvent(new StorageEvent('storage', {
                 key: 'user',
                 newValue: JSON.stringify(updatedUser),
             }));
         }
 
-
         const message: Message = {
             id: Date.now().toString(),
             senderId: currentUser.id,
             text: newMessage,
             timestamp: new Date().toISOString(),
+            image: imagePreview || undefined,
         };
         
         const updatedConversations = conversations.map(c => {
@@ -86,11 +115,17 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
             html: `
                 <p>You have a new message from ${currentUser.name}:</p>
                 <p><i>"${newMessage}"</i></p>
+                ${imagePreview ? '<p>(An image was attached)</p>' : ''}
                 <p><a href="/messages">Click here</a> to reply.</p>
             `
         });
 
         setNewMessage("");
+        setImageFile(null);
+        setImagePreview(null);
+        if(fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     return (
@@ -130,7 +165,7 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                 <div className="flex-1 truncate">
                                     <h3 className="font-semibold">{convo.user.name}</h3>
                                     <p className="text-sm text-muted-foreground truncate">
-                                        {convo.messages[convo.messages.length - 1]?.text || "No messages yet"}
+                                        {convo.messages[convo.messages.length - 1]?.image && !convo.messages[convo.messages.length - 1]?.text ? '[Image]' : convo.messages[convo.messages.length - 1]?.text || "No messages yet"}
                                     </p>
                                 </div>
                             </div>
@@ -172,7 +207,8 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                                 "p-3 rounded-lg max-w-xs",
                                                 msg.senderId === currentUser.id ? "bg-primary text-primary-foreground" : "bg-background"
                                             )}>
-                                                <p>{msg.text}</p>
+                                                {msg.image && <Image src={msg.image} alt="attached image" width={200} height={200} className="rounded-md mb-2" data-ai-hint="attached image" />}
+                                                {msg.text && <p>{msg.text}</p>}
                                             </div>
                                              {msg.senderId === currentUser.id && (
                                                 <Avatar className="h-8 w-8">
@@ -184,9 +220,38 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                     ))}
                                 </div>
                             </ScrollArea>
+                            {imagePreview && (
+                                <div className="p-4 border-t relative">
+                                    <Image src={imagePreview} alt="Preview" width={80} height={80} className="rounded-md" />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-2 left-20 h-6 w-6 rounded-full bg-black/50 text-white"
+                                        onClick={() => {
+                                            setImagePreview(null);
+                                            setImageFile(null);
+                                            if (fileInputRef.current) fileInputRef.current.value = "";
+                                        }}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
                             <div className="p-4 border-t flex items-center gap-4">
-                                <Paperclip className="h-5 w-5 text-muted-foreground cursor-pointer" />
-                                <Smile className="h-5 w-5 text-muted-foreground cursor-pointer" />
+                                <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+                                <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                                    <Paperclip className="h-5 w-5 text-muted-foreground cursor-pointer" />
+                                </Button>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <Smile className="h-5 w-5 text-muted-foreground cursor-pointer" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="p-0 w-auto border-0">
+                                        <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                    </PopoverContent>
+                                </Popover>
                                 <Input
                                     placeholder="Type your message..."
                                     className="flex-1"
@@ -194,7 +259,7 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                                 />
-                                <Button onClick={handleSendMessage}>
+                                <Button onClick={handleSendMessage} disabled={(newMessage.trim() === "" && !imageFile)}>
                                     <Send className="h-5 w-5" />
                                 </Button>
                             </div>
