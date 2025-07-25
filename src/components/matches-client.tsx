@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/lib/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,11 +29,45 @@ type MatchesClientProps = {
 type ListType = 'favorites' | 'visitors' | 'viewed';
 
 export function MatchesClient({ initialMatches }: MatchesClientProps) {
-  const [favorites, setFavorites] = useState(initialMatches.slice(0, 2));
-  const [visitors, setVisitors] = useState(initialMatches.slice(1, 4));
-  const [viewed, setViewed] = useState(initialMatches.slice(2, 3));
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [favorites, setFavorites] = useState<UserProfile[]>([]);
+  const [visitors, setVisitors] = useState<UserProfile[]>([]);
+  const [viewed, setViewed] = useState<UserProfile[]>([]);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            setCurrentUser(parsedUser);
+
+            const filteredMatches = initialMatches.filter(user => {
+                if (parsedUser.role === 'Admin') {
+                    return true;
+                }
+                if (parsedUser.role === 'Sugar Baby') {
+                    return user.role === 'Sugar Daddy';
+                }
+                if (parsedUser.role === 'Sugar Daddy') {
+                    return user.role === 'Sugar Baby';
+                }
+                return false;
+            });
+            
+            // For demonstration, we'll populate the lists with filtered data.
+            // In a real app, these lists would come from separate API calls.
+            setFavorites(filteredMatches.slice(0, 2));
+            setVisitors(filteredMatches.slice(1, 4).filter(u => !favorites.some(f => f.id === u.id)));
+            setViewed(filteredMatches.slice(2, 5).filter(u => !favorites.some(f => f.id === u.id) && !visitors.some(v => v.id === u.id)));
+
+        } catch (e) {
+            console.error("Failed to parse user from storage", e);
+        }
+    }
+  }, [initialMatches]);
+
 
   const handleDelete = (userId: string, list: ListType) => {
     switch (list) {

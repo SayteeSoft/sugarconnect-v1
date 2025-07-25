@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 };
 
 async function getMatches(): Promise<UserProfile[]> {
-  // In a real app, you would fetch different lists for favorites, visitors, etc.
-  // For this example, we'll use a subset of the mock data.
-  return Promise.resolve(mockUsers.slice(0, 4));
+  // In a real app, this would be a more sophisticated fetch from a DB
+  // For now, we return all non-admin mock users for client-side filtering.
+  return Promise.resolve(mockUsers.filter(u => u.role !== 'Admin'));
 }
 
 export default async function MatchesPage() {
