@@ -24,8 +24,21 @@ export default function MessagesPage() {
                 const parsedUser: UserProfile = JSON.parse(storedUser);
                 setCurrentUser(parsedUser);
 
-                // Filter out the current user and admin from potential conversations
-                const otherUsers = mockUsers.filter(u => u.id !== parsedUser.id && u.role !== 'Admin');
+                let otherUsers: UserProfile[];
+                
+                if (parsedUser.role === 'Admin') {
+                    // Admin can see everyone except themselves
+                    otherUsers = mockUsers.filter(u => u.id !== parsedUser.id);
+                } else if (parsedUser.role === 'Sugar Baby') {
+                    // Sugar Babies only see Sugar Daddies
+                    otherUsers = mockUsers.filter(u => u.role === 'Sugar Daddy');
+                } else if (parsedUser.role === 'Sugar Daddy') {
+                    // Sugar Daddies only see Sugar Babies
+                    otherUsers = mockUsers.filter(u => u.role === 'Sugar Baby');
+                } else {
+                    otherUsers = [];
+                }
+
 
                 // Create mock conversations
                 const generatedConversations = otherUsers.slice(0, 5).map((user, index) => {
@@ -56,7 +69,7 @@ export default function MessagesPage() {
                             text: `Thanks! I'm glad you think so.`,
                             timestamp: new Date(Date.now() - 1000 * 60 * (7 - index)).toISOString(),
                         });
-                    } else {
+                    } else { // Handles Admin and other cases
                          messages.push({
                             id: `${user.id}-${index}-1`,
                             senderId: user.id,

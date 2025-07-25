@@ -41,14 +41,13 @@ export function SearchClient({ initialProfiles }: SearchClientProps) {
   const filteredProfiles = useMemo(() => {
     let roleFilteredProfiles = profiles;
 
-    if (currentUser) {
+    if (currentUser && currentUser.role !== 'Admin') {
         if (currentUser.role === 'Sugar Baby') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
         } else if (currentUser.role === 'Sugar Daddy') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Baby');
         }
-        // Admin sees everyone, so no role filter needed for admin
-    } else {
+    } else if (!currentUser) {
         // Not logged in, show everyone except admin
         roleFilteredProfiles = profiles.filter(p => p.role !== 'Admin');
     }

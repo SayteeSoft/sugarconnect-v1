@@ -43,18 +43,17 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
             const parsedUser = JSON.parse(storedUser);
             setCurrentUser(parsedUser);
 
-            const filteredMatches = initialMatches.filter(user => {
-                if (parsedUser.role === 'Admin') {
-                    return true;
-                }
-                if (parsedUser.role === 'Sugar Baby') {
-                    return user.role === 'Sugar Daddy';
-                }
-                if (parsedUser.role === 'Sugar Daddy') {
-                    return user.role === 'Sugar Baby';
-                }
-                return false;
-            });
+            let filteredMatches: UserProfile[];
+
+            if (parsedUser.role === 'Admin') {
+                filteredMatches = initialMatches;
+            } else if (parsedUser.role === 'Sugar Baby') {
+                filteredMatches = initialMatches.filter(user => user.role === 'Sugar Daddy');
+            } else if (parsedUser.role === 'Sugar Daddy') {
+                filteredMatches = initialMatches.filter(user => user.role === 'Sugar Baby');
+            } else {
+                filteredMatches = [];
+            }
             
             // For demonstration, we'll populate the lists with filtered data.
             // In a real app, these lists would come from separate API calls.
