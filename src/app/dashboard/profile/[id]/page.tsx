@@ -4,11 +4,17 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
-    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const userStore = getStore( 
+      process.env.NETLIFY ? 'users' : { 
+        name: 'users', 
+        consistency: 'strong', 
+        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
+      }
+    );
     const { blobs } = await userStore.list();
     for (const blob of blobs) {
       try {
@@ -61,7 +67,6 @@ export default async function ProfilePage({ params }: { params: { id: string } }
           <ProfileForm initialProfile={profile} currentUser={currentUser} />
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
