@@ -288,16 +288,33 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const handleSave = async () => {
         setIsLoading(true);
         const formData = new FormData();
-
-        // Ensure email is always present for lookup
+    
+        // Logic to set main image from gallery if needed
+        let finalImageFile = imageFile;
+        let finalGalleryFiles = [...galleryFiles];
+        let finalGalleryPreviews = [...galleryPreviews];
+    
+        const hasMainImage = profile.image && !profile.image.includes('placehold.co');
+        if (!hasMainImage && !imageFile && galleryFiles.length > 0) {
+            finalImageFile = galleryFiles[0]; // Set first gallery file as main image
+            setImageFile(galleryFiles[0]); // update state for preview
+            setImagePreview(URL.createObjectURL(galleryFiles[0]));
+    
+            // Remove the promoted image from the gallery files and previews
+            finalGalleryFiles.shift(); 
+            const removedPreview = finalGalleryPreviews.find(p => p.startsWith('blob:'));
+            if(removedPreview){
+                finalGalleryPreviews = finalGalleryPreviews.filter(p => p !== removedPreview);
+            }
+        }
+    
         formData.append('email', profile.email);
-
+    
         Object.entries(profile).forEach(([key, value]) => {
             if (key === 'interests' || key === 'wants' || key === 'gallery') {
                  if (Array.isArray(value)) {
-                    // Send only non-blob urls for existing gallery images
                     if (key === 'gallery') {
-                         formData.append(key, value.filter(v => !v.startsWith('blob:')).join(','));
+                         formData.append(key, finalGalleryPreviews.filter(v => !v.startsWith('blob:')).join(','));
                     } else {
                         formData.append(key, value.join(','));
                     }
@@ -306,33 +323,32 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 formData.append(key, String(value));
             }
         });
-
-        if (imageFile) {
-            formData.append('image', imageFile);
+    
+        if (finalImageFile) {
+            formData.append('image', finalImageFile);
         }
         
-        galleryFiles.forEach(file => {
+        finalGalleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
-
+    
         try {
             const response = await fetch(`/api/users/${profile.id}`, {
                 method: 'PUT',
                 body: formData,
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to save profile.');
             }
             
             const updatedProfile: UserProfile = await response.json();
-
-            // Force image refresh with a timestamp
-            if (updatedProfile.image && (imageFile || (updatedProfile.image !== profile.image))) {
+    
+            if (updatedProfile.image) {
                 updatedProfile.image = `${updatedProfile.image.split('?')[0]}?t=${new Date().getTime()}`;
             }
-
+    
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
             setProfile(updatedProfile);
@@ -340,12 +356,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
             
-            // Remove edit=true from URL
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
-
+    
             router.refresh();
-
+    
         } catch (error: any) {
             toast({ variant: 'destructive', title: "Save Failed", description: error.message });
         } finally {
@@ -691,5 +706,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
 
+
+    
 
     
