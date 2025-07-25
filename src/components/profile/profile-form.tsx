@@ -267,13 +267,13 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="relative group">
                                 <Image
+                                    key={imagePreview}
                                     src={imagePreview || 'https://placehold.co/500x500.png'}
                                     alt={profile.name}
                                     width={500}
                                     height={500}
                                     className="rounded-lg object-cover aspect-square"
                                     data-ai-hint="profile photo"
-                                    key={imagePreview}
                                 />
                                 {isEditMode && (
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
@@ -455,7 +455,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-    
-
-    
