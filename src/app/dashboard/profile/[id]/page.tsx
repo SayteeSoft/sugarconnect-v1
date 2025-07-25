@@ -4,6 +4,7 @@ import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound } from "next/navigation";
 import { getStore, type Store } from '@netlify/blobs';
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
@@ -55,11 +56,12 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   return (
     <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
       <Header />
-      <main className="flex-grow py-16">
+      <main className="flex-grow pt-28 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <ProfileForm initialProfile={profile} currentUser={currentUser} />
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
