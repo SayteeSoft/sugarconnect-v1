@@ -122,18 +122,21 @@ export async function PUT(
         }
 
         const galleryImageFiles = formData.getAll('galleryImages') as File[];
+        // Get existing gallery URLs from the form data
+        const existingGalleryUrls = (formData.get('gallery') as string || '').split(',').filter(Boolean);
+        let finalGalleryUrls = [...existingGalleryUrls];
+
         if (galleryImageFiles && galleryImageFiles.length > 0 && galleryImageFiles.some(f => f.size > 0)) {
-            const galleryUrls = existingUser.gallery || [];
             for (const file of galleryImageFiles) {
                  if (file.size > 0) {
                     const imageBuffer = await file.arrayBuffer();
                     const imageKey = `${userId}-gallery-${uuidv4()}`;
                     await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
-                    galleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
+                    finalGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
                 }
             }
-            updatedData.gallery = galleryUrls;
         }
+        updatedData.gallery = finalGalleryUrls;
 
 
         const updatedUser = { ...existingUser, ...updatedData };

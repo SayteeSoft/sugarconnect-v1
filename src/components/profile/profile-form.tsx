@@ -135,7 +135,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = [imagePreview, ...galleryPreviews].filter((img): img is string => !!img);
+    const allImages = [imagePreview, ...galleryPreviews].filter((img): img is string => !!img && img !== '');
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -715,3 +715,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
