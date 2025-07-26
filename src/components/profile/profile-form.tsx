@@ -487,57 +487,59 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                         </CardContent>
                     </Card>
-                     <Card className="shadow-xl">
-                        <CardContent className="p-6">
-                            <div className="relative group aspect-square">
-                                {privateGalleryPreviews.length > 0 ? (
-                                    <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                                        <button className="w-full h-full" onClick={() => privateGalleryPreviews[0] && openGallery(allImages.indexOf(privateGalleryPreviews[0]))}>
-                                            <Image
-                                                key={privateGalleryPreviews[0]}
-                                                src={privateGalleryPreviews[0]}
-                                                alt="Private photo"
-                                                fill
-                                                className="rounded-lg object-cover"
-                                                data-ai-hint="private photo"
-                                            />
-                                        </button>
-                                        {isEditMode && (
-                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(0)}>
-                                                    <X className="h-4 w-4" />
-                                                </Button>
+                    {(isOwnProfile || currentUser.role === 'Admin') && (
+                        <Card className="shadow-xl">
+                            <CardContent className="p-6">
+                                <div className="relative group aspect-square">
+                                    {privateGalleryPreviews.length > 0 ? (
+                                        <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                                            <button className="w-full h-full" onClick={() => privateGalleryPreviews[0] && openGallery(allImages.indexOf(privateGalleryPreviews[0]))}>
+                                                <Image
+                                                    key={privateGalleryPreviews[0]}
+                                                    src={privateGalleryPreviews[0]}
+                                                    alt="Private photo"
+                                                    fill
+                                                    className="rounded-lg object-cover"
+                                                    data-ai-hint="private photo"
+                                                />
+                                            </button>
+                                            {isEditMode && (
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(0)}>
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : isEditMode ? (
+                                        <div
+                                            className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent p-4"
+                                            onClick={() => privateGalleryInputRef.current?.click()}
+                                        >
+                                            <div className="text-center text-muted-foreground">
+                                                <PlusCircle className="mx-auto h-8 w-8" />
+                                                <p>Add Photo</p>
                                             </div>
-                                        )}
-                                    </div>
-                                ) : isEditMode ? (
-                                     <div
-                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent p-4"
-                                        onClick={() => privateGalleryInputRef.current?.click()}
-                                    >
-                                        <div className="text-center text-muted-foreground">
-                                            <PlusCircle className="mx-auto h-8 w-8" />
-                                            <p>Add Photo</p>
+                                            <input
+                                                type="file"
+                                                ref={privateGalleryInputRef}
+                                                onChange={handlePrivateGalleryImageChange}
+                                                accept="image/*"
+                                                className="hidden"
+                                            />
                                         </div>
-                                        <input
-                                            type="file"
-                                            ref={privateGalleryInputRef}
-                                            onChange={handlePrivateGalleryImageChange}
-                                            accept="image/*"
-                                            className="hidden"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square p-4">
-                                         <div className="text-center text-muted-foreground">
-                                            <Camera className="mx-auto h-8 w-8" />
-                                            <p>No Private Photo</p>
+                                    ) : (
+                                        <div className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square p-4">
+                                            <div className="text-center text-muted-foreground">
+                                                <Camera className="mx-auto h-8 w-8" />
+                                                <p>No Private Photo</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                      <Card className="shadow-xl">
                          <CardContent className="p-6 space-y-4">
                             <div>
@@ -794,3 +796,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
