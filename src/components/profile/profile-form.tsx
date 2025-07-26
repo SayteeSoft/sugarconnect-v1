@@ -511,6 +511,48 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             )}
                         </CardContent>
                     </Card>
+                     <Card className="shadow-xl">
+                        <CardContent className="p-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {privateGalleryPreviews.map((img, i) => (
+                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
+                                        <button className="w-full h-full" onClick={() => openGallery(allImages.indexOf(img))}>
+                                            <Image src={img} alt={`Private gallery image ${i + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="private photo" />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+                                        {isEditMode && (
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                                onClick={() => handleRemovePrivateGalleryImage()}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                                {isEditMode && privateGalleryPreviews.length < 1 && (
+                                    <div
+                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
+                                        onClick={() => privateGalleryInputRef.current?.click()}
+                                    >
+                                        <div className="text-center text-muted-foreground">
+                                            <PlusCircle className="mx-auto h-8 w-8" />
+                                            <p>Add Photo</p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            ref={privateGalleryInputRef}
+                                            onChange={handlePrivateGalleryImageChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                     
                     <div className="mt-6 flex flex-col gap-2">
                             {isEditMode ? (
@@ -629,49 +671,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         </CardContent>
                     </Card>
 
-                     <Card className="shadow-xl">
-                        <CardContent className="p-6">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                {privateGalleryPreviews.map((img, i) => (
-                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
-                                        <button className="w-full h-full" onClick={() => openGallery(allImages.indexOf(img))}>
-                                            <Image src={img} alt={`Private gallery image ${i + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="private photo" />
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </button>
-                                        {isEditMode && (
-                                            <Button
-                                                variant="destructive"
-                                                size="icon"
-                                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                onClick={() => handleRemovePrivateGalleryImage()}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                ))}
-                                {isEditMode && privateGalleryPreviews.length < 1 && (
-                                    <div
-                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
-                                        onClick={() => privateGalleryInputRef.current?.click()}
-                                    >
-                                        <div className="text-center text-muted-foreground">
-                                            <PlusCircle className="mx-auto h-8 w-8" />
-                                            <p>Add Photo</p>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            ref={privateGalleryInputRef}
-                                            onChange={handlePrivateGalleryImageChange}
-                                            accept="image/*"
-                                            className="hidden"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
 
                      <Card className="shadow-xl">
                         <CardHeader className="flex flex-row items-center justify-between">
@@ -773,3 +772,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
+
+    
