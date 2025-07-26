@@ -4,53 +4,36 @@ import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
 
 async function getProfiles(): Promise<UserProfile[]> {
-  // In a real app, you'd fetch this from your API
-  const allUsers = [...mockUsers.filter(u => u.role !== 'Admin')];
-  
-  // Add some placeholder users to match the design, ensuring no duplicates
-  const placeholderUsers: UserProfile[] = [
-    {
-        id: 'olivia-placeholder',
-        email: 'olivia@example.com',
-        name: 'Olivia',
-        age: 23,
-        location: 'Medellin, CO',
-        role: 'Sugar Baby',
-        sex: 'Female',
-        bio: 'Placeholder bio for Olivia.',
-        interests: ['Travel', 'Music'],
-        image: ''
-    },
-    {
-        id: 'cecilia-placeholder',
-        email: 'cecilia@example.com',
-        name: 'Cecilia',
-        age: 25,
-        location: 'Rio, Brazil',
-        role: 'Sugar Baby',
-        sex: 'Female',
-        bio: 'Placeholder bio for Cecilia.',
-        interests: ['Dancing', 'Beaches'],
-        image: ''
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
+    let users: UserProfile[];
+
+    if (!baseUrl) {
+      console.warn("URL env var not set, falling back to mock users for search.");
+      users = [...mockUsers];
+    } else {
+        const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+        const allUsers = [...mockUsers];
+        if (res.ok) {
+            const apiUsers = await res.json();
+            const mockUserIds = new Set(mockUsers.map(u => u.id));
+            for (const apiUser of apiUsers) {
+                if (!mockUserIds.has(apiUser.id)) {
+                    allUsers.push(apiUser);
+                }
+            }
+        } else {
+          console.warn(`API call failed with status ${res.status}, using only mock users for search.`);
+        }
+        users = allUsers;
     }
-  ];
+    
+    return users.filter((user: UserProfile) => user.role !== 'Admin');
 
-  const uniqueProfiles = new Map<string, UserProfile>();
-
-  allUsers.forEach(user => {
-    if (!uniqueProfiles.has(user.name)) {
-      uniqueProfiles.set(user.name, user);
-    }
-  });
-
-  placeholderUsers.forEach(user => {
-     if (!uniqueProfiles.has(user.name)) {
-      uniqueProfiles.set(user.name, user);
-    }
-  });
-
-
-  return Array.from(uniqueProfiles.values());
+  } catch (error) {
+    console.error("Error fetching profiles for search, falling back to mock data:", error);
+    return mockUsers.filter(user => user.role !== 'Admin');
+  }
 }
 
 

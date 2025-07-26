@@ -25,22 +25,23 @@ async function getFeaturedProfiles(): Promise<UserProfile[]> {
 
     if (!baseUrl) {
       // Fallback for local dev or environments where URL is not set
+      console.warn("URL env var not set, falling back to mock users for featured profiles.");
       users = [...mockUsers];
     } else {
-        const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
-        if (!res.ok) {
-            console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
-            users = [...mockUsers];
-        } else {
-            const apiUsers = await res.json();
-            // In case the API returns empty, we still have a fallback.
-            if (apiUsers && apiUsers.length > 0) {
-                 users = apiUsers;
-            } else {
-                 console.warn(`API returned no users, falling back to mock users.`);
-                 users = [...mockUsers];
-            }
-        }
+      const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+      const allUsers = [...mockUsers];
+      if (res.ok) {
+          const apiUsers = await res.json();
+          const mockUserIds = new Set(mockUsers.map(u => u.id));
+          for (const apiUser of apiUsers) {
+              if (!mockUserIds.has(apiUser.id)) {
+                  allUsers.push(apiUser);
+              }
+          }
+      } else {
+        console.warn(`API call failed with status ${res.status}, using only mock users for featured profiles.`);
+      }
+      users = allUsers;
     }
     // Filter out admin users and take the first 4 non-admin profiles
     return users.filter((user: UserProfile) => user.role !== 'Admin').slice(0, 4);
