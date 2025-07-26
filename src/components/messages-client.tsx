@@ -102,7 +102,6 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                 });
             } catch (error) {
                 console.error("Failed to update credits on the server:", error);
-                // Optionally, handle this error, e.g., by trying to revert the local change or notifying the user.
             }
         }
 
@@ -177,10 +176,12 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                 )}
                                 onClick={() => setSelectedConversation(convo)}
                             >
-                                <Avatar className="h-12 w-12">
-                                    <AvatarImage src={convo.user.image} alt={convo.user.name} />
-                                    <AvatarFallback>{convo.user.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
+                                <Link href={`/dashboard/profile/${convo.user.id}`}>
+                                  <Avatar className="h-12 w-12">
+                                      <AvatarImage src={convo.user.image} alt={convo.user.name} />
+                                      <AvatarFallback>{convo.user.name.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                </Link>
                                 <div className="flex-1 truncate">
                                     <h3 className="font-semibold">{convo.user.name}</h3>
                                     <p className="text-sm text-muted-foreground truncate">
@@ -197,10 +198,12 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                         <>
                             <div className="p-4 border-b flex items-center justify-between">
                                 <div className="flex items-center gap-4">
+                                  <Link href={`/dashboard/profile/${selectedConversation.user.id}`}>
                                      <Avatar className="h-10 w-10">
                                         <AvatarImage src={selectedConversation.user.image} alt={selectedConversation.user.name} />
                                         <AvatarFallback>{selectedConversation.user.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
+                                   </Link>
                                     <div>
                                         <h3 className="font-semibold">{selectedConversation.user.name}</h3>
                                         <p className="text-sm text-green-500">Online</p>
@@ -217,10 +220,12 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                     {selectedConversation.messages.map(msg => (
                                         <div key={msg.id} className={cn("flex gap-3", msg.senderId === currentUser.id ? "justify-end" : "justify-start")}>
                                             {msg.senderId !== currentUser.id && (
+                                              <Link href={`/dashboard/profile/${selectedConversation.user.id}`}>
                                                 <Avatar className="h-8 w-8">
                                                     <AvatarImage src={selectedConversation.user.image} alt={selectedConversation.user.name} />
                                                     <AvatarFallback>{selectedConversation.user.name.charAt(0)}</AvatarFallback>
                                                 </Avatar>
+                                              </Link>
                                             )}
                                             <div className={cn(
                                                 "p-3 rounded-lg max-w-xs",
@@ -230,10 +235,12 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
                                                 {msg.text && <p>{msg.text}</p>}
                                             </div>
                                              {msg.senderId === currentUser.id && (
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={currentUser.image} alt={currentUser.name} />
-                                                    <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
+                                                <Link href={`/dashboard/profile/${currentUser.id}`}>
+                                                  <Avatar className="h-8 w-8">
+                                                      <AvatarImage src={currentUser.image} alt={currentUser.name} />
+                                                      <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                                                  </Avatar>
+                                                </Link>
                                             )}
                                         </div>
                                     ))}

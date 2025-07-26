@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
 
 type MatchesClientProps = {
   initialMatches: UserProfile[];
@@ -55,8 +56,6 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
                 filteredMatches = [];
             }
             
-            // For demonstration, we'll populate the lists with filtered data.
-            // In a real app, these lists would come from separate API calls.
             setFavorites(filteredMatches.slice(0, 2));
             setVisitors(filteredMatches.slice(1, 4).filter(u => !favorites.some(f => f.id === u.id)));
             setViewed(filteredMatches.slice(2, 5).filter(u => !favorites.some(f => f.id === u.id) && !visitors.some(v => v.id === u.id)));
@@ -91,10 +90,12 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
     return (
         <Card className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <Link href={`/dashboard/profile/${user.id}`}>
                 <Avatar className="h-14 w-14">
                     <AvatarImage src={user.image} alt={user.name} />
                     <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
+              </Link>
                 <div>
                     <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{user.name}, {user.age}</h3>

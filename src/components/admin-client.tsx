@@ -37,12 +37,20 @@ type AdminClientProps = {
 
 export function AdminClient({ initialUsers }: AdminClientProps) {
   const [users, setUsers] = useState(initialUsers);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    // This ensures that any updates to initialUsers from the server are reflected.
-    // For example, if the page is re-rendered via router.refresh().
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch (e) {
+        //
+      }
+    }
+
     const adminUser = initialUsers.find(u => u.role === 'Admin');
     const otherUsers = initialUsers.filter(u => u.role !== 'Admin');
     const sortedUsers = adminUser ? [adminUser, ...otherUsers] : otherUsers;
@@ -65,8 +73,6 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
         title: "User Deleted",
         description: "The user has been successfully removed.",
       });
-      // No need to call router.refresh() as we are updating state locally.
-      // Call it only if you want to re-fetch all data from the server.
     } catch (error: any) {
       console.error("Deletion failed:", error);
       toast({
@@ -91,6 +97,11 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
     if (role === 'Sugar Baby') return 'Baby';
     return role;
   }
+
+  const canShowAdminBadge = (user: UserProfile) => {
+    if (user.role !== 'Admin') return true;
+    return currentUser?.role === 'Admin';
+  };
 
   return (
     <div className="container mx-auto">
@@ -117,15 +128,17 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <Avatar>
-                        <AvatarImage src={user.image || ''} alt={user.name} data-ai-hint="avatar person" />
-                        <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
-                      </Avatar>
+                      <Link href={`/dashboard/profile/${user.id}`}>
+                        <Avatar>
+                          <AvatarImage src={user.image || ''} alt={user.name} data-ai-hint="avatar person" />
+                          <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
+                        </Avatar>
+                      </Link>
                     </TableCell>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <span>{user.name}</span>
-                        <Badge variant={getRoleVariant(user.role)}>{getRoleDisplayName(user.role)}</Badge>
+                        {canShowAdminBadge(user) && <Badge variant={getRoleVariant(user.role)}>{getRoleDisplayName(user.role)}</Badge>}
                       </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
