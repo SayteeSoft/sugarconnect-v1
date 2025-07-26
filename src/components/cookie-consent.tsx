@@ -66,14 +66,14 @@ export function CookieConsent() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm p-4 z-50 border-t">
        <Dialog>
-        <div className="container mx-auto flex items-center justify-between flex-wrap gap-4">
+        <div className="container mx-auto flex flex-col items-start gap-4">
           <p className="text-sm text-muted-foreground flex-1">
-            To enhance your browsing experience and ensure our platform works effectively, we use cookies and other similar technologies to analyze site traffic and personalize content. By clicking &quot;Accept&quot;, you consent to our use of these technologies. You can learn more about how we use cookies and manage your preferences by reading our {' '}
+            To enhance your browsing experience and ensure our platform works effectively, we use cookies and other similar technologies to analyze site traffic and personalize content. By clicking "Accept and Close", you consent to our use of these technologies. You can learn more about how we use cookies and manage your preferences by reading our {' '}
             <DialogTrigger asChild>
                  <button className="underline text-primary">Cookie Policy</button>
             </DialogTrigger>.
           </p>
-          <Button onClick={acceptConsent} size="sm">Accept</Button>
+          <Button onClick={acceptConsent} size="sm">Accept and Close</Button>
         </div>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
