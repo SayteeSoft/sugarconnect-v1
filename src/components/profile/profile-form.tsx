@@ -123,9 +123,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const [isEditMode, setIsEditMode] = useState(isEditModeFromQuery || false);
     const [profile, setProfile] = useState(initialProfile);
-    const [imagePreview, setImagePreview] = useState<string | null>(profile.image);
+    const [imagePreview, setImagePreview] = useState<string | null>(initialProfile.image);
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(profile.gallery || []);
+    const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(initialProfile.gallery || []);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
@@ -648,7 +648,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <span className="sr-only">Close</span>
                         </Button>
                     </DialogClose>
-                    {allImages.length > 0 && (
+                    {allImages.length > 0 && allImages[currentImageIndex] && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
                                 key={allImages[currentImageIndex]}
@@ -706,4 +706,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
 
