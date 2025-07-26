@@ -40,7 +40,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
-  await request.text(); // Consume the request stream
   const { userId } = params;
   const store = getBlobStore('users');
 
