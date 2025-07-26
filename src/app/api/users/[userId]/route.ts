@@ -94,13 +94,13 @@ export async function PUT(
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
-            if (key !== 'image' && key !== 'galleryImages' && key !== 'gallery' && key !== 'privateGalleryImages' && key !== 'privateGallery' && value !== null && key !== 'password') {
+            if (!['image', 'galleryImages', 'gallery', 'privateGalleryImages', 'privateGallery', 'password'].includes(key) && value !== null) {
                  if ((key === 'interests' || key === 'wants') && typeof value === 'string') {
-                    updatedData[key as keyof UserProfile] = value.split(',').filter(Boolean) as any;
+                    updatedData[key as 'interests' | 'wants'] = value.split(',').filter(Boolean);
                  } else if (key === 'age' && typeof value === 'string') {
-                    updatedData[key] = Number(value);
+                    updatedData.age = Number(value);
                 } else if (typeof value === 'string' && key !== 'email') { 
-                    updatedData[key as keyof UserProfile] = value as any;
+                    updatedData[key as keyof Omit<UserProfile, 'age' | 'interests' | 'wants'>] = value as any;
                 }
             }
         }
@@ -126,37 +126,40 @@ export async function PUT(
 
         // Handle Gallery
         const galleryImageFiles = formData.getAll('galleryImages') as File[];
-        let finalGalleryUrls: string[] = [];
-
-        try {
-            const existingGalleryString = formData.get('gallery') as string;
-            if (existingGalleryString) {
-                finalGalleryUrls = JSON.parse(existingGalleryString);
+        let galleryUrls: string[] = [];
+        
+        // Start with existing URLs from form
+        const existingGalleryString = formData.get('gallery') as string;
+        if (existingGalleryString) {
+            try {
+                galleryUrls = JSON.parse(existingGalleryString);
+            } catch(e) {
+                console.warn("Could not parse existing gallery", e);
             }
-        } catch(e) {
-            console.warn("Could not parse existing gallery", e);
         }
-
+        
+        // Upload new files and add their URLs
         for (const file of galleryImageFiles) {
              if (file.size > 0) {
                 const imageBuffer = await file.arrayBuffer();
                 const imageKey = `${userId}-gallery-${uuidv4()}`;
                 await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
-                finalGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
+                galleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
             }
         }
-        updatedData.gallery = finalGalleryUrls;
+        updatedData.gallery = galleryUrls;
         
         // Handle Private Gallery
         const privateGalleryImageFiles = formData.getAll('privateGalleryImages') as File[];
-        let finalPrivateGalleryUrls: string[] = [];
-        try {
-            const existingPrivateGalleryString = formData.get('privateGallery') as string;
-            if (existingPrivateGalleryString) {
-                finalPrivateGalleryUrls = JSON.parse(existingPrivateGalleryString);
+        let privateGalleryUrls: string[] = [];
+
+        const existingPrivateGalleryString = formData.get('privateGallery') as string;
+        if (existingPrivateGalleryString) {
+            try {
+                privateGalleryUrls = JSON.parse(existingPrivateGalleryString);
+            } catch(e) {
+                console.warn("Could not parse existing private gallery", e);
             }
-        } catch(e) {
-            console.warn("Could not parse existing private gallery", e);
         }
 
         for (const file of privateGalleryImageFiles) {
@@ -164,10 +167,10 @@ export async function PUT(
                 const imageBuffer = await file.arrayBuffer();
                 const imageKey = `${userId}-private-gallery-${uuidv4()}`;
                 await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
-                finalPrivateGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
+                privateGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
             }
         }
-        updatedData.privateGallery = finalPrivateGalleryUrls;
+        updatedData.privateGallery = privateGalleryUrls;
 
 
         const updatedUser = { ...existingUser, ...updatedData };

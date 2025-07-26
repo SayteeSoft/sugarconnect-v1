@@ -125,8 +125,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [profile, setProfile] = useState(initialProfile);
     const [imagePreview, setImagePreview] = useState<string | null>(initialProfile.image);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    
     const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(initialProfile.gallery || []);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    
     const [privateGalleryPreviews, setPrivateGalleryPreviews] = useState<(string)[]>(initialProfile.privateGallery || []);
     const [privateGalleryFiles, setPrivateGalleryFiles] = useState<File[]>([]);
 
@@ -139,7 +141,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = [imagePreview, ...galleryPreviews].filter(Boolean) as string[];
+    const allImages = useMemo(() => [imagePreview, ...galleryPreviews].filter(Boolean) as string[], [imagePreview, galleryPreviews]);
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -278,8 +280,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            const newFiles = [...galleryFiles, ...files];
-            setGalleryFiles(newFiles);
+            setGalleryFiles(prev => [...prev, ...files]);
             
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
@@ -294,30 +295,38 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
     };
 
-    const handleRemoveGalleryImage = (index: number, isPreview: boolean) => {
-        if (isPreview) {
-            const newPreviews = [...galleryPreviews];
-            newPreviews.splice(index, 1);
-            setGalleryPreviews(newPreviews);
-        } else {
-            const newFiles = [...galleryFiles];
-            newFiles.splice(index, 1);
-            setGalleryFiles(newFiles);
+    const handleRemoveGalleryImage = (index: number) => {
+        const urlToRemove = galleryPreviews[index];
+        setGalleryPreviews(previews => previews.filter((_, i) => i !== index));
+
+        if(urlToRemove.startsWith('blob:')){
+            // This was a new file, find and remove it from galleryFiles
+            const fileIndex = galleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
+            if(fileIndex > -1){
+                setGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
+            }
         }
     };
 
-    const handleRemovePrivateGalleryImage = () => {
-        setPrivateGalleryFiles([]);
-        setPrivateGalleryPreviews([]);
+    const handleRemovePrivateGalleryImage = (index: number) => {
+        const urlToRemove = privateGalleryPreviews[index];
+        setPrivateGalleryPreviews(previews => previews.filter((_, i) => i !== index));
+
+        if(urlToRemove.startsWith('blob:')){
+            const fileIndex = privateGalleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
+             if(fileIndex > -1){
+                setPrivateGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
+            }
+        }
     };
 
     const handleSave = async () => {
         setIsLoading(true);
         const formData = new FormData();
 
-        // Append all profile fields except for images
+        // Append all profile fields except for images and password
         Object.entries(profile).forEach(([key, value]) => {
-            if (key === 'image' || key === 'gallery' || key === 'privateGallery' || key === 'password') return;
+            if (['image', 'gallery', 'privateGallery', 'password'].includes(key)) return;
             
             if (Array.isArray(value)) {
                 formData.append(key, value.join(','));
@@ -326,24 +335,24 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             }
         });
 
+        // Handle main profile image
         if (imageFile) {
             formData.append('image', imageFile);
         } else if (profile.image) {
             formData.append('image', profile.image);
         }
 
-        // Append gallery files and existing URLs
+        // Handle public gallery images
         galleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
         const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
         formData.append('gallery', JSON.stringify(existingGalleryUrls));
 
-
-        // Append private gallery file
-        if (privateGalleryFiles.length > 0) {
-            formData.append('privateGalleryImages', privateGalleryFiles[0]);
-        }
+        // Handle private gallery images
+        privateGalleryFiles.forEach(file => {
+            formData.append('privateGalleryImages', file);
+        });
         const existingPrivateGalleryUrls = privateGalleryPreviews.filter(p => !p.startsWith('blob:'));
         formData.append('privateGallery', JSON.stringify(existingPrivateGalleryUrls));
 
@@ -361,7 +370,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             
             const updatedProfile: UserProfile = await response.json();
 
-            // Update localStorage if the saved profile belongs to the current user
             if (isOwnProfile) {
                 localStorage.setItem('user', JSON.stringify(updatedProfile));
                 window.dispatchEvent(new StorageEvent('storage', {
@@ -373,7 +381,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
             setProfile(updatedProfile);
+            // Reset file states and update previews from the server response
             setImagePreview(updatedProfile.image);
+            setImageFile(null);
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
             setPrivateGalleryPreviews(updatedProfile.privateGallery || []);
@@ -440,7 +450,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Card className="shadow-xl">
                         <CardContent className="p-6">
                             <div className="relative group">
-                                <button className="w-full" onClick={() => allImages.length > 0 && openGallery(0)}>
+                                <button className="w-full" onClick={() => allImages.length > 0 && imagePreview && openGallery(allImages.indexOf(imagePreview))}>
                                 <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
                                     {imagePreview ? (
                                         <Image
@@ -477,25 +487,24 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="shadow-xl">
+                     <Card className="shadow-xl">
                         <CardContent className="p-6">
-                            <div className="relative group">
+                            <div className="relative group aspect-square">
                                 {privateGalleryPreviews.length > 0 ? (
-                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                                        <button className="w-full h-full" onClick={() => allImages.length > 0 && privateGalleryPreviews[0] && openGallery(allImages.indexOf(privateGalleryPreviews[0]))}>
+                                    <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                                        <button className="w-full h-full" onClick={() => privateGalleryPreviews[0] && openGallery(allImages.indexOf(privateGalleryPreviews[0]))}>
                                             <Image
                                                 key={privateGalleryPreviews[0]}
                                                 src={privateGalleryPreviews[0]}
                                                 alt="Private photo"
-                                                width={500}
-                                                height={500}
-                                                className="rounded-lg object-cover aspect-square"
+                                                fill
+                                                className="rounded-lg object-cover"
                                                 data-ai-hint="private photo"
                                             />
                                         </button>
                                         {isEditMode && (
                                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage()}>
+                                                <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(0)}>
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -503,10 +512,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                     </div>
                                 ) : isEditMode ? (
                                      <div
-                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
+                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent p-4"
                                         onClick={() => privateGalleryInputRef.current?.click()}
                                     >
-                                        <div className="text-center text-muted-foreground p-4">
+                                        <div className="text-center text-muted-foreground">
                                             <PlusCircle className="mx-auto h-8 w-8" />
                                             <p>Add Photo</p>
                                         </div>
@@ -519,8 +528,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square">
-                                         <div className="text-center text-muted-foreground p-4">
+                                    <div className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square p-4">
+                                         <div className="text-center text-muted-foreground">
                                             <Camera className="mx-auto h-8 w-8" />
                                             <p>No Private Photo</p>
                                         </div>
@@ -651,7 +660,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                                 variant="destructive"
                                                 size="icon"
                                                 className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                onClick={() => handleRemoveGalleryImage(i, true)}
+                                                onClick={() => handleRemoveGalleryImage(i)}
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>
