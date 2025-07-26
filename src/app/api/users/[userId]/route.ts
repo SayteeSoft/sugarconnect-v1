@@ -111,6 +111,14 @@ export async function PUT(
             
             const imageUrl = `/api/images/${imageKey}?t=${new Date().getTime()}`;
             updatedData.image = imageUrl;
+        } else if (formData.get('image') === '') {
+            // Handle image removal
+            updatedData.image = '';
+            try {
+                await imageStore.delete(userId);
+            } catch (imgErr) {
+                console.error(`Could not delete image for user ${userId}:`, imgErr);
+            }
         }
 
         const galleryImageFiles = formData.getAll('galleryImages') as File[];

@@ -268,6 +268,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const file = e.target.files[0];
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
+        } else {
+            // Handle case where user cancels file selection
+            setImageFile(null);
+            setImagePreview(initialProfile.image); // Or revert to original
         }
     };
     
@@ -300,27 +304,31 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setIsLoading(true);
         const formData = new FormData();
     
+        // Always append email for identification
         formData.append('email', profile.email);
     
+        // Append all other profile fields
         Object.entries(profile).forEach(([key, value]) => {
-            if (key === 'interests' || key === 'wants' || key === 'gallery') {
-                 if (Array.isArray(value)) {
-                    // For gallery, only send back existing image URLs, not blob previews
-                    if (key === 'gallery') {
-                         formData.append(key, value.filter(v => !v.startsWith('blob:')).join(','));
-                    } else {
-                        formData.append(key, value.join(','));
-                    }
-                }
-            } else if (value !== undefined && value !== null) {
+            if (key === 'id' || key === 'email' || key === 'image' || key === 'gallery' || key === 'password') return; // Handled separately or not sent
+            
+            if (Array.isArray(value)) {
+                formData.append(key, value.join(','));
+            } else if (value !== null && value !== undefined) {
                 formData.append(key, String(value));
             }
         });
     
+        // Handle main profile image
         if (imageFile) {
             formData.append('image', imageFile);
+        } else if (!imagePreview) {
+            // If the preview is null, it means the user wants to remove the image.
+            formData.append('image', '');
         }
-        
+
+        // Handle gallery images
+        const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
+        formData.append('gallery', existingGalleryUrls.join(','));
         galleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
@@ -341,7 +349,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             // Update localStorage if the saved profile belongs to the current user
             if (isOwnProfile) {
                 localStorage.setItem('user', JSON.stringify(updatedProfile));
-                // Dispatch a storage event to notify other components (like the header) of the change
                 window.dispatchEvent(new StorageEvent('storage', {
                     key: 'user',
                     newValue: JSON.stringify(updatedProfile),
@@ -350,12 +357,15 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
+            
+            // Reset state with data from server
             setProfile(updatedProfile);
             setImagePreview(updatedProfile.image);
-            setImageFile(null); // Clear the file state after successful upload
+            setImageFile(null);
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
             
+            // Clean up URL
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     
@@ -373,7 +383,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setGalleryPreviews(initialProfile.gallery || []);
         setGalleryFiles([]);
         setIsEditMode(false);
-        // Remove edit=true from URL
         const newUrl = window.location.pathname;
         window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     };
@@ -417,7 +426,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     <Card className="shadow-xl">
                         <CardContent className="p-6">
                             <div className="relative group">
-                                <button className="w-full" onClick={() => openGallery(0)}>
+                                <button className="w-full" onClick={() => allImages.length > 0 && openGallery(0)}>
                                     <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
                                     {imagePreview ? (
                                         <Image
@@ -567,7 +576,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 {galleryPreviews.map((img, i) => (
                                     <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
-                                        <button className="w-full h-full" onClick={() => openGallery(i + 1)}>
+                                        <button className="w-full h-full" onClick={() => openGallery(allImages.indexOf(img))}>
                                             <Image src={img} alt={`Gallery image ${i+1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="gallery photo" />
                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </button>
@@ -648,7 +657,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <span className="sr-only">Close</span>
                         </Button>
                     </DialogClose>
-                    {allImages.length > 0 && (
+                    {allImages.length > 0 && allImages[currentImageIndex] && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
                                 key={allImages[currentImageIndex]}
@@ -706,6 +715,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-
-

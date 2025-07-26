@@ -6,6 +6,11 @@ export async function GET(
   { params }: { params: { imageKey: string } }
 ) {
   const { imageKey } = params;
+
+  if (!imageKey) {
+    return NextResponse.json({ message: 'Image key is required' }, { status: 400 });
+  }
+
   const store = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
   try {
@@ -15,7 +20,7 @@ export async function GET(
     }
     return new NextResponse(blob, {
       headers: {
-        'Content-Type': blob.type,
+        'Content-Type': blob.type || 'application/octet-stream',
       },
     });
   } catch (error) {
