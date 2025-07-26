@@ -123,14 +123,19 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const [isEditMode, setIsEditMode] = useState(isEditModeFromQuery || false);
     const [profile, setProfile] = useState(initialProfile);
+    
     const [imagePreview, setImagePreview] = useState<string | null>(initialProfile.image);
     const [imageFile, setImageFile] = useState<File | null>(null);
-    
+    const [imageBase64, setImageBase64] = useState<string | null>(null);
+
     const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(initialProfile.gallery || []);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [galleryBase64s, setGalleryBase64s] = useState<string[]>([]);
     
     const [privateGalleryPreviews, setPrivateGalleryPreviews] = useState<(string)[]>(initialProfile.privateGallery || []);
     const [privateGalleryFiles, setPrivateGalleryFiles] = useState<File[]>([]);
+    const [privateGalleryBase64s, setPrivateGalleryBase64s] = useState<string[]>([]);
+
 
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
@@ -269,29 +274,41 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setProfile(prev => ({ ...prev, [name]: values }));
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+    });
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
+            setImageBase64(await toBase64(file));
         }
     };
     
-    const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
             setGalleryFiles(prev => [...prev, ...files]);
             
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
+
+            const newBase64s = await Promise.all(files.map(file => toBase64(file)));
+            setGalleryBase64s(prev => [...prev, ...newBase64s]);
         }
     };
     
-    const handlePrivateGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePrivateGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setPrivateGalleryFiles([file]);
             setPrivateGalleryPreviews([URL.createObjectURL(file)]);
+            setPrivateGalleryBase64s([await toBase64(file)]);
         }
     };
 
@@ -300,10 +317,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setGalleryPreviews(previews => previews.filter((_, i) => i !== index));
 
         if(urlToRemove.startsWith('blob:')){
-            // This was a new file, find and remove it from galleryFiles
+            // This was a new file, find and remove it from galleryFiles and base64s
             const fileIndex = galleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
             if(fileIndex > -1){
                 setGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
+                setGalleryBase64s(base64s => base64s.filter((_,i) => i !== fileIndex));
             }
         }
     };
@@ -316,6 +334,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const fileIndex = privateGalleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
              if(fileIndex > -1){
                 setPrivateGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
+                setPrivateGalleryBase64s(base64s => base64s.filter((_,i) => i !== fileIndex));
             }
         }
     };
@@ -324,73 +343,62 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setIsLoading(true);
         const formData = new FormData();
 
-        // Append all profile fields except for images and password
         Object.entries(profile).forEach(([key, value]) => {
             if (['image', 'gallery', 'privateGallery', 'password'].includes(key)) return;
-            
-            if (Array.isArray(value)) {
-                formData.append(key, value.join(','));
-            } else if (value !== null && value !== undefined) {
-                formData.append(key, String(value));
-            }
+            if (Array.isArray(value)) formData.append(key, value.join(','));
+            else if (value !== null && value !== undefined) formData.append(key, String(value));
         });
 
-        // Handle main profile image
-        if (imageFile) {
-            formData.append('image', imageFile);
-        } else if (profile.image) {
-            formData.append('image', profile.image);
+        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE) {
+            if (imageBase64) formData.append('image', imageBase64);
+            else if (profile.image) formData.append('image', profile.image);
+
+            const allGalleryUrls = [...galleryPreviews.filter(p => !p.startsWith('blob:')), ...galleryBase64s];
+            formData.append('gallery', JSON.stringify(allGalleryUrls));
+
+            const allPrivateGalleryUrls = [...privateGalleryPreviews.filter(p => !p.startsWith('blob:')), ...privateGalleryBase64s];
+            formData.append('privateGallery', JSON.stringify(allPrivateGalleryUrls));
+
+        } else {
+            if (imageFile) formData.append('image', imageFile);
+            else if (profile.image) formData.append('image', profile.image);
+
+            galleryFiles.forEach(file => formData.append('galleryImages', file));
+            const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
+            formData.append('gallery', JSON.stringify(existingGalleryUrls));
+
+            privateGalleryFiles.forEach(file => formData.append('privateGalleryImages', file));
+            const existingPrivateGalleryUrls = privateGalleryPreviews.filter(p => !p.startsWith('blob:'));
+            formData.append('privateGallery', JSON.stringify(existingPrivateGalleryUrls));
         }
 
-        // Handle public gallery images
-        galleryFiles.forEach(file => {
-            formData.append('galleryImages', file);
-        });
-        const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
-        formData.append('gallery', JSON.stringify(existingGalleryUrls));
-
-        // Handle private gallery images
-        privateGalleryFiles.forEach(file => {
-            formData.append('privateGalleryImages', file);
-        });
-        const existingPrivateGalleryUrls = privateGalleryPreviews.filter(p => !p.startsWith('blob:'));
-        formData.append('privateGallery', JSON.stringify(existingPrivateGalleryUrls));
-
-
         try {
-            const response = await fetch(`/api/users/${profile.id}`, {
-                method: 'PUT',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to save profile.');
-            }
+            const response = await fetch(`/api/users/${profile.id}`, { method: 'PUT', body: formData });
+            if (!response.ok) throw new Error((await response.json()).message || 'Failed to save profile.');
             
             const updatedProfile: UserProfile = await response.json();
-
             if (isOwnProfile) {
                 localStorage.setItem('user', JSON.stringify(updatedProfile));
-                window.dispatchEvent(new StorageEvent('storage', {
-                    key: 'user',
-                    newValue: JSON.stringify(updatedProfile),
-                }));
+                window.dispatchEvent(new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(updatedProfile) }));
             }
 
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
             setProfile(updatedProfile);
-            // Reset file states and update previews from the server response
             setImagePreview(updatedProfile.image);
             setImageFile(null);
+            setImageBase64(null);
+
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
+            setGalleryBase64s([]);
+
             setPrivateGalleryPreviews(updatedProfile.privateGallery || []);
             setPrivateGalleryFiles([]);
+            setPrivateGalleryBase64s([]);
+            
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
-
         } catch (error: any) {
             toast({ variant: 'destructive', title: "Save Failed", description: error.message });
         } finally {
@@ -487,7 +495,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                         </CardContent>
                     </Card>
-                    {(isOwnProfile || currentUser.role === 'Admin') && (
+                    {(canViewSensitiveInfo || (profile.privateGallery && profile.privateGallery.length > 0)) && (
                         <Card className="shadow-xl">
                             <CardContent className="p-6">
                                 <div className="relative group aspect-square">
@@ -796,4 +804,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
