@@ -358,6 +358,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             if (updatedProfile.image) {
                 updatedProfile.image = `${updatedProfile.image.split('?')[0]}?t=${new Date().getTime()}`;
             }
+            
+            // Update localStorage if the saved profile belongs to the current user
+            if (isOwnProfile) {
+                localStorage.setItem('user', JSON.stringify(updatedProfile));
+                // Dispatch a storage event to notify other components (like the header) of the change
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'user',
+                    newValue: JSON.stringify(updatedProfile),
+                }));
+            }
     
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
@@ -368,8 +378,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
-    
-            router.refresh();
     
         } catch (error: any) {
             toast({ variant: 'destructive', title: "Save Failed", description: error.message });
@@ -720,3 +728,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
     
 
     
+
