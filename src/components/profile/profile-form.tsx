@@ -565,6 +565,13 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                             </div>
                                         </div>
                                     )}
+                                     <VerificationBadge />
+                                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Progress value={completionPercentages.total} className="h-2 w-full" />
+                                            <span className="text-white text-xs font-bold">{completionPercentages.total}%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -825,6 +832,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
