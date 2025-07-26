@@ -90,7 +90,7 @@ export default function ProfilePage() {
     return (
         <div className="flex flex-col min-h-screen bg-secondary dark:bg-background">
             <Header />
-            <main className="flex-grow pb-16 pt-24">
+            <main className="flex-grow pb-16 pt-36">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <ProfileForm initialProfile={profile} currentUser={currentUser} />
                 </div>
