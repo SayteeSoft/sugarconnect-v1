@@ -41,6 +41,10 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
+  if (!userId) {
+    return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
+  }
+
   const store = getBlobStore('users');
 
   try {
@@ -61,6 +65,10 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
     const { userId } = params;
+    if (!userId) {
+      return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
+    }
+
     const formData = await request.formData();
     
     const userStore = getBlobStore('users');
@@ -79,19 +87,18 @@ export async function PUT(
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
-        // Verify the user ID matches
         if (existingUser.id !== userId) {
             return NextResponse.json({ message: 'User ID mismatch' }, { status: 400 });
         }
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
-            if (key !== 'image' && key !== 'galleryImages' && value !== null && key !== 'password') {
-                 if ((key === 'interests' || key === 'wants' || key === 'gallery') && typeof value === 'string') {
+            if (key !== 'image' && key !== 'galleryImages' && key !== 'gallery' && value !== null && key !== 'password') {
+                 if ((key === 'interests' || key === 'wants') && typeof value === 'string') {
                     updatedData[key as keyof UserProfile] = value.split(',').filter(Boolean) as any;
                  } else if (key === 'age' && typeof value === 'string') {
                     updatedData[key] = Number(value);
-                } else if (typeof value === 'string' && key !== 'email') { // Do not update email
+                } else if (typeof value === 'string' && key !== 'email') { 
                     updatedData[key as keyof UserProfile] = value as any;
                 }
             }
@@ -111,22 +118,24 @@ export async function PUT(
             
             const imageUrl = `/api/images/${imageKey}?t=${new Date().getTime()}`;
             updatedData.image = imageUrl;
-        } else if (formData.get('image') === '') {
-            // Handle image removal
-            updatedData.image = '';
-            try {
-                await imageStore.delete(userId);
-            } catch (imgErr) {
-                console.error(`Could not delete image for user ${userId}:`, imgErr);
-            }
+        } else {
+             const existingImage = formData.get('image') as string;
+             updatedData.image = existingImage;
         }
 
         const galleryImageFiles = formData.getAll('galleryImages') as File[];
-        // Get existing gallery URLs from the form data
-        const existingGalleryUrls = (formData.get('gallery') as string || '').split(',').filter(Boolean);
-        let finalGalleryUrls = [...existingGalleryUrls];
+        let finalGalleryUrls: string[] = [];
 
-        if (galleryImageFiles && galleryImageFiles.length > 0 && galleryImageFiles.some(f => f.size > 0)) {
+        try {
+            const existingGalleryString = formData.get('gallery') as string;
+            if (existingGalleryString) {
+                finalGalleryUrls = JSON.parse(existingGalleryString);
+            }
+        } catch(e) {
+            console.warn("Could not parse existing gallery", e);
+        }
+
+        if (galleryImageFiles && galleryImageFiles.length > 0) {
             for (const file of galleryImageFiles) {
                  if (file.size > 0) {
                     const imageBuffer = await file.arrayBuffer();

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -135,7 +135,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = [imagePreview, ...galleryPreviews].filter((img): img is string => !!img && img !== '');
+    const allImages = [imagePreview, ...galleryPreviews].filter(Boolean) as string[];
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -268,48 +268,39 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const file = e.target.files[0];
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
-        } else {
-            // Handle case where user cancels file selection
-            setImageFile(null);
-            setImagePreview(initialProfile.image); // Or revert to original
         }
     };
     
     const handleGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            setGalleryFiles(prev => [...prev, ...files]);
+            const newFiles = [...galleryFiles, ...files];
+            setGalleryFiles(newFiles);
             
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
         }
     };
     
-    const handleRemoveGalleryImage = (index: number) => {
-        const newPreviews = [...galleryPreviews];
-        const removedImage = newPreviews.splice(index, 1)[0];
-
-        // Check if the removed image was a newly uploaded file (blob URL)
-        if(removedImage.startsWith('blob:')) {
-            // Find the corresponding file in galleryFiles and remove it
-            const newFiles = galleryFiles.filter(file => URL.createObjectURL(file) !== removedImage);
+    const handleRemoveGalleryImage = (index: number, isPreview: boolean) => {
+        if (isPreview) {
+            const newPreviews = [...galleryPreviews];
+            newPreviews.splice(index, 1);
+            setGalleryPreviews(newPreviews);
+        } else {
+            const newFiles = [...galleryFiles];
+            newFiles.splice(index, 1);
             setGalleryFiles(newFiles);
         }
-
-        setGalleryPreviews(newPreviews);
-        setProfile(prev => ({...prev, gallery: newPreviews.filter(p => !p.startsWith('blob:'))}))
-    }
+    };
 
     const handleSave = async () => {
         setIsLoading(true);
         const formData = new FormData();
-    
-        // Always append email for identification
-        formData.append('email', profile.email);
-    
-        // Append all other profile fields
+
+        // Append all profile fields except for images
         Object.entries(profile).forEach(([key, value]) => {
-            if (key === 'id' || key === 'email' || key === 'image' || key === 'gallery' || key === 'password') return; // Handled separately or not sent
+            if (key === 'image' || key === 'gallery' || key === 'password') return;
             
             if (Array.isArray(value)) {
                 formData.append(key, value.join(','));
@@ -317,35 +308,35 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 formData.append(key, String(value));
             }
         });
-    
-        // Handle main profile image
+
         if (imageFile) {
             formData.append('image', imageFile);
-        } else if (!imagePreview) {
-            // If the preview is null, it means the user wants to remove the image.
-            formData.append('image', '');
+        } else {
+            formData.append('image', profile.image || '');
         }
 
-        // Handle gallery images
-        const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
-        formData.append('gallery', existingGalleryUrls.join(','));
+        // Append gallery files
         galleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
-    
+
+        // Append existing gallery URLs
+        formData.append('gallery', JSON.stringify(galleryPreviews));
+
+
         try {
             const response = await fetch(`/api/users/${profile.id}`, {
                 method: 'PUT',
                 body: formData,
             });
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to save profile.');
             }
             
             const updatedProfile: UserProfile = await response.json();
-    
+
             // Update localStorage if the saved profile belongs to the current user
             if (isOwnProfile) {
                 localStorage.setItem('user', JSON.stringify(updatedProfile));
@@ -354,21 +345,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     newValue: JSON.stringify(updatedProfile),
                 }));
             }
-    
+
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
-            
-            // Reset state with data from server
             setProfile(updatedProfile);
             setImagePreview(updatedProfile.image);
-            setImageFile(null);
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
-            
-            // Clean up URL
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
-    
+
         } catch (error: any) {
             toast({ variant: 'destructive', title: "Save Failed", description: error.message });
         } finally {
@@ -585,7 +571,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                                 variant="destructive"
                                                 size="icon"
                                                 className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                onClick={() => handleRemoveGalleryImage(i)}
+                                                onClick={() => handleRemoveGalleryImage(i, true)}
                                             >
                                                 <X className="h-4 w-4" />
                                             </Button>
@@ -657,7 +643,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <span className="sr-only">Close</span>
                         </Button>
                     </DialogClose>
-                    {allImages.length > 0 && allImages[currentImageIndex] && (
+                    {allImages.length > 0 && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
                                 key={allImages[currentImageIndex]}
@@ -715,4 +701,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
