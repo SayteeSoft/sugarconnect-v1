@@ -438,15 +438,21 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="relative group">
                                 <button className="w-full" onClick={() => openGallery(0)}>
-                                    <Image
-                                        key={imagePreview}
-                                        src={imagePreview || ''}
-                                        alt={profile.name}
-                                        width={500}
-                                        height={500}
-                                        className="rounded-lg object-cover aspect-square bg-muted"
-                                        data-ai-hint="profile photo"
-                                    />
+                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                    {imagePreview ? (
+                                        <Image
+                                            key={imagePreview}
+                                            src={imagePreview}
+                                            alt={profile.name}
+                                            width={500}
+                                            height={500}
+                                            className="rounded-lg object-cover aspect-square bg-muted"
+                                            data-ai-hint="profile photo"
+                                        />
+                                    ) : (
+                                        <Camera className="h-16 w-16 text-muted-foreground" />
+                                    )}
+                                    </div>
                                 </button>
                                  <VerificationBadge />
                                 {isEditMode && (
