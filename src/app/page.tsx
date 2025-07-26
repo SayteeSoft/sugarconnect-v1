@@ -12,7 +12,7 @@ import { CookieConsent } from '@/components/cookie-consent';
 import { UserProfile } from '@/lib/users';
 import { FeaturedProfileCard } from '@/components/featured-profile-card';
 import { TestimonialsSection } from '@/components/testimonials-section';
-import { mockTestimonials, mockUsers } from '@/lib/mock-data';
+import { mockTestimonials, mockUsers, Testimonial } from '@/lib/mock-data';
 import { SecuritySection } from '@/components/security-section';
 import { ByTheNumbersSection } from '@/components/by-the-numbers-section';
 import { SugarRelationshipSection } from '@/components/sugar-relationship-section';
@@ -57,10 +57,35 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [offsetY, setOffsetY] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [filteredTestimonials, setFilteredTestimonials] = useState<Testimonial[]>(mockTestimonials);
+
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    setIsLoggedIn(!!user);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        setIsLoggedIn(true);
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+
+            if (parsedUser.role === 'Sugar Daddy') {
+                setFilteredTestimonials(mockTestimonials.filter(t => t.role === 'Sugar Baby'));
+            } else if (parsedUser.role === 'Sugar Baby') {
+                setFilteredTestimonials(mockTestimonials.filter(t => t.role === 'Sugar Daddy'));
+            } else {
+                setFilteredTestimonials(mockTestimonials);
+            }
+
+        } catch (e) {
+            setUser(null);
+            setFilteredTestimonials(mockTestimonials);
+        }
+    } else {
+        setIsLoggedIn(false);
+        setUser(null);
+        setFilteredTestimonials(mockTestimonials);
+    }
   }, []);
 
   const handleScroll = () => {
@@ -76,11 +101,19 @@ export default function Home() {
     const loadProfiles = async () => {
       setLoading(true);
       const profiles = await getFeaturedProfiles();
-      setFeaturedProfiles(profiles);
+      
+      if (user?.role === 'Sugar Daddy') {
+        setFeaturedProfiles(profiles.filter(p => p.role === 'Sugar Baby'));
+      } else if (user?.role === 'Sugar Baby') {
+        setFeaturedProfiles(profiles.filter(p => p.role === 'Sugar Daddy'));
+      } else {
+        setFeaturedProfiles(profiles);
+      }
+
       setLoading(false);
     };
     loadProfiles();
-  }, []);
+  }, [user]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -143,7 +176,7 @@ export default function Home() {
           </div>
         </section>
         
-        <TestimonialsSection testimonials={mockTestimonials} />
+        <TestimonialsSection testimonials={filteredTestimonials} />
 
         <SugarRelationshipSection />
 
