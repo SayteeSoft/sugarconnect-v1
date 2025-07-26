@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,11 +27,12 @@ type Conversation = {
 type MessagesClientProps = {
     initialConversations: Conversation[];
     currentUser: UserProfile;
+    selectedUserId?: string | null;
 };
 
-export function MessagesClient({ initialConversations, currentUser }: MessagesClientProps) {
+export function MessagesClient({ initialConversations, currentUser, selectedUserId }: MessagesClientProps) {
     const [conversations, setConversations] = useState(initialConversations);
-    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0] || null);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
     const [localUser, setLocalUser] = useState<UserProfile>(currentUser);
@@ -38,6 +40,15 @@ export function MessagesClient({ initialConversations, currentUser }: MessagesCl
     const [imageFile, setImageFile] = useState<File | null>(null);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (selectedUserId) {
+            const conversationToSelect = conversations.find(c => c.user.id === selectedUserId);
+            setSelectedConversation(conversationToSelect || conversations[0] || null);
+        } else {
+            setSelectedConversation(conversations[0] || null);
+        }
+    }, [selectedUserId, conversations]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));

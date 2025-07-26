@@ -627,7 +627,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         ) : isOwnProfile ? (
                             <Button onClick={() => setIsEditMode(true)}>Edit Profile</Button>
                         ) : (
-                            <Button>Message {profile.name}</Button>
+                            <Button asChild>
+                                <Link href={`/messages?userId=${profile.id}`}>Message {profile.name}</Link>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -836,6 +838,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 

@@ -1,18 +1,23 @@
 
+
 "use client";
 
 import { MessagesClient } from "@/components/messages-client";
 import { UserProfile } from "@/lib/users";
 import { mockUsers } from "@/lib/mock-data";
 import { Message } from "@/lib/messages";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 
-export default function MessagesPage() {
+function MessagesPageComponent() {
+    const searchParams = useSearchParams();
+    const userId = searchParams.get('userId');
+
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
     const [conversations, setConversations] = useState<{user: UserProfile, messages: Message[]}[]>([]);
     const [loading, setLoading] = useState(true);
@@ -124,6 +129,18 @@ export default function MessagesPage() {
     }
   
     return (
-        <MessagesClient initialConversations={conversations} currentUser={currentUser} />
+        <MessagesClient 
+            initialConversations={conversations} 
+            currentUser={currentUser}
+            selectedUserId={userId} 
+        />
     );
+}
+
+export default function MessagesPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <MessagesPageComponent />
+        </Suspense>
+    )
 }
