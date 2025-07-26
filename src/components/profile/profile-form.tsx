@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -299,32 +300,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setIsLoading(true);
         const formData = new FormData();
     
-        // Logic to set main image from gallery if needed
-        let finalImageFile = imageFile;
-        let finalGalleryFiles = [...galleryFiles];
-        let finalGalleryPreviews = [...galleryPreviews];
-    
-        const hasMainImage = profile.image && profile.image.trim() !== '';
-        if (!hasMainImage && !imageFile && galleryFiles.length > 0) {
-            finalImageFile = galleryFiles[0]; // Set first gallery file as main image
-            setImageFile(galleryFiles[0]); // update state for preview
-            setImagePreview(URL.createObjectURL(galleryFiles[0]));
-    
-            // Remove the promoted image from the gallery files and previews
-            finalGalleryFiles.shift(); 
-            const removedPreview = finalGalleryPreviews.find(p => p.startsWith('blob:'));
-            if(removedPreview){
-                finalGalleryPreviews = finalGalleryPreviews.filter(p => p !== removedPreview);
-            }
-        }
-    
         formData.append('email', profile.email);
     
         Object.entries(profile).forEach(([key, value]) => {
             if (key === 'interests' || key === 'wants' || key === 'gallery') {
                  if (Array.isArray(value)) {
+                    // For gallery, only send back existing image URLs, not blob previews
                     if (key === 'gallery') {
-                         formData.append(key, finalGalleryPreviews.filter(v => !v.startsWith('blob:')).join(','));
+                         formData.append(key, value.filter(v => !v.startsWith('blob:')).join(','));
                     } else {
                         formData.append(key, value.join(','));
                     }
@@ -334,11 +317,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             }
         });
     
-        if (finalImageFile) {
-            formData.append('image', finalImageFile);
+        if (imageFile) {
+            formData.append('image', imageFile);
         }
         
-        finalGalleryFiles.forEach(file => {
+        galleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
     
@@ -355,10 +338,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             
             const updatedProfile: UserProfile = await response.json();
     
-            if (updatedProfile.image) {
-                updatedProfile.image = `${updatedProfile.image.split('?')[0]}?t=${new Date().getTime()}`;
-            }
-            
             // Update localStorage if the saved profile belongs to the current user
             if (isOwnProfile) {
                 localStorage.setItem('user', JSON.stringify(updatedProfile));
@@ -373,6 +352,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setIsEditMode(false);
             setProfile(updatedProfile);
             setImagePreview(updatedProfile.image);
+            setImageFile(null); // Clear the file state after successful upload
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
             
@@ -450,7 +430,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                             data-ai-hint="profile photo"
                                         />
                                     ) : (
-                                        <Camera className="h-16 w-16 text-muted-foreground" />
+                                        <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
+                                            <Camera className="h-16 w-16 text-muted-foreground" />
+                                        </div>
                                     )}
                                     </div>
                                 </button>
@@ -724,3 +706,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
