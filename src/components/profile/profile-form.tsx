@@ -718,14 +718,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-    
-
-    
-
-
-
-    
-
-    
-

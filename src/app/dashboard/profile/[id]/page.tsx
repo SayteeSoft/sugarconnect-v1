@@ -8,15 +8,8 @@ import { mockUsers } from "@/lib/mock-data";
 
 async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
-    
-    let userStore: Store;
-    // In production, always use the Netlify Blob store as the single source of truth.
-    if (process.env.NETLIFY) {
-        userStore = getStore('users');
-    } else {
-        // For local development, use a local mock store.
-        userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-    }
+
+    const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 
     try {
       const { blobs } = await userStore.list();
@@ -28,12 +21,11 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
             return userToReturn as UserProfile;
           }
         } catch (e) {
-          // Silently ignore blobs that are not valid JSON or don't match the user profile structure.
+          console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
         }
       }
     } catch (e) {
       console.error("Error connecting to blob store in findUserById:", e);
-      // If the blob store itself fails, we should not fall back to mock data in production.
     }
     
     // Fallback to mock data ONLY for local development if user is not in the local blob store.
