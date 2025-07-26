@@ -146,7 +146,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = useMemo(() => [imagePreview, ...galleryPreviews].filter(Boolean) as string[], [imagePreview, galleryPreviews]);
+    const allImages = useMemo(() => [imagePreview, ...privateGalleryPreviews, ...galleryPreviews].filter(Boolean) as string[], [imagePreview, privateGalleryPreviews, galleryPreviews]);
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -517,26 +517,26 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <div className="relative group aspect-square">
                                     {privateGalleryPreviews.length > 0 ? (
                                         <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                                           {privateGalleryPreviews.map((img, i) => (
-                                                <div key={i} className="relative w-full h-full group">
-                                                    <button className="w-full h-full" onClick={() => openGallery(allImages.length + i)}>
-                                                        <Image
-                                                            key={img}
-                                                            src={img}
-                                                            alt="Private photo"
-                                                            fill
-                                                            className="rounded-lg object-cover"
-                                                            data-ai-hint="private photo"
-                                                        />
-                                                    </button>
-                                                    {isEditMode && (
-                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(i)}>
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                            {privateGalleryPreviews.map((img, i) => (
+                                                 <div key={i} className="relative w-full h-full group">
+                                                     <button className="w-full h-full" onClick={() => openGallery(allImages.indexOf(img))}>
+                                                         <Image
+                                                             key={img}
+                                                             src={img}
+                                                             alt="Private photo"
+                                                             fill
+                                                             className="rounded-lg object-cover"
+                                                             data-ai-hint="private photo"
+                                                         />
+                                                     </button>
+                                                     {isEditMode && (
+                                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                             <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(i)}>
+                                                                 <X className="h-4 w-4" />
+                                                             </Button>
+                                                         </div>
+                                                     )}
+                                                 </div>
                                             ))}
                                         </div>
                                     ) : isEditMode ? (
@@ -825,6 +825,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
