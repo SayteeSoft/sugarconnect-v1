@@ -79,11 +79,7 @@ export default function ProfilePage() {
         notFound();
     }
     
-    // In a real app, you would fetch the current user from session/auth context.
-    // We are getting it from localStorage for this demo.
     if (!currentUser) {
-        // This case can happen if localStorage is cleared, but they still have the URL
-        // We can either redirect to login or show a limited view. For now, we'll show loading.
         return <p>Loading user session...</p>
     }
 

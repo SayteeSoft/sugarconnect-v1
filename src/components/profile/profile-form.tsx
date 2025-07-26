@@ -102,7 +102,6 @@ const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 
 
     let completedCount = 0;
     
-    // image is not part of completion anymore, but privateGallery is.
     const fieldsWithoutImage = fieldsToCheck.filter(f => f !== 'image');
     if (!fieldsWithoutImage.includes('privateGallery')) fieldsWithoutImage.push('privateGallery');
 
@@ -138,7 +137,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [galleryBase64s, setGalleryBase64s] = useState<string[]>([]);
     
-    const [privateGalleryPreviews, setPrivateGalleryPreviews] = useState<(string)[]>(initialProfile.privateGallery || []);
+    const [privateGalleryPreviews, setPrivateGalleryPreviews] = useState<(string)[]>(initialProfile.image ? [initialProfile.image] : []);
     const [privateGalleryFiles, setPrivateGalleryFiles] = useState<File[]>([]);
     const [privateGalleryBase64s, setPrivateGalleryBase64s] = useState<string[]>([]);
 
@@ -152,7 +151,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = useMemo(() => [...galleryPreviews, ...privateGalleryPreviews].filter(Boolean) as string[], [galleryPreviews, privateGalleryPreviews]);
+    const allImages = useMemo(() => galleryPreviews.filter(Boolean) as string[], [galleryPreviews]);
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -384,7 +383,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const allGalleryUrls = [...galleryPreviews.filter(p => !p.startsWith('blob:')), ...galleryBase64s];
             formData.append('gallery', JSON.stringify(allGalleryUrls));
 
-            // private gallery is now just for show, not saved separately
             formData.append('privateGallery', JSON.stringify([]));
 
         } else {
@@ -395,7 +393,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
             formData.append('gallery', JSON.stringify(existingGalleryUrls));
             
-            // private gallery is now just for show, not saved separately
             formData.append('privateGallery', JSON.stringify([]));
         }
 
@@ -421,10 +418,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setGalleryFiles([]);
             setGalleryBase64s([]);
             
-            setPrivateGalleryPreviews(updatedProfile.privateGallery || []);
-            if (updatedProfile.image) {
-                setPrivateGalleryPreviews(pg => [updatedProfile.image, ...pg.filter(p => p !== updatedProfile.image)]);
-            }
+            setPrivateGalleryPreviews(updatedProfile.image ? [updatedProfile.image] : []);
             setPrivateGalleryFiles([]);
             setPrivateGalleryBase64s([]);
             
@@ -443,7 +437,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setImageFile(null);
         setGalleryPreviews(initialProfile.gallery || []);
         setGalleryFiles([]);
-        setPrivateGalleryPreviews(initialProfile.privateGallery || []);
+        setPrivateGalleryPreviews(initialProfile.image ? [initialProfile.image] : []);
         setPrivateGalleryFiles([]);
         setIsEditMode(false);
         const newUrl = window.location.pathname;
@@ -477,12 +471,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     return (
         <div className="max-w-6xl mx-auto">
-            {isOwnProfile && !isEditMode &&(
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">Your Profile</h1>
-                    <p className="text-lg text-muted-foreground mt-2">This is how other members see you. Keep it up to date!</p>
-                </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 {/* Left Column */}
                 <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
@@ -848,6 +836,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
