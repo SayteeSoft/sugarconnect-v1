@@ -89,9 +89,9 @@ const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onActio
 const completionSections = {
     about: ['bio'],
     wantsAndInterests: ['wants', 'interests'],
-    gallery: ['gallery'],
+    gallery: ['gallery', 'privateGallery'],
     attributes: ['height', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'smoker', 'drinker', 'piercings', 'tattoos', 'relationshipStatus', 'children'],
-    main: ['image', 'name', 'location']
+    main: ['name', 'location']
 };
 
 const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 'all') => {
@@ -146,7 +146,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = useMemo(() => [imagePreview, ...privateGalleryPreviews, ...galleryPreviews].filter(Boolean) as string[], [imagePreview, privateGalleryPreviews, galleryPreviews]);
+    const allImages = useMemo(() => [...privateGalleryPreviews, ...galleryPreviews].filter(Boolean) as string[], [privateGalleryPreviews, galleryPreviews]);
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -832,6 +832,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
