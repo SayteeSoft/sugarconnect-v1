@@ -32,24 +32,27 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
     } catch (e) {
       console.error("Error connecting to blob store in findUserById:", e);
     }
+    // Fallback to mock data for local development if user not found in blob store.
+    if (process.env.NODE_ENV !== 'production') {
+        const mockUser = mockUsers.find(u => u.id === userId);
+        if (mockUser) {
+            console.warn(`User with id ${userId} not found in primary store, falling back to mock data for local dev.`);
+            return mockUser;
+        }
+    }
+    
     return null;
 }
 
-const getProfileById = async (id: string): Promise<UserProfile | undefined> => {
+const getProfileById = async (id: string): Promise<UserProfile | null | undefined> => {
   let user: UserProfile | null | undefined = null;
   try {
     user = await findUserById(id);
   } catch (e) {
     console.error(`Error fetching profile by id ${id} from primary source:`, e);
   }
-
-  if (user) {
-    return user;
-  }
   
-  // Fallback to mock data if user not found in blob store or if there was an error
-  console.warn(`User with id ${id} not found in primary store, falling back to mock data.`);
-  return mockUsers.find(u => u.id === id);
+  return user;
 };
 
 
