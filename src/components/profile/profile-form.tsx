@@ -101,7 +101,12 @@ const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 
 
     let completedCount = 0;
     
-    fieldsToCheck.forEach(field => {
+    // image is not part of completion anymore, but privateGallery is.
+    const fieldsWithoutImage = fieldsToCheck.filter(f => f !== 'image');
+    if (!fieldsWithoutImage.includes('privateGallery')) fieldsWithoutImage.push('privateGallery');
+
+
+    fieldsWithoutImage.forEach(field => {
         const value = profile[field as keyof UserProfile];
         if (Array.isArray(value)) {
             if (value.length > 0) completedCount++;
@@ -112,7 +117,7 @@ const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 
         }
     });
 
-    return fieldsToCheck.length > 0 ? Math.round((completedCount / fieldsToCheck.length) * 100) : 0;
+    return fieldsWithoutImage.length > 0 ? Math.round((completedCount / fieldsWithoutImage.length) * 100) : 0;
 };
 
 
@@ -285,9 +290,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+
             if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
-                setImageBase64(await toBase64(file));
+                const base64 = await toBase64(file);
+                setImageBase64(base64);
             }
         }
     };
@@ -295,8 +303,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const handleGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            setGalleryFiles(prev => [...prev, ...files]);
-            
+            const newFiles = [...galleryFiles, ...files];
+            setGalleryFiles(newFiles);
+
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
             
@@ -310,7 +319,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const handlePrivateGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            setPrivateGalleryFiles(prev => [...prev, ...files]);
+            const newFiles = [...privateGalleryFiles, ...files];
+            setPrivateGalleryFiles(newFiles);
 
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setPrivateGalleryPreviews(prev => [...prev, ...newPreviews]);
@@ -324,8 +334,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const handleRemoveGalleryImage = (index: number) => {
         const urlToRemove = galleryPreviews[index];
-        const newPreviews = galleryPreviews.filter((_, i) => i !== index);
-        setGalleryPreviews(newPreviews);
+        setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
         
         if (urlToRemove.startsWith('blob:')) {
             const blobIndex = galleryPreviews.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
@@ -340,8 +349,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     const handleRemovePrivateGalleryImage = (index: number) => {
         const urlToRemove = privateGalleryPreviews[index];
-        const newPreviews = privateGalleryPreviews.filter((_, i) => i !== index);
-        setPrivateGalleryPreviews(newPreviews);
+        setPrivateGalleryPreviews(prev => prev.filter((_, i) => i !== index));
 
         if (urlToRemove.startsWith('blob:')) {
             const blobIndex = privateGalleryPreviews.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
@@ -366,7 +374,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
             if (imageBase64) formData.append('image', imageBase64);
-            else if (imagePreview) formData.append('image', imagePreview);
+            else if(imagePreview) formData.append('image', imagePreview);
 
             const allGalleryUrls = [...galleryPreviews.filter(p => !p.startsWith('blob:')), ...galleryBase64s];
             formData.append('gallery', JSON.stringify(allGalleryUrls));
@@ -471,49 +479,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 {/* Left Column */}
                 <div className="md:col-span-1 space-y-8 md:sticky top-28 self-start">
-                    {currentUser.role === 'Admin' && (
-                        <Card className="shadow-xl">
-                            <CardContent className="p-6">
-                                <div className="relative group">
-                                    <button className="w-full" onClick={() => allImages.length > 0 && imagePreview && openGallery(allImages.indexOf(imagePreview))}>
-                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                                        {imagePreview ? (
-                                            <Image
-                                                key={imagePreview}
-                                                src={imagePreview}
-                                                alt={profile.name}
-                                                width={500}
-                                                height={500}
-                                                className="rounded-lg object-cover aspect-square bg-muted"
-                                                data-ai-hint="profile photo"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
-                                                <Camera className="h-16 w-16 text-muted-foreground" />
-                                            </div>
-                                        )}
-                                        </div>
-                                    </button>
-                                     <VerificationBadge />
-                                    {isEditMode && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
-                                                <Camera className="mr-2 h-4 w-4" /> Change Photo
-                                            </Button>
-                                            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                                        </div>
-                                    )}
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
-                                        <div className="flex items-center gap-2">
-                                            <Progress value={completionPercentages.total} className="h-2 w-full" />
-                                            <span className="text-white text-xs font-bold">{completionPercentages.total}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-                    {(canViewSensitiveInfo || (profile.privateGallery && profile.privateGallery.length > 0)) && (
+                     {(canViewSensitiveInfo || (profile.privateGallery && profile.privateGallery.length > 0)) && (
                         <Card className="shadow-xl">
                             <CardContent className="p-6">
                                 <div className="relative group aspect-square">
@@ -578,6 +544,49 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </CardContent>
                         </Card>
                     )}
+                    {currentUser.role === 'Admin' && (
+                        <Card className="shadow-xl">
+                            <CardContent className="p-6">
+                                <div className="relative group">
+                                    <button className="w-full" onClick={() => allImages.length > 0 && imagePreview && openGallery(allImages.indexOf(imagePreview))}>
+                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                        {imagePreview ? (
+                                            <Image
+                                                key={imagePreview}
+                                                src={imagePreview}
+                                                alt={profile.name}
+                                                width={500}
+                                                height={500}
+                                                className="rounded-lg object-cover aspect-square bg-muted"
+                                                data-ai-hint="profile photo"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
+                                                <Camera className="h-16 w-16 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                        </div>
+                                    </button>
+                                     <VerificationBadge />
+                                    {isEditMode && (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
+                                                <Camera className="mr-2 h-4 w-4" /> Change Photo
+                                            </Button>
+                                            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+                                        </div>
+                                    )}
+                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Progress value={completionPercentages.total} className="h-2 w-full" />
+                                            <span className="text-white text-xs font-bold">{completionPercentages.total}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                   
                      <Card className="shadow-xl">
                          <CardContent className="p-6 space-y-4">
                             <div>
@@ -834,6 +843,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
