@@ -151,7 +151,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    const allImages = useMemo(() => galleryPreviews.filter(Boolean) as string[], [galleryPreviews]);
+    const allImages = useMemo(() => {
+        const primaryImage = privateGalleryPreviews[0];
+        const otherImages = galleryPreviews;
+        const all = primaryImage ? [primaryImage, ...otherImages.filter(img => img !== primaryImage)] : otherImages;
+        return [...new Set(all)].filter(Boolean) as string[]; // Deduplicate and remove empty
+    }, [privateGalleryPreviews, galleryPreviews]);
 
     const openGallery = (index: number) => {
         setCurrentImageIndex(index);
@@ -348,18 +353,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     };
 
     const handleRemovePrivateGalleryImage = (index: number) => {
-        const urlToRemove = privateGalleryPreviews[index];
-        setPrivateGalleryPreviews(prev => prev.filter((_, i) => i !== index));
-
-        if (urlToRemove.startsWith('blob:')) {
-            const blobIndex = privateGalleryPreviews.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
-            if(blobIndex > -1){
-                setPrivateGalleryFiles(files => files.filter((_,i) => i !== blobIndex));
-                 if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
-                    setPrivateGalleryBase64s(base64s => base64s.filter((_,i) => i !== blobIndex));
-                }
-            }
-        }
+        setPrivateGalleryPreviews([]);
+        setPrivateGalleryFiles([]);
+        setPrivateGalleryBase64s([]);
     };
 
     const handleSave = async () => {
@@ -536,49 +532,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 </div>
                             </CardContent>
                         </Card>
-
-                    {currentUser.role === 'Admin' && (
-                        <Card className="shadow-xl">
-                            <CardContent className="p-6">
-                                <div className="relative group">
-                                    <button className="w-full" onClick={() => allImages.length > 0 && imagePreview && openGallery(allImages.indexOf(imagePreview))}>
-                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
-                                        {imagePreview ? (
-                                            <Image
-                                                key={imagePreview}
-                                                src={imagePreview}
-                                                alt={profile.name}
-                                                width={500}
-                                                height={500}
-                                                className="rounded-lg object-cover aspect-square bg-muted"
-                                                data-ai-hint="profile photo"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
-                                                <Camera className="h-16 w-16 text-muted-foreground" />
-                                            </div>
-                                        )}
-                                        </div>
-                                    </button>
-                                     <VerificationBadge />
-                                    {isEditMode && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => fileInputRef.current?.click()}>
-                                                <Camera className="mr-2 h-4 w-4" /> Change Photo
-                                            </Button>
-                                            <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
-                                        </div>
-                                    )}
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
-                                        <div className="flex items-center gap-2">
-                                            <Progress value={completionPercentages.total} className="h-2 w-full" />
-                                            <span className="text-white text-xs font-bold">{completionPercentages.total}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                    
                      <Card className="shadow-xl">
                          <CardContent className="p-6 space-y-4">
@@ -850,3 +803,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
 
+
+
+    
