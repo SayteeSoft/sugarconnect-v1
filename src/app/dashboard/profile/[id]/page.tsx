@@ -10,13 +10,15 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
     if (!userId) return null;
     
     let userStore: Store;
-    try {
-      if (process.env.NETLIFY) {
-          userStore = getStore('users');
-      } else {
-          userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-      }
+    // In production, always use the Netlify Blob store as the single source of truth.
+    if (process.env.NETLIFY) {
+        userStore = getStore('users');
+    } else {
+        // For local development, use a local mock store.
+        userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    }
 
+    try {
       const { blobs } = await userStore.list();
       for (const blob of blobs) {
         try {
@@ -31,12 +33,15 @@ async function findUserById(userId: string): Promise<UserProfile | null> {
       }
     } catch (e) {
       console.error("Error connecting to blob store in findUserById:", e);
+      // If the blob store itself fails, we should not fall back to mock data in production.
     }
-    // Fallback to mock data for local development if user not found in blob store.
+    
+    // Fallback to mock data ONLY for local development if user is not in the local blob store.
+    // This prevents production from ever showing mock data.
     if (process.env.NODE_ENV !== 'production') {
         const mockUser = mockUsers.find(u => u.id === userId);
         if (mockUser) {
-            console.warn(`User with id ${userId} not found in primary store, falling back to mock data for local dev.`);
+            console.warn(`User with id ${userId} not found in blob store, falling back to mock data for local dev.`);
             return mockUser;
         }
     }
