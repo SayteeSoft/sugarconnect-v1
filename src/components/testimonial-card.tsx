@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star } from "lucide-react";
 import { Testimonial } from "@/lib/mock-data";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 type TestimonialCardProps = {
   testimonial: Testimonial;
@@ -18,14 +19,20 @@ export function TestimonialCard({ testimonial }: TestimonialCardProps) {
         </div>
         <p className="text-muted-foreground mb-6 italic">&quot;{testimonial.quote}&quot;</p>
         <div className="flex items-center gap-3">
-          <Image
-            src={testimonial.image}
-            alt={testimonial.name}
-            width={40}
-            height={40}
-            className="rounded-full"
-            data-ai-hint="avatar person"
-          />
+          {testimonial.image ? (
+            <Image
+              src={testimonial.image}
+              alt={testimonial.name}
+              width={40}
+              height={40}
+              className="rounded-full"
+              data-ai-hint="avatar person"
+            />
+          ) : (
+            <Avatar className="h-10 w-10">
+                <AvatarFallback>{testimonial.name.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+          )}
           <div>
             <p className="font-semibold">{testimonial.name}</p>
             <p className="text-sm text-muted-foreground">{testimonial.role}</p>
