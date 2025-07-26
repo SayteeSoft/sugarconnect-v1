@@ -648,7 +648,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <span className="sr-only">Close</span>
                         </Button>
                     </DialogClose>
-                    {allImages.length > 0 && allImages[currentImageIndex] && (
+                    {allImages.length > 0 && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
                                 key={allImages[currentImageIndex]}
@@ -706,5 +706,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
+
 
 

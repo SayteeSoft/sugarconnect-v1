@@ -94,7 +94,6 @@ export const mockUsers: UserProfile[] = [
     role: 'Sugar Baby',
     sex: 'Female',
     bio: 'Yoga instructor and nature lover. I find peace in the outdoors and joy in healthy living. Seeking a grounded, successful partner who values wellness and authenticity.',
-    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
     image: '',
   },
 ];
