@@ -105,7 +105,7 @@ const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 
         if (Array.isArray(value)) {
             if (value.length > 0) completedCount++;
         } else if (typeof value === 'string') {
-            if (value.trim() !== '' && !value.includes('placehold.co')) completedCount++;
+            if (value.trim() !== '') completedCount++;
         } else if (value) {
             completedCount++;
         }
@@ -304,7 +304,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         let finalGalleryFiles = [...galleryFiles];
         let finalGalleryPreviews = [...galleryPreviews];
     
-        const hasMainImage = profile.image && !profile.image.includes('placehold.co');
+        const hasMainImage = profile.image && profile.image.trim() !== '';
         if (!hasMainImage && !imageFile && galleryFiles.length > 0) {
             finalImageFile = galleryFiles[0]; // Set first gallery file as main image
             setImageFile(galleryFiles[0]); // update state for preview
@@ -440,11 +440,11 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <button className="w-full" onClick={() => openGallery(0)}>
                                     <Image
                                         key={imagePreview}
-                                        src={imagePreview || 'https://placehold.co/500x500.png'}
+                                        src={imagePreview || ''}
                                         alt={profile.name}
                                         width={500}
                                         height={500}
-                                        className="rounded-lg object-cover aspect-square"
+                                        className="rounded-lg object-cover aspect-square bg-muted"
                                         data-ai-hint="profile photo"
                                     />
                                 </button>

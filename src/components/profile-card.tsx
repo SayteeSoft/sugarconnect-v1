@@ -23,7 +23,7 @@ export function ProfileCard({ user }: ProfileCardProps) {
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
         <div className="relative aspect-[3/4]">
           <Image
-            src={user.image || 'https://placehold.co/400x533.png'}
+            src={user.image || ''}
             alt={user.name}
             fill
             className="object-cover"

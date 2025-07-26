@@ -21,7 +21,7 @@ export function FeaturedProfileCard({ user, isLoggedIn }: FeaturedProfileCardPro
             !isLoggedIn && "after:absolute after:inset-0 after:backdrop-blur-sm"
         )}>
           <Image
-            src={user.image ? user.image : 'https://placehold.co/400x400.png'}
+            src={user.image ? user.image : ''}
             alt={user.name}
             fill
             className="object-cover"

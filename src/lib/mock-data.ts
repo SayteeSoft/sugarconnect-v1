@@ -95,7 +95,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Female',
     bio: 'Yoga instructor and nature lover. I find peace in the outdoors and joy in healthy living. Seeking a grounded, successful partner who values wellness and authenticity.',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: 'https://placehold.co/400x400.png?text=Olivia',
+    image: '',
   },
 ];
 
@@ -140,7 +140,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'John',
     role: 'Sugar Daddy',
     quote: 'Found exactly what I was looking for. Highly recommend.',
-    image: 'https://placehold.co/100x100.png?text=J',
+    image: '',
     rating: 5,
   },
 ];

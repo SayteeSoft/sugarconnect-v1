@@ -19,7 +19,7 @@ async function getProfiles(): Promise<UserProfile[]> {
         sex: 'Female',
         bio: 'Placeholder bio for Olivia.',
         interests: ['Travel', 'Music'],
-        image: 'https://placehold.co/400x400.png?text=Olivia'
+        image: ''
     },
     {
         id: 'cecilia-placeholder',
@@ -31,7 +31,7 @@ async function getProfiles(): Promise<UserProfile[]> {
         sex: 'Female',
         bio: 'Placeholder bio for Cecilia.',
         interests: ['Dancing', 'Beaches'],
-        image: 'https://placehold.co/400x400.png?text=Cecilia'
+        image: ''
     }
   ];
 

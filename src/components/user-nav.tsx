@@ -53,7 +53,7 @@ export function UserNav({ user, mounted }: UserNavProps) {
         {user ? (
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.image || "https://placehold.co/100x100.png"} alt={user.name} data-ai-hint="avatar placeholder" />
+                    <AvatarImage src={user.image || ""} alt={user.name} data-ai-hint="avatar placeholder" />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
             </Button>

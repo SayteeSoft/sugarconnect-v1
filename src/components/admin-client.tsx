@@ -118,7 +118,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                   <TableRow key={user.id}>
                     <TableCell>
                       <Avatar>
-                        <AvatarImage src={user.image || `https://placehold.co/100x100.png`} alt={user.name} data-ai-hint="avatar person" />
+                        <AvatarImage src={user.image || ''} alt={user.name} data-ai-hint="avatar person" />
                         <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
                       </Avatar>
                     </TableCell>
