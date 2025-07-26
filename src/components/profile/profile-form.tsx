@@ -89,9 +89,10 @@ const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onActio
 const completionSections = {
     about: ['bio'],
     wantsAndInterests: ['wants', 'interests'],
-    gallery: ['gallery', 'privateGallery'],
+    gallery: ['gallery'],
     attributes: ['height', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'smoker', 'drinker', 'piercings', 'tattoos', 'relationshipStatus', 'children'],
-    main: ['name', 'location']
+    main: ['name', 'location'],
+    privateGallery: ['privateGallery'],
 };
 
 const calculateCompletion = (profile: UserProfile, sections: string[] | 'all' = 'all') => {
@@ -500,6 +501,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                                      data-ai-hint="profile photo"
                                                  />
                                              </button>
+                                              {isEditMode && (
+                                                <Button
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                                    onClick={() => handleRemovePrivateGalleryImage(0)}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                          </div>
                                     ) : isEditMode ? (
                                         <div
@@ -837,6 +848,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 

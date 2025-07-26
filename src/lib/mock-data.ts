@@ -11,7 +11,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Adminitrator',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: '/user-profiles/Admin_Gemini_Generated_Image(small)-001.jpg',
+    image: '',
   },
   {
     id: '2',
