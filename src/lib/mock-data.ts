@@ -11,7 +11,7 @@ export const mockUsers: UserProfile[] = [
     sex: 'Male',
     bio: 'Adminitrator',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
-    image: '',
+    image: '/user-profiles/Admin_Gemini_Generated_Image(small)-001.jpg',
   },
   {
     id: '2',
@@ -75,7 +75,7 @@ export const mockUsers: UserProfile[] = [
   }, 
   {
     id: '7',
-    email: 'Cecilia7gmail.com',
+    email: 'cecilia7gmail.com',
     name: 'Cecilia',
     age: 25,
     location: 'Rio, Brazil',
@@ -94,7 +94,8 @@ export const mockUsers: UserProfile[] = [
     role: 'Sugar Baby',
     sex: 'Female',
     bio: 'Yoga instructor and nature lover. I find peace in the outdoors and joy in healthy living. Seeking a grounded, successful partner who values wellness and authenticity.',
-    image: '',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
   },
 ];
 
