@@ -99,6 +99,7 @@ export const mockUsers: UserProfile[] = [
 ];
 
 export type Testimonial = {
+  id: string;
   name: string;
   role: string;
   quote: string;
@@ -108,6 +109,7 @@ export type Testimonial = {
 
 export const mockTestimonials: Testimonial[] = [
   {
+    id: '2',
     name: 'Darianna',
     role: 'Sugar Baby',
     quote: 'Art student with a love for adventure and exploring new cultures.',
@@ -115,6 +117,7 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
   {
+    id: '3',
     name: 'Kateryna',
     role: 'Sugar Baby',
     quote: 'Recent graduate starting my career in marketing.',
@@ -122,6 +125,7 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
   {
+    id: '6',
     name: 'Mark',
     role: 'Sugar Daddy',
     quote: 'Investor and lover of the great outdoors.',
@@ -129,6 +133,7 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
     {
+    id: '4',
     name: 'Sofia',
     role: 'Sugar Baby',
     quote: 'A perfect platform to meet genuine people.',
@@ -136,6 +141,7 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
   {
+    id: '99', // Placeholder ID for users not in mockUsers
     name: 'John',
     role: 'Sugar Daddy',
     quote: 'Found exactly what I was looking for. Highly recommend.',
