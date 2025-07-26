@@ -6,29 +6,37 @@ import { useState, useEffect } from 'react';
 import { UserProfile } from "@/lib/users";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { notFound, useParams } from "next/navigation";
+import { mockUsers } from '@/lib/mock-data';
 
 async function getProfileById(id: string): Promise<UserProfile | null> {
     if (!id) return null;
 
     try {
         const baseUrl = process.env.NEXT_PUBLIC_URL || '';
-        // Add a cache-busting parameter to the fetch request
         const response = await fetch(`${baseUrl}/api/users/${id}?t=${new Date().getTime()}`, { cache: 'no-store' });
 
-        if (!response.ok) {
-            if (response.status === 404) {
-                return null;
+        if (response.ok) {
+            const user = await response.json();
+            return user;
+        }
+
+        if (response.status === 404) {
+            // If user is not in the API, check mock users
+            const mockUser = mockUsers.find(u => u.id === id);
+            if (mockUser) {
+                return mockUser;
             }
-            // For other errors, we still want to throw to see what's wrong.
-            throw new Error(`Failed to fetch profile: ${response.statusText}`);
+            return null; // Truly not found
         }
         
-        const user = await response.json();
-        return user;
+        // For other non-404 errors, we might still want to check mocks as a fallback
+        throw new Error(`Failed to fetch profile: ${response.statusText}`);
 
     } catch (e) {
-      console.error(`Error fetching profile by id ${id}:`, e);
-      return null;
+      console.error(`Error fetching profile by id ${id}, checking mock data. Error:`, e);
+      // Fallback to mock users on any fetch error
+      const mockUser = mockUsers.find(u => u.id === id);
+      return mockUser || null;
     }
 }
 
@@ -87,3 +95,4 @@ export default function ProfilePage() {
         <ProfileForm initialProfile={profile} currentUser={currentUser} />
     );
 }
+
