@@ -286,7 +286,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             const file = e.target.files[0];
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
-            setImageBase64(await toBase64(file));
+            if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
+                setImageBase64(await toBase64(file));
+            }
         }
     };
     
@@ -297,44 +299,57 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setGalleryPreviews(prev => [...prev, ...newPreviews]);
-
-            const newBase64s = await Promise.all(files.map(file => toBase64(file)));
-            setGalleryBase64s(prev => [...prev, ...newBase64s]);
+            
+            if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
+                const newBase64s = await Promise.all(files.map(file => toBase64(file)));
+                setGalleryBase64s(prev => [...prev, ...newBase64s]);
+            }
         }
     };
     
     const handlePrivateGalleryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setPrivateGalleryFiles([file]);
-            setPrivateGalleryPreviews([URL.createObjectURL(file)]);
-            setPrivateGalleryBase64s([await toBase64(file)]);
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+            setPrivateGalleryFiles(prev => [...prev, ...files]);
+
+            const newPreviews = files.map(file => URL.createObjectURL(file));
+            setPrivateGalleryPreviews(prev => [...prev, ...newPreviews]);
+            
+            if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
+                const newBase64s = await Promise.all(files.map(file => toBase64(file)));
+                setPrivateGalleryBase64s(prev => [...prev, ...newBase64s]);
+            }
         }
     };
 
     const handleRemoveGalleryImage = (index: number) => {
         const urlToRemove = galleryPreviews[index];
-        setGalleryPreviews(previews => previews.filter((_, i) => i !== index));
-
-        if(urlToRemove.startsWith('blob:')){
-            // This was a new file, find and remove it from galleryFiles and base64s
-            const fileIndex = galleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
-            if(fileIndex > -1){
-                setGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
-                setGalleryBase64s(base64s => base64s.filter((_,i) => i !== fileIndex));
+        const newPreviews = galleryPreviews.filter((_, i) => i !== index);
+        setGalleryPreviews(newPreviews);
+        
+        if (urlToRemove.startsWith('blob:')) {
+            const blobIndex = galleryPreviews.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
+            if (blobIndex > -1) {
+                setGalleryFiles(files => files.filter((_, i) => i !== blobIndex));
+                if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
+                    setGalleryBase64s(base64s => base64s.filter((_, i) => i !== blobIndex));
+                }
             }
         }
     };
 
     const handleRemovePrivateGalleryImage = (index: number) => {
         const urlToRemove = privateGalleryPreviews[index];
-        setPrivateGalleryPreviews(previews => previews.filter((_, i) => i !== index));
+        const newPreviews = privateGalleryPreviews.filter((_, i) => i !== index);
+        setPrivateGalleryPreviews(newPreviews);
 
-        if(urlToRemove.startsWith('blob:')){
-            const fileIndex = privateGalleryFiles.findIndex(file => URL.createObjectURL(file) === urlToRemove);
-             if(fileIndex > -1){
-                setPrivateGalleryFiles(files => files.filter((_,i) => i !== fileIndex));
-                setPrivateGalleryBase64s(base64s => base64s.filter((_,i) => i !== fileIndex));
+        if (urlToRemove.startsWith('blob:')) {
+            const blobIndex = privateGalleryPreviews.filter(p => p.startsWith('blob:')).indexOf(urlToRemove);
+            if(blobIndex > -1){
+                setPrivateGalleryFiles(files => files.filter((_,i) => i !== blobIndex));
+                 if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
+                    setPrivateGalleryBase64s(base64s => base64s.filter((_,i) => i !== blobIndex));
+                }
             }
         }
     };
@@ -349,9 +364,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             else if (value !== null && value !== undefined) formData.append(key, String(value));
         });
 
-        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE) {
+        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
             if (imageBase64) formData.append('image', imageBase64);
-            else if (profile.image) formData.append('image', profile.image);
+            else if (imagePreview) formData.append('image', imagePreview);
 
             const allGalleryUrls = [...galleryPreviews.filter(p => !p.startsWith('blob:')), ...galleryBase64s];
             formData.append('gallery', JSON.stringify(allGalleryUrls));
@@ -361,7 +376,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
         } else {
             if (imageFile) formData.append('image', imageFile);
-            else if (profile.image) formData.append('image', profile.image);
+            else if (imagePreview) formData.append('image', imagePreview);
 
             galleryFiles.forEach(file => formData.append('galleryImages', file));
             const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
@@ -385,6 +400,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             toast({ title: "Profile Saved", description: "Your changes have been saved successfully." });
             setIsEditMode(false);
             setProfile(updatedProfile);
+            
             setImagePreview(updatedProfile.image);
             setImageFile(null);
             setImageBase64(null);
@@ -501,23 +517,27 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <div className="relative group aspect-square">
                                     {privateGalleryPreviews.length > 0 ? (
                                         <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                                            <button className="w-full h-full" onClick={() => privateGalleryPreviews[0] && openGallery(allImages.indexOf(privateGalleryPreviews[0]))}>
-                                                <Image
-                                                    key={privateGalleryPreviews[0]}
-                                                    src={privateGalleryPreviews[0]}
-                                                    alt="Private photo"
-                                                    fill
-                                                    className="rounded-lg object-cover"
-                                                    data-ai-hint="private photo"
-                                                />
-                                            </button>
-                                            {isEditMode && (
-                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(0)}>
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
+                                           {privateGalleryPreviews.map((img, i) => (
+                                                <div key={i} className="relative w-full h-full group">
+                                                    <button className="w-full h-full" onClick={() => openGallery(allImages.length + i)}>
+                                                        <Image
+                                                            key={img}
+                                                            src={img}
+                                                            alt="Private photo"
+                                                            fill
+                                                            className="rounded-lg object-cover"
+                                                            data-ai-hint="private photo"
+                                                        />
+                                                    </button>
+                                                    {isEditMode && (
+                                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button variant="destructive" size="icon" onClick={() => handleRemovePrivateGalleryImage(i)}>
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
                                     ) : isEditMode ? (
                                         <div
@@ -534,6 +554,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                                 onChange={handlePrivateGalleryImageChange}
                                                 accept="image/*"
                                                 className="hidden"
+                                                multiple={false}
                                             />
                                         </div>
                                     ) : (
@@ -804,5 +825,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 

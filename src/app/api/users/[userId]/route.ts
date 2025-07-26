@@ -94,7 +94,7 @@ export async function PUT(
             if (newPassword) updatedData.password = await bcrypt.hash(newPassword, 10);
         }
 
-        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE) {
+        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true') {
             // Local development: Save Base64 strings directly
             if (formData.has('image')) updatedData.image = formData.get('image') as string;
             if (formData.has('gallery')) updatedData.gallery = JSON.parse(formData.get('gallery') as string);
@@ -102,12 +102,12 @@ export async function PUT(
         } else {
             // Production: Save to Netlify Blobs
             const imageFile = formData.get('image') as File | null;
-            if (imageFile && typeof imageFile !== 'string') {
+            if (imageFile && typeof imageFile !== 'string' && imageFile.size > 0) {
                 const imageBuffer = await imageFile.arrayBuffer();
                 await imageStore.set(userId, imageBuffer, { metadata: { contentType: imageFile.type } });
                 updatedData.image = `/api/images/${userId}?t=${new Date().getTime()}`;
-            } else if (formData.has('image')) {
-                updatedData.image = formData.get('image') as string;
+            } else if (formData.has('image') && typeof formData.get('image') === 'string') {
+                 updatedData.image = formData.get('image') as string;
             }
             
             const galleryImageFiles = formData.getAll('galleryImages') as File[];
