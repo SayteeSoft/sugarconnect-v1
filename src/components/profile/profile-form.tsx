@@ -127,10 +127,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [galleryPreviews, setGalleryPreviews] = useState<(string)[]>(initialProfile.gallery || []);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [privateGalleryPreviews, setPrivateGalleryPreviews] = useState<(string)[]>(initialProfile.privateGallery || []);
+    const [privateGalleryFiles, setPrivateGalleryFiles] = useState<File[]>([]);
+
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
+    const privateGalleryInputRef = useRef<HTMLInputElement>(null);
 
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -282,6 +286,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
     };
     
+    const handlePrivateGalleryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setPrivateGalleryFiles([file]);
+            setPrivateGalleryPreviews([URL.createObjectURL(file)]);
+        }
+    };
+
     const handleRemoveGalleryImage = (index: number, isPreview: boolean) => {
         if (isPreview) {
             const newPreviews = [...galleryPreviews];
@@ -294,13 +306,18 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         }
     };
 
+    const handleRemovePrivateGalleryImage = () => {
+        setPrivateGalleryFiles([]);
+        setPrivateGalleryPreviews([]);
+    };
+
     const handleSave = async () => {
         setIsLoading(true);
         const formData = new FormData();
 
         // Append all profile fields except for images
         Object.entries(profile).forEach(([key, value]) => {
-            if (key === 'image' || key === 'gallery' || key === 'password') return;
+            if (key === 'image' || key === 'gallery' || key === 'privateGallery' || key === 'password') return;
             
             if (Array.isArray(value)) {
                 formData.append(key, value.join(','));
@@ -311,17 +328,24 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
         if (imageFile) {
             formData.append('image', imageFile);
-        } else {
-            formData.append('image', profile.image || '');
+        } else if (profile.image) {
+            formData.append('image', profile.image);
         }
 
-        // Append gallery files
+        // Append gallery files and existing URLs
         galleryFiles.forEach(file => {
             formData.append('galleryImages', file);
         });
+        const existingGalleryUrls = galleryPreviews.filter(p => !p.startsWith('blob:'));
+        formData.append('gallery', JSON.stringify(existingGalleryUrls));
 
-        // Append existing gallery URLs
-        formData.append('gallery', JSON.stringify(galleryPreviews));
+
+        // Append private gallery file
+        if (privateGalleryFiles.length > 0) {
+            formData.append('privateGalleryImages', privateGalleryFiles[0]);
+        }
+        const existingPrivateGalleryUrls = privateGalleryPreviews.filter(p => !p.startsWith('blob:'));
+        formData.append('privateGallery', JSON.stringify(existingPrivateGalleryUrls));
 
 
         try {
@@ -352,6 +376,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             setImagePreview(updatedProfile.image);
             setGalleryPreviews(updatedProfile.gallery || []);
             setGalleryFiles([]);
+            setPrivateGalleryPreviews(updatedProfile.privateGallery || []);
+            setPrivateGalleryFiles([]);
             const newUrl = window.location.pathname;
             window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
 
@@ -368,6 +394,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setImageFile(null);
         setGalleryPreviews(initialProfile.gallery || []);
         setGalleryFiles([]);
+        setPrivateGalleryPreviews(initialProfile.privateGallery || []);
+        setPrivateGalleryFiles([]);
         setIsEditMode(false);
         const newUrl = window.location.pathname;
         window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
@@ -413,7 +441,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         <CardContent className="p-6">
                             <div className="relative group">
                                 <button className="w-full" onClick={() => allImages.length > 0 && openGallery(0)}>
-                                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                                <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
                                     {imagePreview ? (
                                         <Image
                                             key={imagePreview}
@@ -602,6 +630,50 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     </Card>
 
                      <Card className="shadow-xl">
+                        <CardContent className="p-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {privateGalleryPreviews.map((img, i) => (
+                                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
+                                        <button className="w-full h-full" onClick={() => openGallery(allImages.indexOf(img))}>
+                                            <Image src={img} alt={`Private gallery image ${i + 1}`} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint="private photo" />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+                                        {isEditMode && (
+                                            <Button
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                                onClick={() => handleRemovePrivateGalleryImage()}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                                {isEditMode && privateGalleryPreviews.length < 1 && (
+                                    <div
+                                        className="flex items-center justify-center border-2 border-dashed rounded-lg aspect-square cursor-pointer hover:bg-accent"
+                                        onClick={() => privateGalleryInputRef.current?.click()}
+                                    >
+                                        <div className="text-center text-muted-foreground">
+                                            <PlusCircle className="mx-auto h-8 w-8" />
+                                            <p>Add Photo</p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            ref={privateGalleryInputRef}
+                                            onChange={handlePrivateGalleryImageChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+
+                     <Card className="shadow-xl">
                         <CardHeader className="flex flex-row items-center justify-between">
                            <div className='flex items-center gap-2'>
                                 <CardTitle>Attributes</CardTitle>
@@ -643,7 +715,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             <span className="sr-only">Close</span>
                         </Button>
                     </DialogClose>
-                    {allImages.length > 0 && (
+                     {allImages.length > 0 && allImages[currentImageIndex] && (
                         <div className="relative w-full h-full flex items-center justify-center">
                             <Image
                                 key={allImages[currentImageIndex]}

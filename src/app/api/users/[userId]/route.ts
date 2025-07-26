@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { getStore, type Store } from '@netlify/blobs';
@@ -93,7 +94,7 @@ export async function PUT(
 
         const updatedData: Partial<UserProfile> = {};
         for (const [key, value] of formData.entries()) {
-            if (key !== 'image' && key !== 'galleryImages' && key !== 'gallery' && value !== null && key !== 'password') {
+            if (key !== 'image' && key !== 'galleryImages' && key !== 'gallery' && key !== 'privateGalleryImages' && key !== 'privateGallery' && value !== null && key !== 'password') {
                  if ((key === 'interests' || key === 'wants') && typeof value === 'string') {
                     updatedData[key as keyof UserProfile] = value.split(',').filter(Boolean) as any;
                  } else if (key === 'age' && typeof value === 'string') {
@@ -118,11 +119,12 @@ export async function PUT(
             
             const imageUrl = `/api/images/${imageKey}?t=${new Date().getTime()}`;
             updatedData.image = imageUrl;
-        } else {
-             const existingImage = formData.get('image') as string;
-             updatedData.image = existingImage;
+        } else if (formData.has('image')) {
+             updatedData.image = formData.get('image') as string;
         }
 
+
+        // Handle Gallery
         const galleryImageFiles = formData.getAll('galleryImages') as File[];
         let finalGalleryUrls: string[] = [];
 
@@ -135,17 +137,37 @@ export async function PUT(
             console.warn("Could not parse existing gallery", e);
         }
 
-        if (galleryImageFiles && galleryImageFiles.length > 0) {
-            for (const file of galleryImageFiles) {
-                 if (file.size > 0) {
-                    const imageBuffer = await file.arrayBuffer();
-                    const imageKey = `${userId}-gallery-${uuidv4()}`;
-                    await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
-                    finalGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
-                }
+        for (const file of galleryImageFiles) {
+             if (file.size > 0) {
+                const imageBuffer = await file.arrayBuffer();
+                const imageKey = `${userId}-gallery-${uuidv4()}`;
+                await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
+                finalGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
             }
         }
         updatedData.gallery = finalGalleryUrls;
+        
+        // Handle Private Gallery
+        const privateGalleryImageFiles = formData.getAll('privateGalleryImages') as File[];
+        let finalPrivateGalleryUrls: string[] = [];
+        try {
+            const existingPrivateGalleryString = formData.get('privateGallery') as string;
+            if (existingPrivateGalleryString) {
+                finalPrivateGalleryUrls = JSON.parse(existingPrivateGalleryString);
+            }
+        } catch(e) {
+            console.warn("Could not parse existing private gallery", e);
+        }
+
+        for (const file of privateGalleryImageFiles) {
+             if (file.size > 0) {
+                const imageBuffer = await file.arrayBuffer();
+                const imageKey = `${userId}-private-gallery-${uuidv4()}`;
+                await imageStore.set(imageKey, imageBuffer, { metadata: { contentType: file.type } });
+                finalPrivateGalleryUrls.push(`/api/images/${imageKey}?t=${new Date().getTime()}`);
+            }
+        }
+        updatedData.privateGallery = finalPrivateGalleryUrls;
 
 
         const updatedUser = { ...existingUser, ...updatedData };

@@ -14,6 +14,7 @@ export type UserProfile = {
   summary?: string;
   wants?: string[];
   gallery?: string[];
+  privateGallery?: string[];
   height?: string;
   bodyType?: string;
   ethnicity?: string;
