@@ -94,30 +94,42 @@ export async function POST(request: NextRequest) {
             }
         });
         
-        // AI-initiate conversation
-        const oppositeRole = newUser.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
-        const allMockUsersOfOppositeRole = mockUsers.filter(u => u.role === oppositeRole);
-        const randomSender = allMockUsersOfOppositeRole[Math.floor(Math.random() * allMockUsersOfOppositeRole.length)];
-
-        if (randomSender) {
-            const { message: aiMessage } = await initiateConversation({
-                senderProfile: JSON.stringify(randomSender),
-                recipientProfile: JSON.stringify(newUser),
-                senderRole: randomSender.role,
-            });
-
-            const conversationId = [newUser.id, randomSender.id].sort().join('--');
+        // If new user is a Sugar Daddy, initiate 3 conversations from mock Sugar Babies
+        if (newUser.role === 'Sugar Daddy') {
+            const sugarBabies = mockUsers.filter(u => u.role === 'Sugar Baby');
             const messagesStore = getBlobStore('messages');
             
-            const newMessage: Message = {
-                id: uuidv4(),
-                conversationId,
-                senderId: randomSender.id,
-                text: aiMessage,
-                timestamp: new Date().toISOString(),
-            };
+            // Shuffle babies to get random ones, and take the first 3
+            const shuffledBabies = sugarBabies.sort(() => 0.5 - Math.random());
+            const selectedSenders = shuffledBabies.slice(0, 3);
 
-            await messagesStore.setJSON(conversationId, { messages: [newMessage] });
+            for (const sender of selectedSenders) {
+                try {
+                    const { message: aiMessage } = await initiateConversation({
+                        senderProfile: JSON.stringify(sender),
+                        recipientProfile: JSON.stringify(newUser),
+                        senderRole: sender.role,
+                    });
+                    
+                    const conversationId = [newUser.id, sender.id].sort().join('--');
+                    
+                    const newMessage: Message = {
+                        id: uuidv4(),
+                        conversationId,
+                        senderId: sender.id,
+                        text: aiMessage,
+                        timestamp: new Date().toISOString(),
+                    };
+                    
+                    // In a real app, you might want to check if a conversation already exists
+                    // and append, but for new user registration, we assume it's new.
+                    await messagesStore.setJSON(conversationId, { messages: [newMessage] });
+
+                } catch (aiError) {
+                    console.error(`Failed to initiate conversation with ${sender.name}:`, aiError);
+                    // Continue to the next one even if one fails
+                }
+            }
         }
         
         const { password: _, ...userToReturn } = newUser;
