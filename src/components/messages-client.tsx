@@ -43,6 +43,15 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const [loadingMessages, setLoadingMessages] = useState(false);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setLocalUser(currentUser);
+    }, [currentUser]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     const getConversationId = (userId1: string, userId2: string) => {
         return [userId1, userId2].sort().join('--');
@@ -130,6 +139,10 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             fetchConversationsAndSelect();
         }
     }, [selectedUserId, currentUser.id]);
+    
+    useEffect(() => {
+        scrollToBottom();
+    }, [selectedConversation?.messages]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -163,7 +176,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         if ((newMessage.trim() === "" && !imageFile) || !selectedConversation) return;
 
         if (localUser.role === 'Sugar Daddy') {
-            if ((localUser.credits ?? 0) < 1) {
+            if ((localUser.credits ?? 0) <= 0) {
                 toast({
                     variant: 'destructive',
                     title: 'No Credits Remaining',
@@ -376,6 +389,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                                             )}
                                         </div>
                                     ))}
+                                    <div ref={messagesEndRef} />
                                 </div>
                                 )}
                             </ScrollArea>
@@ -433,5 +447,3 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
-
-    

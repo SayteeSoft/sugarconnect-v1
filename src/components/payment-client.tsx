@@ -69,16 +69,18 @@ export function PaymentClient({ selectedPackage, user }: PaymentClientProps) {
                     description: `Transaction ID: ${orderData.id}. Your purchase is complete.`,
                 });
                 
-                // Refresh user data from "DB"
-                const res = await fetch(`/api/users/${user.id}`);
+                // Refetch user data to get updated credits/status
+                const res = await fetch(`/api/users/${user.id}?t=${new Date().getTime()}`, { cache: 'no-store' });
                 const updatedUser = await res.json();
-                localStorage.setItem('user', JSON.stringify(updatedUser));
                 
-                // Manually dispatch a storage event to trigger header update
-                window.dispatchEvent(new StorageEvent('storage', {
-                    key: 'user',
-                    newValue: JSON.stringify(updatedUser),
-                }));
+                // Update localStorage and notify other components
+                if (updatedUser) {
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    window.dispatchEvent(new StorageEvent('storage', {
+                        key: 'user',
+                        newValue: JSON.stringify(updatedUser),
+                    }));
+                }
                 
                 router.push(`/dashboard/profile/${user.id}`);
             } else {

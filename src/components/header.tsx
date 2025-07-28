@@ -43,10 +43,16 @@ export function Header() {
     updateUserFromStorage();
 
     // Listen for storage changes to update credits in real-time
-    window.addEventListener('storage', updateUserFromStorage);
+    const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === 'user') {
+            updateUserFromStorage();
+        }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-        window.removeEventListener('storage', updateUserFromStorage);
+        window.removeEventListener('storage', handleStorageChange);
     }
   }, []);
 
@@ -74,7 +80,7 @@ export function Header() {
           <Link href="/purchase-credits">
             <span>Buy Credits</span>
             <div className="ml-2 bg-primary text-primary-foreground h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">
-              {user.credits ?? 10}
+              {user.credits ?? 0}
             </div>
           </Link>
         </Button>
