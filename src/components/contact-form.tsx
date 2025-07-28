@@ -12,7 +12,7 @@ export function ContactForm() {
   return (
     <form action="https://api.web3forms.com/submit" method="POST" className="space-y-6">
       <input type="hidden" name="access_key" value={ACCESS_KEY} />
-      <input type="hidden" name="subject" value="New Contact Form Submission from Sugar Connect" />
+      <input type="hidden" name="subject" value="New activity on 'Sugar Connect' website. The details are below." />
       <input type="hidden" name="from_name" value="Sugar Connect" />
 
       <div className="space-y-2">

@@ -44,7 +44,7 @@ export async function sendEmail({ to, recipientName, subject, body, from_name = 
 
   const payload = {
     access_key: ACCESS_KEY,
-    email: to,
+    to,
     subject,
     html,
     from_name,
