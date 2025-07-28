@@ -20,7 +20,7 @@ export const mockUsers: UserProfile[] = [
     age: 26,
     location: 'Rio, Brazil',
     role: 'Admin',
-    sex: 'Male',
+    sex: 'Female',
     bio: 'Adminitrator',
     interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
     image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',

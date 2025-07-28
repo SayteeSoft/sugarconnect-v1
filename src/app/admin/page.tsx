@@ -36,18 +36,18 @@ async function getUsers(): Promise<UserProfile[]> {
         }
     }
 
-    // Ensure Admin is always first
-    const adminUser = users.find(u => u.role === 'Admin');
+    // Ensure all Admins are always first
+    const adminUsers = users.filter(u => u.role === 'Admin');
     const otherUsers = users.filter(u => u.role !== 'Admin');
     
-    return adminUser ? [adminUser, ...otherUsers] : otherUsers;
+    return [...adminUsers, ...otherUsers];
 
   } catch (e) {
     console.error("Error fetching users, falling back to mock users:", e);
     const users = [...mockUsers];
-    const adminUser = users.find(u => u.role === 'Admin');
+    const adminUsers = users.filter(u => u.role === 'Admin');
     const otherUsers = users.filter(u => u.role !== 'Admin');
-    return adminUser ? [adminUser, ...otherUsers] : otherUsers;
+    return [...adminUsers, ...otherUsers];
   }
 }
 

@@ -50,10 +50,13 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
         //
       }
     }
-
-    const adminUser = initialUsers.find(u => u.role === 'Admin');
-    const otherUsers = initialUsers.filter(u => u.role !== 'Admin');
-    const sortedUsers = adminUser ? [adminUser, ...otherUsers] : otherUsers;
+    
+    // Sort users to ensure admins are always at the top
+    const sortedUsers = [...initialUsers].sort((a, b) => {
+        if (a.role === 'Admin' && b.role !== 'Admin') return -1;
+        if (a.role !== 'Admin' && b.role === 'Admin') return 1;
+        return 0;
+    });
     setUsers(sortedUsers);
   }, [initialUsers]);
 
