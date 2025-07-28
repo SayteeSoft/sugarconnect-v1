@@ -6,7 +6,6 @@ import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
 import { mockUsers } from '@/lib/mock-data';
 import { mockConversations } from '@/lib/mock-messages';
-import { headers } from 'next/headers';
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
     // First check mock users as they are fewer
@@ -102,17 +101,20 @@ export async function GET(request: NextRequest) {
                     // No messages yet for this conversation, which is fine
                 }
             }
-
-            conversations.push({
-                user: {
-                    id: partner.id,
-                    name: partner.name,
-                    image: partner.image,
-                    role: partner.role,
-                    email: partner.email,
-                },
-                messages: lastMessage ? [lastMessage] : []
-            });
+            
+            // Only add conversation if it's for the admin's mock data or if it's a real conversation
+            if (isMockConversationForAdmin || ! (currentUser.email === 'saytee.software@gmail.com')) {
+                conversations.push({
+                    user: {
+                        id: partner.id,
+                        name: partner.name,
+                        image: partner.image,
+                        role: partner.role,
+                        email: partner.email,
+                    },
+                    messages: lastMessage ? [lastMessage] : []
+                });
+            }
         }
         
         conversations.sort((a, b) => {
