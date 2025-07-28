@@ -56,21 +56,20 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
             const localConversation = localStorage.getItem(`conversation_${conversationId}`);
             return localConversation ? JSON.parse(localConversation).messages : [];
-        } else {
-             const res = await fetch(`/api/messages/${conversationId}`);
-            if (!res.ok) throw new Error('Failed to fetch messages');
-            const messages = await res.json();
-            // The API returns the whole conversation object for real users sometimes, handle both cases
-            return Array.isArray(messages) ? messages : messages.messages || [];
         }
+        
+        const res = await fetch(`/api/messages/${conversationId}`);
+        if (!res.ok) throw new Error('Failed to fetch messages');
+        const messages = await res.json();
+        return Array.isArray(messages) ? messages : messages.messages || [];
     };
 
 
     const handleSelectConversation = async (conversation: Conversation) => {
-        if (selectedConversation?.user.id === conversation.user.id && selectedConversation.messages.length > 0) return;
+        if (selectedConversation?.user.id === conversation.user.id) return;
 
-        setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
         setLoadingMessages(true);
+        setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
         try {
             const messages = await loadMessagesForConversation(conversation);
             setSelectedConversation({ ...conversation, messages });
@@ -103,15 +102,16 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
                 setConversations(conversationsWithStatus);
                 
-                let conversationToSelect: Conversation | undefined;
-                if (selectedUserId) {
-                    conversationToSelect = conversationsWithStatus.find(c => c.user.id === selectedUserId);
-                } else if (conversationsWithStatus.length > 0) {
-                    conversationToSelect = conversationsWithStatus[0];
+                let conversationIdToSelect = selectedUserId;
+                if (!conversationIdToSelect && conversationsWithStatus.length > 0) {
+                    conversationIdToSelect = conversationsWithStatus[0].user.id;
                 }
 
-                if (conversationToSelect) {
-                    await handleSelectConversation(conversationToSelect);
+                if (conversationIdToSelect) {
+                    const conversationToSelect = conversationsWithStatus.find(c => c.user.id === conversationIdToSelect);
+                    if (conversationToSelect) {
+                       await handleSelectConversation(conversationToSelect);
+                    }
                 } else {
                     setSelectedConversation(null);
                 }
@@ -133,6 +133,12 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
+
+    useEffect(() => {
+        if (!loadingMessages) {
+             messageEndRef.current?.scrollIntoView();
+        }
+    }, [selectedConversation, loadingMessages]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -202,11 +208,12 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         const bothAreMock = isMockUser(currentUser.id) && isMockUser(selectedConversation.user.id);
         
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
-            const currentConversationJSON = localStorage.getItem(`conversation_${conversationId}`);
-            const currentConversation = currentConversationJSON ? JSON.parse(currentConversationJSON) : { messages: [] };
-            currentConversation.messages.push(optimisticMessage);
-            localStorage.setItem(`conversation_${conversationId}`, JSON.stringify(currentConversation));
-            // No need to replace temp message with saved one as it's all local
+            const localKey = `conversation_${conversationId}`;
+            const existingMessages: Message[] = JSON.parse(localStorage.getItem(localKey) || '[]' );
+            const updatedMessages = [...existingMessages, optimisticMessage];
+            localStorage.setItem(localKey, JSON.stringify(updatedMessages));
+            
+            setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.map(m => m.id === tempMessageId ? { ...optimisticMessage, id: tempMessageId } : m) } : null);
             return;
         }
 
@@ -434,3 +441,5 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
+
+    
