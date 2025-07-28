@@ -55,7 +55,11 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
             const localConversation = localStorage.getItem(`conversation_${conversationId}`);
-            return localConversation ? JSON.parse(localConversation).messages : [];
+            if (localConversation) {
+                const parsed = JSON.parse(localConversation);
+                return Array.isArray(parsed.messages) ? parsed.messages : [];
+            }
+            return [];
         }
         
         const res = await fetch(`/api/messages/${conversationId}`);
@@ -134,12 +138,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    useEffect(() => {
-        if (!loadingMessages) {
-             messageEndRef.current?.scrollIntoView();
-        }
-    }, [selectedConversation, loadingMessages]);
-
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [conversations, searchTerm]);
@@ -209,9 +207,10 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
             const localKey = `conversation_${conversationId}`;
-            const existingMessages: Message[] = JSON.parse(localStorage.getItem(localKey) || '[]' );
-            const updatedMessages = [...existingMessages, optimisticMessage];
-            localStorage.setItem(localKey, JSON.stringify(updatedMessages));
+            const existingConversationData = localStorage.getItem(localKey);
+            const existingConversation = existingConversationData ? JSON.parse(existingConversationData) : { messages: [] };
+            const updatedMessages = [...existingConversation.messages, optimisticMessage];
+            localStorage.setItem(localKey, JSON.stringify({messages: updatedMessages}));
             
             setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.map(m => m.id === tempMessageId ? { ...optimisticMessage, id: tempMessageId } : m) } : null);
             return;
@@ -441,5 +440,3 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
-
-    
