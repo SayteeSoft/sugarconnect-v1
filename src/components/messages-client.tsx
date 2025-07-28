@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -68,7 +67,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
 
     useEffect(() => {
-        const fetchConversations = async () => {
+        const fetchConversationsAndSelect = async () => {
             setLoadingConversations(true);
             try {
                 const res = await fetch(`/api/conversations`, {
@@ -86,16 +85,20 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 }));
 
                 setConversations(conversationsWithStatus);
+                
+                let conversationToSelect: Conversation | undefined;
                 if (selectedUserId) {
-                    const conversationToSelect = conversationsWithStatus.find(c => c.user.id === selectedUserId);
-                    if (conversationToSelect) {
-                        handleSelectConversation(conversationToSelect);
-                    }
+                    conversationToSelect = conversationsWithStatus.find(c => c.user.id === selectedUserId);
                 } else if (conversationsWithStatus.length > 0) {
-                    handleSelectConversation(conversationsWithStatus[0]);
+                    conversationToSelect = conversationsWithStatus[0];
+                }
+
+                if (conversationToSelect) {
+                    await handleSelectConversation(conversationToSelect);
                 } else {
                     setSelectedConversation(null);
                 }
+
             } catch (error) {
                 console.error(error);
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load conversations.' });
@@ -103,12 +106,17 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 setLoadingConversations(false);
             }
         };
-        if(currentUser) fetchConversations();
+
+        if(currentUser) {
+            fetchConversationsAndSelect();
+        }
     }, [selectedUserId, currentUser.id]);
 
 
     const handleSelectConversation = async (conversation: Conversation) => {
-        setSelectedConversation({ ...conversation, messages: [] }); // Clear old messages while loading
+        if (selectedConversation?.user.id === conversation.user.id) return;
+
+        setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
         setLoadingMessages(true);
         try {
             const messages = await loadMessagesForConversation(conversation);
@@ -116,6 +124,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         } catch (error) {
             console.error(error);
             toast({ variant: 'destructive', title: 'Error', description: `Could not load messages for ${conversation.user.name}` });
+            setSelectedConversation(null); // Clear selection on error
         } finally {
             setLoadingMessages(false);
         }
@@ -423,5 +432,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
+
+    
 
     
