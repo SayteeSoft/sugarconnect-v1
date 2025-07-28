@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getStore, type Store } from '@netlify/blobs';
@@ -18,8 +19,7 @@ const getBlobStore = (): Store => {
   });
 };
 
-async function ensureAdminUser(store: Store): Promise<UserProfile> {
-  const adminEmail = 'saytee.software@gmail.com';
+async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserProfile> {
   let adminData: UserProfile | null = null;
   
   try {
@@ -29,7 +29,6 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
   }
 
   if (adminData) {
-    // If admin exists but doesn't have a hashed password (e.g., old data), re-hash it.
     if (!adminData.password || !adminData.password.startsWith('$2b$')) {
         const hashedPassword = await bcrypt.hash('password123', 10);
         adminData.password = hashedPassword;
@@ -38,17 +37,15 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
     return adminData;
   }
 
-  // Create admin user if they don't exist at all
-  const adminTemplate = mockUsers.find(u => u.role === 'Admin');
+  const adminTemplate = mockUsers.find(u => u.email === adminEmail && u.role === 'Admin');
   if (!adminTemplate) {
-    throw new Error('Admin template not found in mock data.');
+    throw new Error(`Admin template for ${adminEmail} not found in mock data.`);
   }
 
   const hashedPassword = await bcrypt.hash('password123', 10);
   
   const adminUser: UserProfile = {
     ...adminTemplate,
-    email: adminEmail,
     password: hashedPassword,
   };
 
@@ -66,14 +63,14 @@ export async function POST(request: NextRequest) {
     }
 
     let user: UserProfile | null = null;
+    const isMockAdmin = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'Admin');
 
-    if (email.toLowerCase() === 'saytee.software@gmail.com') {
-      user = await ensureAdminUser(store);
+    if (isMockAdmin) {
+      user = await ensureAdminUser(store, email.toLowerCase());
     } else {
       try {
         user = (await store.get(email, { type: 'json' })) as UserProfile;
       } catch (error) {
-        // User not found in blob store
         return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
       }
     }
