@@ -132,19 +132,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         }
     }, [selectedUserId, currentUser.id]);
 
-    
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    };
-
-    useEffect(() => {
-        if(selectedConversation && selectedConversation.messages.length > 0){
-             scrollToBottom();
-        }
-    }, [selectedConversation?.messages]);
-
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [conversations, searchTerm]);
