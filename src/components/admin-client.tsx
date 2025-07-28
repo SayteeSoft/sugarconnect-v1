@@ -51,7 +51,7 @@ export function AdminClient() {
           console.warn("URL env var not set, falling back to mock users.");
           fetchedUsers = [...mockUsers];
         } else {
-            const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+            const res = await fetch(`/api/users`, { cache: 'no-store' });
             if (!res.ok) {
                 console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
                 fetchedUsers = [...mockUsers];

@@ -1,5 +1,11 @@
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Search - Sugar Connect",
+    description: "Search for your perfect match.",
+};
 
 export default function SearchLayout({
   children,

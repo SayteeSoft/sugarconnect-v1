@@ -35,7 +35,7 @@ export function SearchClient() {
               console.warn("URL env var not set, falling back to mock users for search.");
               fetchedUsers = [...mockUsers];
             } else {
-                const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+                const res = await fetch(`/api/users`, { cache: 'no-store' });
                 const allUsers = [...mockUsers];
                 if (res.ok) {
                     const apiUsers = await res.json();

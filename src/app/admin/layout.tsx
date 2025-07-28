@@ -1,5 +1,11 @@
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Admin Dashboard - Sugar Connect",
+    description: "Manage users and view site statistics.",
+};
 
 export default function AdminLayout({
   children,

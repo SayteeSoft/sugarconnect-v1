@@ -1,5 +1,11 @@
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Your Matches - Sugar Connect",
+    description: "Browse your favorites, see who visited your profile, and who you have viewed.",
+};
 
 export default function MatchesLayout({
   children,
