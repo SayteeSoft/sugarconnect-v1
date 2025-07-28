@@ -55,12 +55,14 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         const bothAreMock = isMockUser(currentUser.id) && isMockUser(conversation.user.id);
 
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
-            const localMessages = localStorage.getItem(`messages_${conversationId}`);
-            return localMessages ? JSON.parse(localMessages) : [];
+            const localConversation = localStorage.getItem(`conversation_${conversationId}`);
+            return localConversation ? JSON.parse(localConversation).messages : [];
         } else {
              const res = await fetch(`/api/messages/${conversationId}`);
             if (!res.ok) throw new Error('Failed to fetch messages');
-            return await res.json();
+            const messages = await res.json();
+            // The API returns the whole conversation object for real users sometimes, handle both cases
+            return Array.isArray(messages) ? messages : messages.messages || [];
         }
     };
 
@@ -190,9 +192,10 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         const bothAreMock = isMockUser(currentUser.id) && isMockUser(selectedConversation.user.id);
         
         if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
-            const currentMessages = await loadMessagesForConversation(selectedConversation);
-            const newMessages = [...currentMessages, optimisticMessage];
-            localStorage.setItem(`messages_${conversationId}`, JSON.stringify(newMessages));
+            const currentConversationJSON = localStorage.getItem(`conversation_${conversationId}`);
+            const currentConversation = currentConversationJSON ? JSON.parse(currentConversationJSON) : { messages: [] };
+            currentConversation.messages.push(optimisticMessage);
+            localStorage.setItem(`conversation_${conversationId}`, JSON.stringify(currentConversation));
             // No need to replace temp message with saved one as it's all local
             return;
         }
@@ -420,3 +423,5 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
+
+    
