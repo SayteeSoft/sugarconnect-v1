@@ -43,7 +43,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const [loadingMessages, setLoadingMessages] = useState(false);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const messageEndRef = useRef<HTMLDivElement>(null);
 
     const getConversationId = (userId1: string, userId2: string) => {
         return [userId1, userId2].sort().join('--');
@@ -377,7 +376,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                                             )}
                                         </div>
                                     ))}
-                                    <div ref={messageEndRef} />
                                 </div>
                                 )}
                             </ScrollArea>
