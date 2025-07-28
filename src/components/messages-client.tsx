@@ -140,9 +140,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         }
     }, [selectedUserId, currentUser.id]);
     
-    useEffect(() => {
-        scrollToBottom();
-    }, [selectedConversation?.messages]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -200,6 +197,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         };
         
         setSelectedConversation(prev => prev ? { ...prev, messages: [...prev.messages, optimisticMessage] } : null);
+        scrollToBottom();
         
         const currentNewMessage = newMessage;
         const currentImageFile = imageFile;
