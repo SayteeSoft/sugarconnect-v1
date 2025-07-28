@@ -156,16 +156,21 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    // First, check mock users because it's a smaller, faster in-memory check.
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
         try {
+            // Even if it's a mock user, their data might have been updated in the blob store (e.g. credits).
             const storedUser = await store.get(mockUser.email, { type: 'json' });
+            // Return the potentially updated user from blob store, with their original key (email).
             return { key: mockUser.email, user: storedUser };
         } catch (e) {
+            // If user is not in blob store, it means they are a pure mock user.
             return { key: mockUser.email, user: mockUser };
         }
     }
 
+    // If not found in mocks, scan the blob store. This is less efficient.
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -174,9 +179,11 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
           return { key: blob.key, user: userData };
         }
       } catch (e) {
+        // This can happen if a blob is not valid JSON, we can safely ignore it.
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
     }
 
+    // User not found anywhere.
     return null;
 }

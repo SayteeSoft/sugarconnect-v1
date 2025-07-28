@@ -66,6 +66,23 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     };
 
 
+    const handleSelectConversation = async (conversation: Conversation) => {
+        if (selectedConversation?.user.id === conversation.user.id && selectedConversation.messages.length > 0) return;
+
+        setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
+        setLoadingMessages(true);
+        try {
+            const messages = await loadMessagesForConversation(conversation);
+            setSelectedConversation({ ...conversation, messages });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not load messages for ${conversation.user.name}` });
+            setSelectedConversation(null); // Clear selection on error
+        } finally {
+            setLoadingMessages(false);
+        }
+    };
+
     useEffect(() => {
         const fetchConversationsAndSelect = async () => {
             setLoadingConversations(true);
@@ -112,23 +129,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         }
     }, [selectedUserId, currentUser.id]);
 
-
-    const handleSelectConversation = async (conversation: Conversation) => {
-        if (selectedConversation?.user.id === conversation.user.id) return;
-
-        setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
-        setLoadingMessages(true);
-        try {
-            const messages = await loadMessagesForConversation(conversation);
-            setSelectedConversation({ ...conversation, messages });
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: `Could not load messages for ${conversation.user.name}` });
-            setSelectedConversation(null); // Clear selection on error
-        } finally {
-            setLoadingMessages(false);
-        }
-    };
     
     const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -193,7 +193,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         setTimeout(scrollToBottom, 100);
 
         const currentNewMessage = newMessage;
-        const currentImagePreview = imagePreview;
+        const currentImageFile = imageFile;
         setNewMessage("");
         setImageFile(null);
         setImagePreview(null);
@@ -221,8 +221,8 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             const formData = new FormData();
             formData.append('senderId', currentUser.id);
             formData.append('text', currentNewMessage);
-            if (imageFile) {
-                formData.append('image', imageFile);
+            if (currentImageFile) {
+                formData.append('image', currentImageFile);
             }
 
             const response = await fetch(`/api/messages/${conversationId}`, {
@@ -240,7 +240,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 to: selectedConversation.user.email,
                 recipientName: selectedConversation.user.name,
                 subject: `You have a new message from ${currentUser.name}`,
-                body: `<p>You have received a new message from ${currentUser.name}:</p><p><i>"${currentNewMessage}"</i></p>${currentImagePreview ? '<p>(An image was attached)</p>' : ''}`,
+                body: `<p>You have received a new message from ${currentUser.name}:</p><p><i>"${currentNewMessage}"</i></p>${imagePreview ? '<p>(An image was attached)</p>' : ''}`,
                 callToAction: {
                     text: 'Click here to reply',
                     url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${currentUser.id}`
@@ -251,7 +251,8 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to send message. Please try again.' });
             setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.filter(m => m.id !== tempMessageId) } : null);
             setNewMessage(currentNewMessage);
-            setImagePreview(currentImagePreview);
+            setImagePreview(imagePreview);
+            setImageFile(currentImageFile);
         }
     };
 
@@ -433,7 +434,3 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         </div>
     );
 }
-
-    
-
-    
