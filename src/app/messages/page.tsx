@@ -4,8 +4,6 @@
 
 import { MessagesClient } from "@/components/messages-client";
 import { UserProfile } from "@/lib/users";
-import { mockUsers } from "@/lib/mock-data";
-import { Message } from "@/lib/messages";
 import { useState, useEffect, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +17,6 @@ function MessagesPageComponent() {
     const userId = searchParams.get('userId');
 
     const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-    const [conversations, setConversations] = useState<{user: UserProfile, messages: Message[]}[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -28,65 +25,6 @@ function MessagesPageComponent() {
             try {
                 const parsedUser: UserProfile = JSON.parse(storedUser);
                 setCurrentUser(parsedUser);
-
-                let otherUsers: UserProfile[];
-                
-                if (parsedUser.role === 'Admin') {
-                    // Admin can see everyone except themselves
-                    otherUsers = mockUsers.filter(u => u.id !== parsedUser.id);
-                } else if (parsedUser.role === 'Sugar Baby') {
-                    // Sugar Babies only see Sugar Daddies
-                    otherUsers = mockUsers.filter(u => u.role === 'Sugar Daddy');
-                } else if (parsedUser.role === 'Sugar Daddy') {
-                    // Sugar Daddies only see Sugar Babies
-                    otherUsers = mockUsers.filter(u => u.role === 'Sugar Baby');
-                } else {
-                    otherUsers = [];
-                }
-
-
-                // Create mock conversations
-                const generatedConversations = otherUsers.slice(0, 5).map((user, index) => {
-                    const messages: Message[] = [];
-                    if (parsedUser.role === 'Sugar Baby' && user.role === 'Sugar Daddy') {
-                        messages.push({
-                            id: `${user.id}-${index}-1`,
-                            senderId: user.id,
-                            text: `Hello ${parsedUser.name}, I was impressed by your profile.`,
-                            timestamp: new Date(Date.now() - 1000 * 60 * (10 - index)).toISOString(),
-                        });
-                        messages.push({
-                            id: `${user.id}-${index}-2`,
-                            senderId: parsedUser.id,
-                            text: `Thank you, ${user.name}! I appreciate that.`,
-                            timestamp: new Date(Date.now() - 1000 * 60 * (8 - index)).toISOString(),
-                        });
-                    } else if (parsedUser.role === 'Sugar Daddy' && user.role === 'Sugar Baby') {
-                         messages.push({
-                            id: `${user.id}-${index}-1`,
-                            senderId: parsedUser.id,
-                            text: `Hi ${user.name}, you have a lovely profile.`,
-                            timestamp: new Date(Date.now() - 1000 * 60 * (12 - index)).toISOString(),
-                        });
-                        messages.push({
-                            id: `${user.id}-${index}-2`,
-                            senderId: user.id,
-                            text: `Thanks! I'm glad you think so.`,
-                            timestamp: new Date(Date.now() - 1000 * 60 * (7 - index)).toISOString(),
-                        });
-                    } else { // Handles Admin and other cases
-                         messages.push({
-                            id: `${user.id}-${index}-1`,
-                            senderId: user.id,
-                            text: `Hi there!`,
-                            timestamp: new Date(Date.now() - 1000 * 60 * (5 - index)).toISOString(),
-                        });
-                    }
-                    return { user, messages };
-                });
-                
-                setConversations(generatedConversations);
-
             } catch(e) {
                 console.error("Error parsing user from storage", e);
                 setCurrentUser(null);
@@ -130,7 +68,6 @@ function MessagesPageComponent() {
   
     return (
         <MessagesClient 
-            initialConversations={conversations} 
             currentUser={currentUser}
             selectedUserId={userId} 
         />

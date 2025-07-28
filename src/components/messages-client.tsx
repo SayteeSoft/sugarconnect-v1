@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, X } from 'lucide-react';
+import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -25,30 +25,87 @@ type Conversation = {
 };
 
 type MessagesClientProps = {
-    initialConversations: Conversation[];
     currentUser: UserProfile;
     selectedUserId?: string | null;
 };
 
-export function MessagesClient({ initialConversations, currentUser, selectedUserId }: MessagesClientProps) {
-    const [conversations, setConversations] = useState(initialConversations);
+export function MessagesClient({ currentUser, selectedUserId }: MessagesClientProps) {
+    const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [newMessage, setNewMessage] = useState("");
     const [localUser, setLocalUser] = useState<UserProfile>(currentUser);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [loadingConversations, setLoadingConversations] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(false);
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const messageEndRef = useRef<HTMLDivElement>(null);
+
+    const getConversationId = (userId1: string, userId2: string) => {
+        return [userId1, userId2].sort().join('--');
+    };
 
     useEffect(() => {
-        if (selectedUserId) {
-            const conversationToSelect = conversations.find(c => c.user.id === selectedUserId);
-            setSelectedConversation(conversationToSelect || conversations[0] || null);
-        } else {
-            setSelectedConversation(conversations[0] || null);
+        const fetchConversations = async () => {
+            setLoadingConversations(true);
+            try {
+                const res = await fetch(`/api/conversations`);
+                if (!res.ok) throw new Error("Failed to fetch conversations");
+                const data: Conversation[] = await res.json();
+                
+                // Add onlineStatus randomly
+                const conversationsWithStatus = data.map(convo => ({
+                    ...convo,
+                    user: {
+                        ...convo.user,
+                        onlineStatus: Math.random() > 0.5 ? 'online' : 'offline'
+                    }
+                }));
+
+                setConversations(conversationsWithStatus);
+                if (selectedUserId) {
+                    const conversationToSelect = conversationsWithStatus.find(c => c.user.id === selectedUserId);
+                    if (conversationToSelect) {
+                        handleSelectConversation(conversationToSelect);
+                    }
+                } else if (conversationsWithStatus.length > 0) {
+                    handleSelectConversation(conversationsWithStatus[0]);
+                } else {
+                    setSelectedConversation(null);
+                }
+            } catch (error) {
+                console.error(error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load conversations.' });
+            } finally {
+                setLoadingConversations(false);
+            }
+        };
+        fetchConversations();
+    }, [selectedUserId]);
+
+
+    const handleSelectConversation = async (conversation: Conversation) => {
+        setSelectedConversation({ ...conversation, messages: [] }); // Clear old messages while loading
+        setLoadingMessages(true);
+        try {
+            const conversationId = getConversationId(currentUser.id, conversation.user.id);
+            const res = await fetch(`/api/messages/${conversationId}`);
+            if (!res.ok) throw new Error('Failed to fetch messages');
+            const messages: Message[] = await res.json();
+            setSelectedConversation({ ...conversation, messages });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: `Could not load messages for ${conversation.user.name}` });
+        } finally {
+            setLoadingMessages(false);
         }
-    }, [selectedUserId, conversations]);
+    };
+    
+    useEffect(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [selectedConversation?.messages]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -91,69 +148,88 @@ export function MessagesClient({ initialConversations, currentUser, selectedUser
                 });
                 return;
             }
-            
-            const updatedUser = { ...localUser, credits: (localUser.credits ?? 0) - 1 };
-            setLocalUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-
-            // Dispatch a storage event to notify other components (like the header) of the change
-            window.dispatchEvent(new StorageEvent('storage', {
-                key: 'user',
-                newValue: JSON.stringify(updatedUser),
-            }));
-            
-            // Persist the credit change to the backend without blocking the UI
-            const formData = new FormData();
-            formData.append('email', updatedUser.email);
-            formData.append('credits', updatedUser.credits.toString());
-            try {
-                await fetch(`/api/users/${updatedUser.id}`, {
-                    method: 'PUT',
-                    body: formData,
-                });
-            } catch (error) {
-                console.error("Failed to update credits on the server:", error);
-            }
         }
+        
+        const conversationId = getConversationId(currentUser.id, selectedConversation.user.id);
+        const tempMessageId = Date.now().toString();
 
-        const message: Message = {
-            id: Date.now().toString(),
+        const optimisticMessage: Message = {
+            id: tempMessageId,
             senderId: currentUser.id,
             text: newMessage,
             timestamp: new Date().toISOString(),
             image: imagePreview || undefined,
+            conversationId: conversationId
         };
         
+        // Optimistic UI update
         const updatedConversations = conversations.map(c => {
             if (c.user.id === selectedConversation.user.id) {
-                return { ...c, messages: [...c.messages, message] };
+                return { ...c, messages: [...c.messages, optimisticMessage] };
             }
             return c;
         });
-
         setConversations(updatedConversations);
         setSelectedConversation(updatedConversations.find(c => c.user.id === selectedConversation.user.id) || null);
-        
-        sendEmail({
-            to: selectedConversation.user.email,
-            recipientName: selectedConversation.user.name,
-            subject: `You have a new message from ${currentUser.name}`,
-            body: `
-                <p>You have received a new message from ${currentUser.name}:</p>
-                <p><i>"${newMessage}"</i></p>
-                ${imagePreview ? '<p>(An image was attached)</p>' : ''}
-            `,
-            callToAction: {
-                text: 'Click here to reply',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages`
-            }
-        });
 
+        // Clear input fields
+        const currentNewMessage = newMessage;
+        const currentImagePreview = imagePreview;
         setNewMessage("");
         setImageFile(null);
         setImagePreview(null);
-        if(fileInputRef.current) {
-            fileInputRef.current.value = "";
+        if(fileInputRef.current) fileInputRef.current.value = "";
+
+        try {
+            if (localUser.role === 'Sugar Daddy') {
+                const updatedUser = { ...localUser, credits: (localUser.credits ?? 0) - 1 };
+                setLocalUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                window.dispatchEvent(new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(updatedUser) }));
+            }
+
+            const formData = new FormData();
+            formData.append('senderId', currentUser.id);
+            formData.append('text', currentNewMessage);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            const response = await fetch(`/api/messages/${conversationId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Failed to send message");
+
+            const savedMessage: Message = await response.json();
+
+            // Replace temporary message with saved one from server
+            const finalConversations = conversations.map(c => {
+                if (c.user.id === selectedConversation.user.id) {
+                    return { ...c, messages: c.messages.map(m => m.id === tempMessageId ? savedMessage : m) };
+                }
+                return c;
+            });
+            setConversations(finalConversations);
+            setSelectedConversation(finalConversations.find(c => c.user.id === selectedConversation.user.id) || null);
+
+            sendEmail({
+                to: selectedConversation.user.email,
+                recipientName: selectedConversation.user.name,
+                subject: `You have a new message from ${currentUser.name}`,
+                body: `<p>You have received a new message from ${currentUser.name}:</p><p><i>"${currentNewMessage}"</i></p>${currentImagePreview ? '<p>(An image was attached)</p>' : ''}`,
+                callToAction: {
+                    text: 'Click here to reply',
+                    url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${currentUser.id}`
+                }
+            });
+        } catch(error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to send message. Please try again.' });
+            // Revert optimistic update
+            setNewMessage(currentNewMessage);
+            setImagePreview(currentImagePreview);
         }
     };
 
@@ -178,29 +254,38 @@ export function MessagesClient({ initialConversations, currentUser, selectedUser
                         </div>
                     </div>
                     <ScrollArea className="flex-1">
-                        {filteredConversations.map(convo => (
-                            <div
-                                key={convo.user.id}
-                                className={cn(
-                                    "p-4 flex items-center gap-4 cursor-pointer hover:bg-accent",
-                                    selectedConversation?.user.id === convo.user.id && "bg-primary/10"
-                                )}
-                                onClick={() => setSelectedConversation(convo)}
-                            >
-                                <Link href={`/dashboard/profile/${convo.user.id}`}>
-                                  <Avatar className="h-12 w-12">
-                                      <AvatarImage src={convo.user.image} alt={convo.user.name} />
-                                      <AvatarFallback>{convo.user.name.charAt(0)}</AvatarFallback>
-                                  </Avatar>
-                                </Link>
-                                <div className="flex-1 truncate">
-                                    <h3 className="font-semibold">{convo.user.name}</h3>
-                                    <p className="text-sm text-muted-foreground truncate">
-                                        {convo.messages[convo.messages.length - 1]?.image && !convo.messages[convo.messages.length - 1]?.text ? '[Image]' : convo.messages[convo.messages.length - 1]?.text || "No messages yet"}
-                                    </p>
+                        {loadingConversations ? (
+                            <div className="p-4 text-center text-muted-foreground">Loading conversations...</div>
+                        ) : filteredConversations.length > 0 ? (
+                            filteredConversations.map(convo => (
+                                <div
+                                    key={convo.user.id}
+                                    className={cn(
+                                        "p-4 flex items-center gap-4 cursor-pointer hover:bg-accent",
+                                        selectedConversation?.user.id === convo.user.id && "bg-primary/10"
+                                    )}
+                                    onClick={() => handleSelectConversation(convo)}
+                                >
+                                    <div className="relative">
+                                        <Link href={`/dashboard/profile/${convo.user.id}`}>
+                                            <Avatar className="h-12 w-12">
+                                                <AvatarImage src={convo.user.image} alt={convo.user.name} />
+                                                <AvatarFallback>{convo.user.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                        </Link>
+                                        {convo.user.onlineStatus === 'online' && <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />}
+                                    </div>
+                                    <div className="flex-1 truncate">
+                                        <h3 className="font-semibold">{convo.user.name}</h3>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            {convo.messages[convo.messages.length - 1]?.image && !convo.messages[convo.messages.length - 1]?.text ? '[Image]' : convo.messages[convo.messages.length - 1]?.text || "No messages yet"}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <div className="p-4 text-center text-muted-foreground">No conversations found.</div>
+                        )}
                     </ScrollArea>
                 </div>
                 {/* Right Column: Chat Window */}
@@ -217,7 +302,7 @@ export function MessagesClient({ initialConversations, currentUser, selectedUser
                                    </Link>
                                     <div>
                                         <h3 className="font-semibold">{selectedConversation.user.name}</h3>
-                                        <p className="text-sm text-green-500">Online</p>
+                                        <p className={cn("text-sm", selectedConversation.user.onlineStatus === 'online' ? "text-green-500" : "text-muted-foreground")}>{selectedConversation.user.onlineStatus === 'online' ? "Online" : "Offline"}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 text-muted-foreground">
@@ -227,6 +312,11 @@ export function MessagesClient({ initialConversations, currentUser, selectedUser
                                 </div>
                             </div>
                             <ScrollArea className="flex-1 p-6 bg-secondary/50">
+                                {loadingMessages ? (
+                                    <div className="flex justify-center items-center h-full">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    </div>
+                                ) : (
                                 <div className="space-y-6">
                                     {selectedConversation.messages.map(msg => (
                                         <div key={msg.id} className={cn("flex gap-3", msg.senderId === currentUser.id ? "justify-end" : "justify-start")}>
@@ -255,7 +345,9 @@ export function MessagesClient({ initialConversations, currentUser, selectedUser
                                             )}
                                         </div>
                                     ))}
+                                    <div ref={messageEndRef} />
                                 </div>
+                                )}
                             </ScrollArea>
                             {imagePreview && (
                                 <div className="p-4 border-t relative">

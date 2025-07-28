@@ -1,4 +1,5 @@
 
+
 export type UserProfile = {
   id: string;
   email: string;
@@ -28,4 +29,5 @@ export type UserProfile = {
   children?: string;
   credits?: number;
   verifiedUntil?: string;
+  onlineStatus?: 'online' | 'offline';
 };
