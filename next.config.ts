@@ -19,9 +19,6 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  env: {
-    NEXT_PUBLIC_USE_LOCAL_STORAGE: process.env.NODE_ENV === 'development' ? 'true' : 'false',
-  },
 };
 
 export default nextConfig;
