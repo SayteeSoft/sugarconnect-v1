@@ -17,13 +17,8 @@ const getImageStore = (): Store => {
     return getStore(process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 };
 
-const getBlobStore = (name: 'users' | 'images' | 'messages'): Store => {
-    return getStore({
-        name,
-        consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id',
-        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token',
-    });
+const getUsersStore = (): Store => {
+    return getStore(process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 };
 
 
@@ -109,10 +104,10 @@ export async function POST(
 
         await messagesStore.setJSON(conversationId, conversation);
         
-        const userStore = getBlobStore('users');
+        const userStore = getUsersStore();
         const senderData = await findUserById(userStore, senderId);
 
-        if (senderData?.user.role === 'Sugar Daddy') {
+        if (senderData?.user.role === 'Sugar Daddy' && senderData.key) {
             const updatedCredits = (senderData.user.credits || 0) - 1;
             const updatedUser = { ...senderData.user, credits: updatedCredits };
             await userStore.setJSON(senderData.key, updatedUser);
@@ -156,21 +151,19 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    // First, check mock users because it's a smaller, faster in-memory check.
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
         try {
-            // Even if it's a mock user, their data might have been updated in the blob store (e.g. credits).
             const storedUser = await store.get(mockUser.email, { type: 'json' });
-            // Return the potentially updated user from blob store, with their original key (email).
             return { key: mockUser.email, user: storedUser };
         } catch (e) {
-            // If user is not in blob store, it means they are a pure mock user.
             return { key: mockUser.email, user: mockUser };
         }
     }
 
-    // If not found in mocks, scan the blob store. This is less efficient.
+    // This is the fallback for non-mock users.
+    // It's inefficient, but necessary if we only have the ID.
+    // A better approach in a real app would be a direct lookup table (ID -> email).
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -179,11 +172,10 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
           return { key: blob.key, user: userData };
         }
       } catch (e) {
-        // This can happen if a blob is not valid JSON, we can safely ignore it.
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
     }
 
-    // User not found anywhere.
     return null;
 }
+
