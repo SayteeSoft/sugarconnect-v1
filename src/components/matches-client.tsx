@@ -105,7 +105,7 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => router.push('/messages')}>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/messages?userId=${user.id}`)}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Chat
                 </Button>
