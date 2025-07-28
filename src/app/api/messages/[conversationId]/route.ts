@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
 import { mockConversations } from '@/lib/mock-messages';
+import { generateReply } from '@/ai/flows/generate-reply';
 
 const getMessagesStore = (): Store => {
     return getStore(process.env.NETLIFY ? 'messages' : { name: 'messages', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
@@ -108,7 +109,6 @@ export async function POST(
 
         await messagesStore.setJSON(conversationId, conversation);
         
-        // Also deduct credits if sender is a sugar daddy
         const userStore = getBlobStore('users');
         const senderData = await findUserById(userStore, senderId);
 
@@ -117,6 +117,33 @@ export async function POST(
             const updatedUser = { ...senderData.user, credits: updatedCredits };
             await userStore.setJSON(senderData.key, updatedUser);
         }
+
+        // AI Reply Logic
+        const recipientId = conversationId.replace(senderId, '').replace('--', '');
+        const recipientIsMock = mockUsers.some(u => u.id === recipientId);
+
+        if (recipientIsMock) {
+            const recipientProfile = mockUsers.find(u => u.id === recipientId)!;
+            
+            const { reply: aiReply } = await generateReply({
+                conversationHistory: conversation.messages.map(m => ({ senderId: m.senderId, text: m.text })),
+                responderProfile: JSON.stringify(recipientProfile),
+                recipientProfile: JSON.stringify(senderData?.user),
+                responderRole: recipientProfile.role as 'Sugar Daddy' | 'Sugar Baby',
+            });
+            
+            const aiMessage: Message = {
+                id: uuidv4(),
+                conversationId,
+                senderId: recipientId,
+                text: aiReply,
+                timestamp: new Date(Date.now() + 1000).toISOString(), // slightly after user's message
+            };
+            
+            conversation.messages.push(aiMessage);
+            await messagesStore.setJSON(conversationId, conversation);
+        }
+
 
         return NextResponse.json(newMessage, { status: 201 });
 
@@ -129,24 +156,16 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    // First, check the mock users array since it's small and in memory.
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
-        // We need to check if this mock user also exists in the blob store to get their latest data (like credits).
         try {
-            // The key in the blob store is the user's email.
             const storedUser = await store.get(mockUser.email, { type: 'json' });
-            // If they exist in blob store, return that version as it's the most up-to-date.
             return { key: mockUser.email, user: storedUser };
         } catch (e) {
-            // If they don't exist in the blob store (e.g., they are purely a mock user like the admin),
-            // we can return the mock user object. The key will be their email.
             return { key: mockUser.email, user: mockUser };
         }
     }
 
-    // If not found in mocks, iterate through the blob store.
-    // This is less efficient and should be a fallback for non-mock users.
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -155,11 +174,9 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
           return { key: blob.key, user: userData };
         }
       } catch (e) {
-        // This can happen if a blob is not valid JSON, we can safely ignore it.
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
     }
 
-    // Return null if the user is not found anywhere.
     return null;
 }

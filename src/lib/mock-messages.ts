@@ -20,49 +20,43 @@ type MockConversation = {
 
 export const mockConversations: MockConversation[] = [];
 
-if (adminUser && darianna) {
-    const conversationId = getConversationId(adminUser.id, darianna.id);
-    mockConversations.push({
-        conversationId,
-        participants: [{ id: adminUser.id, name: adminUser.name }, { id: darianna.id, name: darianna.name }],
-        messages: [
-            { id: 'msg1', conversationId, senderId: darianna.id, text: 'Hey there! I saw your profile and was really impressed.', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
-            { id: 'msg2', conversationId, senderId: adminUser.id, text: 'Hello Darianna, thank you. Your profile is quite captivating as well.', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString() },
-            { id: 'msg3', conversationId, senderId: darianna.id, text: 'I\'m glad you think so! I\'d love to chat more and see if we connect.', timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
-        ]
-    });
-}
+// AI-Generated mock conversations for the admin user
+const aiGeneratedInquiries = [
+    "Hi there, I was wondering how the profile verification process works? I want to make sure I'm doing everything correctly.",
+    "I'm having some trouble uploading photos to my gallery. It keeps giving me an error. Can you help?",
+    "Just wanted to say I'm really enjoying the app so far! The quality of profiles is excellent.",
+    "Is there a way to filter my search results by height? I can't seem to find the option.",
+    "I have a suggestion for a new feature: maybe a 'wink' or 'poke' button to show interest without sending a full message?",
+    "Quick question - how long does it typically take to find a match on here? Just curious!",
+];
 
-if (adminUser && kateryna) {
-    const conversationId = getConversationId(adminUser.id, kateryna.id);
-    mockConversations.push({
-        conversationId,
-        participants: [{ id: adminUser.id, name: adminUser.name }, { id: kateryna.id, name: kateryna.name }],
-        messages: [
-            { id: 'msg4', conversationId, senderId: kateryna.id, text: 'Hi! I noticed we have a shared interest in museums.', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString() },
-            { id: 'msg5', conversationId, senderId: adminUser.id, text: 'Yes, I\'m a great admirer of the arts. Do you have a favorite period?', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString() },
-        ]
-    });
-}
+const mockSenders = [darianna, kateryna, sofia, vanessa].filter(Boolean) as UserProfile[];
 
-if (adminUser && sofia) {
-    const conversationId = getConversationId(adminUser.id, sofia.id);
-    mockConversations.push({
-        conversationId,
-        participants: [{ id: adminUser.id, name: adminUser.name }, { id: sofia.id, name: sofia.name }],
-        messages: [
-            { id: 'msg6', conversationId, senderId: sofia.id, text: 'Your profile caught my eye. You seem like a very interesting person.', timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
-        ]
-    });
-}
-
-if (adminUser && vanessa) {
-    const conversationId = getConversationId(adminUser.id, vanessa.id);
-    mockConversations.push({
-        conversationId,
-        participants: [{ id: adminUser.id, name: adminUser.name }, { id: vanessa.id, name: vanessa.name }],
-        messages: [
-             { id: 'msg7', conversationId, senderId: vanessa.id, text: 'Hello there, how are you?', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString() }
-        ]
+if (adminUser) {
+    aiGeneratedInquiries.forEach((inquiry, index) => {
+        const sender = mockSenders[index % mockSenders.length];
+        if (sender) {
+            const conversationId = getConversationId(adminUser.id, sender.id);
+            mockConversations.push({
+                conversationId,
+                participants: [{ id: adminUser.id, name: adminUser.name }, { id: sender.id, name: sender.name }],
+                messages: [
+                    { 
+                        id: `msg-ai-${index}`, 
+                        conversationId, 
+                        senderId: sender.id, 
+                        text: inquiry, 
+                        timestamp: new Date(Date.now() - 1000 * 60 * (60 * (index + 1))).toISOString() 
+                    },
+                    { 
+                        id: `msg-ai-${index}-reply`, 
+                        conversationId, 
+                        senderId: adminUser.id, 
+                        text: `Hi ${sender.name}, thanks for reaching out. I'll look into that for you.`, 
+                        timestamp: new Date(Date.now() - 1000 * 60 * (60 * (index + 1) - 5)).toISOString() 
+                    },
+                ]
+            });
+        }
     });
 }

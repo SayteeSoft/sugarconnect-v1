@@ -8,10 +8,12 @@ import bcrypt from 'bcrypt';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
 import { sendEmail } from '@/lib/email';
+import { initiateConversation } from '@/ai/flows/initiate-conversation';
+import { Message } from '@/lib/messages';
 
-const getBlobStore = (): Store => {
+const getBlobStore = (name: 'users' | 'messages'): Store => {
     return getStore({
-        name: 'users',
+        name,
         consistency: 'strong',
         siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
         token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
@@ -40,8 +42,8 @@ async function ensureAdminUser(store: Store): Promise<void> {
 
 export async function POST(request: NextRequest) {
     try {
-        const store = getBlobStore();
-        await ensureAdminUser(store);
+        const userStore = getBlobStore('users');
+        await ensureAdminUser(userStore);
 
         const { name, email, password, role } = await request.json();
 
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-            const existingUser = await store.get(email, {type: 'json'});
+            const existingUser = await userStore.get(email, {type: 'json'});
             if (existingUser) {
                 return NextResponse.json({ message: 'User already exists' }, { status: 409 });
             }
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
             credits: role === 'Sugar Daddy' ? 10 : undefined,
         };
 
-        await store.setJSON(email, newUser);
+        await userStore.setJSON(email, newUser);
 
         // Send welcome email
         await sendEmail({
@@ -91,6 +93,32 @@ export async function POST(request: NextRequest) {
                 url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${newUser.id}?edit=true`
             }
         });
+        
+        // AI-initiate conversation
+        const oppositeRole = newUser.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
+        const allMockUsersOfOppositeRole = mockUsers.filter(u => u.role === oppositeRole);
+        const randomSender = allMockUsersOfOppositeRole[Math.floor(Math.random() * allMockUsersOfOppositeRole.length)];
+
+        if (randomSender) {
+            const { message: aiMessage } = await initiateConversation({
+                senderProfile: JSON.stringify(randomSender),
+                recipientProfile: JSON.stringify(newUser),
+                senderRole: randomSender.role,
+            });
+
+            const conversationId = [newUser.id, randomSender.id].sort().join('--');
+            const messagesStore = getBlobStore('messages');
+            
+            const newMessage: Message = {
+                id: uuidv4(),
+                conversationId,
+                senderId: randomSender.id,
+                text: aiMessage,
+                timestamp: new Date().toISOString(),
+            };
+
+            await messagesStore.setJSON(conversationId, { messages: [newMessage] });
+        }
         
         const { password: _, ...userToReturn } = newUser;
 
