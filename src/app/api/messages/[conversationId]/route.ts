@@ -139,14 +139,14 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
             // If they exist in blob store, return that version as it's the most up-to-date.
             return { key: mockUser.email, user: storedUser };
         } catch (e) {
-            // If they don't exist in the blob store (e.g., they are purely a mock user),
+            // If they don't exist in the blob store (e.g., they are purely a mock user like the admin),
             // we can return the mock user object. The key will be their email.
             return { key: mockUser.email, user: mockUser };
         }
     }
 
     // If not found in mocks, iterate through the blob store.
-    // This is less efficient and should be a fallback.
+    // This is less efficient and should be a fallback for non-mock users.
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
