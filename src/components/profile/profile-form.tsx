@@ -188,17 +188,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
 
     useEffect(() => {
         if (!isOwnProfile && currentUser) {
-            toast({
-                duration: 5000,
-                component: (
-                    <NotificationToast
-                        user={currentUser}
-                        actionText="just viewed your profile!"
-                        profileUrl={`/dashboard/profile/${currentUser.id}`}
-                    />
-                )
-            });
-
+            // Notify the viewed user
             sendEmail({
                 to: profile.email,
                 recipientName: profile.name,
@@ -209,8 +199,45 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                     url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
                 }
             });
+
+            // Simulate activity for Sugar Daddy viewers
+            if (currentUser.role === 'Sugar Daddy' && profile.role === 'Sugar Baby') {
+                const simulateActivity = Math.random() < 0.5; // 50% chance to simulate an activity
+                if (simulateActivity) {
+                    setTimeout(() => {
+                        const actions = [
+                            { type: 'favorite', text: 'just favorited your profile!', subject: 'You have a new admirer!' },
+                            { type: 'visit', text: 'just visited your profile!', subject: 'Someone is interested in you!' },
+                            { type: 'message', text: `sent you a message: "I love your style! Your profile is so captivating."`, subject: 'You have a new message!' },
+                        ];
+                        const randomAction = actions[Math.floor(Math.random() * actions.length)];
+
+                        toast({
+                            duration: 7000,
+                            component: (
+                                <NotificationToast
+                                    user={profile}
+                                    actionText={randomAction.text}
+                                    profileUrl={`/dashboard/profile/${profile.id}`}
+                                />
+                            )
+                        });
+
+                        sendEmail({
+                            to: currentUser.email,
+                            recipientName: currentUser.name,
+                            subject: randomAction.subject,
+                            body: `Good news! ${profile.name} ${randomAction.text}`,
+                            callToAction: {
+                                text: 'View Their Profile',
+                                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${profile.id}`
+                            }
+                        });
+                    }, Math.random() * 5000 + 2000); // delay between 2-7 seconds
+                }
+            }
         }
-    }, [isOwnProfile, currentUser, profile.email, profile.name, toast]);
+    }, [isOwnProfile, currentUser, profile, toast]);
 
     const handleAction = (action: string) => {
         const actionTextMap: Record<string, string> = {
@@ -806,3 +833,4 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
