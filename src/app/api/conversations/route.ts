@@ -5,8 +5,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
 import { mockUsers } from '@/lib/mock-data';
+import { mockConversations } from '@/lib/mock-messages';
+import { headers } from 'next/headers';
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    // First check mock users as they are fewer
+    const mockUser = mockUsers.find(u => u.id === userId);
+    if (mockUser) {
+        return { key: mockUser.email, user: mockUser };
+    }
+
+    // Then check blob store
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -18,16 +27,11 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
     }
-    const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) {
-        return { key: mockUser.email, user: mockUser };
-    }
     return null;
 }
 
 async function getCurrentUser(req: NextRequest): Promise<UserProfile | null> {
     const userId = req.headers.get('x-user-id');
-
     if (!userId) return null;
     
     const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
@@ -64,12 +68,14 @@ export async function GET(request: NextRequest) {
         }
         
         let potentialPartners: UserProfile[];
-        if (currentUser.role === 'Sugar Daddy') {
+        if (currentUser.role === 'Admin') {
+            potentialPartners = allUsers.filter(u => u.id !== currentUser.id);
+        } else if (currentUser.role === 'Sugar Daddy') {
             potentialPartners = allUsers.filter(u => u.role === 'Sugar Baby');
         } else if (currentUser.role === 'Sugar Baby') {
             potentialPartners = allUsers.filter(u => u.role === 'Sugar Daddy');
-        } else { // Admin
-            potentialPartners = allUsers.filter(u => u.id !== currentUser.id);
+        } else {
+            potentialPartners = [];
         }
 
         const conversations = [];
@@ -77,16 +83,26 @@ export async function GET(request: NextRequest) {
         for (const partner of potentialPartners) {
             const conversationId = [currentUser.id, partner.id].sort().join('--');
             let lastMessage: Message | null = null;
-
-            try {
-                const conversationData = await messagesStore.get(conversationId, { type: 'json' });
-                if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
-                    lastMessage = conversationData.messages[conversationData.messages.length - 1];
-                }
-            } catch (error) {
-                // No messages yet for this conversation, which is fine
-            }
             
+            const isMockConversationForAdmin = currentUser.email === 'saytee.software@gmail.com' && 
+                                               mockConversations.some(mc => mc.conversationId === conversationId);
+
+            if (isMockConversationForAdmin) {
+                const mockConvo = mockConversations.find(mc => mc.conversationId === conversationId);
+                if (mockConvo && mockConvo.messages.length > 0) {
+                    lastMessage = mockConvo.messages[mockConvo.messages.length - 1];
+                }
+            } else {
+                 try {
+                    const conversationData = await messagesStore.get(conversationId, { type: 'json' });
+                    if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
+                        lastMessage = conversationData.messages[conversationData.messages.length - 1];
+                    }
+                } catch (error) {
+                    // No messages yet for this conversation, which is fine
+                }
+            }
+
             conversations.push({
                 user: {
                     id: partner.id,
@@ -95,11 +111,10 @@ export async function GET(request: NextRequest) {
                     role: partner.role,
                     email: partner.email,
                 },
-                messages: lastMessage ? [lastMessage] : [] // Only need the last message for the conversation list
+                messages: lastMessage ? [lastMessage] : []
             });
         }
         
-        // Sort conversations by the timestamp of the last message
         conversations.sort((a, b) => {
             const timeA = a.messages.length > 0 ? new Date(a.messages[0].timestamp).getTime() : 0;
             const timeB = b.messages.length > 0 ? new Date(b.messages[0].timestamp).getTime() : 0;

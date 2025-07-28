@@ -6,6 +6,7 @@ import { Message } from '@/lib/messages';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
+import { mockConversations } from '@/lib/mock-messages';
 
 const getMessagesStore = (): Store => {
     return getStore(process.env.NETLIFY ? 'messages' : { name: 'messages', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
@@ -32,6 +33,17 @@ export async function GET(
   const { conversationId } = params;
   if (!conversationId) {
     return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
+  }
+  
+  // Check if it's a mock conversation for the admin
+  const adminUser = mockUsers.find(u => u.email === 'saytee.software@gmail.com');
+  const mockConversation = mockConversations.find(mc => 
+      mc.conversationId === conversationId && 
+      mc.participants.some(p => p.id === adminUser?.id)
+  );
+  
+  if (mockConversation) {
+    return NextResponse.json(mockConversation.messages);
   }
 
   const store = getMessagesStore();
@@ -92,14 +104,12 @@ export async function POST(
         }
 
         conversation.messages.push(newMessage);
-        // Sort messages by timestamp just in case
         conversation.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         await messagesStore.setJSON(conversationId, conversation);
         
         // Also deduct credits if sender is a sugar daddy
         const userStore = getBlobStore('users');
-        
         const senderData = await findUserById(userStore, senderId);
 
         if (senderData?.user.role === 'Sugar Daddy') {
@@ -119,6 +129,11 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    const mockUser = mockUsers.find(u => u.id === userId);
+    if (mockUser) {
+        return { key: mockUser.email, user: mockUser };
+    }
+    
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -129,10 +144,6 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
       } catch (e) {
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
-    }
-    const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) {
-        return { key: mockUser.email, user: mockUser };
     }
     return null;
 }
