@@ -30,7 +30,7 @@ const aiGeneratedInquiries = [
     "Quick question - how long does it typically take to find a match on here? Just curious!",
 ];
 
-const mockSenders = [darianna, kateryna, sofia, vanessa].filter(Boolean) as UserProfile[];
+const mockSenders = [darianna, kateryna, sofia, vanessa].filter(Boolean);
 
 if (adminUser) {
     aiGeneratedInquiries.forEach((inquiry, index) => {
