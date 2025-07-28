@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import paypal from '@paypal/checkout-server-sdk';
-import { getStore } from '@netlify/blobs';
+import { getStore, Store } from '@netlify/blobs';
 
 const Environment = process.env.NODE_ENV === 'production' 
     ? paypal.core.LiveEnvironment 
@@ -13,6 +13,18 @@ const paypalClient = new paypal.core.PayPalHttpClient(
         process.env.PAYPAL_CLIENT_SECRET || ''
     )
 );
+
+const getBlobStore = (): Store => {
+  if (process.env.NETLIFY) {
+    return getStore('users');
+  }
+  return getStore({
+    name: 'users',
+    consistency: 'strong',
+    siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+    token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
+  });
+};
 
 export async function POST(request: NextRequest) {
     try {
@@ -30,7 +42,7 @@ export async function POST(request: NextRequest) {
         const transactionId = capture.result.purchase_units[0].payments.captures[0].id;
         const packageId = capture.result.purchase_units[0].custom_id;
 
-        const store = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token'});
+        const store = getBlobStore();
         
         try {
             const user = await store.get(userEmail, { type: 'json' });
@@ -55,8 +67,6 @@ export async function POST(request: NextRequest) {
 
             const updatedUser = { ...user, ...updatedData };
             await store.setJSON(userEmail, updatedUser);
-
-            // Update user in local storage on the client
             
         } catch (dbError) {
             console.error('Failed to update user in DB after payment:', dbError);
