@@ -4,31 +4,35 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
+import { mockUsers } from '@/lib/mock-data';
+
+async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    const { blobs } = await store.list();
+    for (const blob of blobs) {
+      try {
+        const userData = await store.get(blob.key, { type: 'json' });
+        if (userData.id === userId) {
+          return { key: blob.key, user: userData };
+        }
+      } catch (e) {
+        console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
+      }
+    }
+    const mockUser = mockUsers.find(u => u.id === userId);
+    if (mockUser) {
+        return { key: mockUser.email, user: mockUser };
+    }
+    return null;
+}
 
 async function getCurrentUser(req: NextRequest): Promise<UserProfile | null> {
     const userId = req.headers.get('x-user-id');
 
     if (!userId) return null;
     
-    const userStore = getStore(process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
     const result = await findUserById(userStore, userId);
     return result?.user || null;
-}
-
-
-async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    const { blobs } = await store.list();
-    for (const blob of blobs) {
-      try {
-        const user = await store.get(blob.key, { type: 'json' });
-        if (user.id === userId) {
-          return { key: blob.key, user };
-        }
-      } catch (e) {
-        //
-      }
-    }
-    return null;
 }
 
 
@@ -39,17 +43,21 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     
-    const userStore = getStore(process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-    const messagesStore = getStore(process.env.NETLIFY ? 'messages' : { name: 'messages', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
+    const messagesStore = getStore({ name: 'messages', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
     
     try {
         const { blobs: userBlobs } = await userStore.list();
         
-        const allUsers: UserProfile[] = [];
+        const allUsers: UserProfile[] = [...mockUsers];
+        const mockUserIds = new Set(mockUsers.map(u => u.id));
+
         for (const blob of userBlobs) {
             try {
                 const user = await userStore.get(blob.key, { type: 'json' });
-                allUsers.push(user);
+                if (!mockUserIds.has(user.id)) {
+                    allUsers.push(user);
+                }
             } catch (e) {
                 //
             }
@@ -72,7 +80,7 @@ export async function GET(request: NextRequest) {
 
             try {
                 const conversationData = await messagesStore.get(conversationId, { type: 'json' });
-                if (conversationData && conversationData.messages.length > 0) {
+                if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
                     lastMessage = conversationData.messages[conversationData.messages.length - 1];
                 }
             } catch (error) {

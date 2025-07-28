@@ -99,7 +99,6 @@ export async function POST(
         
         // Also deduct credits if sender is a sugar daddy
         const userStore = getBlobStore('users');
-        const userIds = conversationId.split('--');
         
         const senderData = await findUserById(userStore, senderId);
 
