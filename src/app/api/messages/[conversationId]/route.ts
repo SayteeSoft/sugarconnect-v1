@@ -129,11 +129,21 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    // First check mock users as they are fewer
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
-        return { key: mockUser.email, user: mockUser };
+        // We still need to check if this mock user exists in the blob store to get their "key" (email)
+        try {
+            const storedUser = await store.get(mockUser.email, { type: 'json' });
+            // If they exist in blob store, return that version (it might have updated credits)
+            return { key: mockUser.email, user: storedUser };
+        } catch (e) {
+            // If they don't exist in blob store, it's fine, we can still use the mock user object
+            return { key: mockUser.email, user: mockUser };
+        }
     }
-    
+
+    // Then check blob store by iterating
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
