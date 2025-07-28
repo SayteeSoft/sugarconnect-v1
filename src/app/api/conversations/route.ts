@@ -4,15 +4,12 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
-import { headers } from 'next/headers'; // Assuming this is how you get current user
+import { headers } from 'next/headers'; 
 
-// This is a placeholder for getting the current authenticated user.
-// In a real app, this would come from a session, token, or auth middleware.
 async function getCurrentUser(req: NextRequest): Promise<UserProfile | null> {
-    // For now, let's assume the user is passed in a header for simplicity.
-    // THIS IS NOT SECURE FOR PRODUCTION.
     const headersList = headers();
     const userId = headersList.get('x-user-id');
+
     if (!userId) return null;
     
     const userStore = getStore(process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
@@ -38,20 +35,18 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
 
 
 export async function GET(request: NextRequest) {
-    // In a real app, you'd get the current user from the session/token
-    const MOCK_CURRENT_USER_ID = '2'; // Let's assume current user is Darianna for now
+    const currentUser = await getCurrentUser(request);
+
+    if (!currentUser) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
     
     const userStore = getStore(process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
     const messagesStore = getStore(process.env.NETLIFY ? 'messages' : { name: 'messages', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
     
     try {
         const { blobs: userBlobs } = await userStore.list();
-        const { blobs: messageBlobs } = await messagesStore.list();
         
-        const currentUserData = await findUserById(userStore, MOCK_CURRENT_USER_ID);
-        if (!currentUserData) return NextResponse.json({ message: "Current user not found" }, { status: 404 });
-        const currentUser = currentUserData.user;
-
         const allUsers: UserProfile[] = [];
         for (const blob of userBlobs) {
             try {

@@ -51,7 +51,9 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         const fetchConversations = async () => {
             setLoadingConversations(true);
             try {
-                const res = await fetch(`/api/conversations`);
+                const res = await fetch(`/api/conversations`, {
+                    headers: { 'x-user-id': currentUser.id }
+                });
                 if (!res.ok) throw new Error("Failed to fetch conversations");
                 const data: Conversation[] = await res.json();
                 
@@ -82,8 +84,8 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 setLoadingConversations(false);
             }
         };
-        fetchConversations();
-    }, [selectedUserId]);
+        if(currentUser) fetchConversations();
+    }, [selectedUserId, currentUser]);
 
 
     const handleSelectConversation = async (conversation: Conversation) => {

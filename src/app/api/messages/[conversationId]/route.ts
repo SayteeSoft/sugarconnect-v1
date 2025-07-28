@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Message } from '@/lib/messages';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
+import { mockUsers } from '@/lib/mock-data';
 
 const getMessagesStore = (): Store => {
     return getStore(process.env.NETLIFY ? 'messages' : { name: 'messages', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
@@ -13,6 +14,16 @@ const getMessagesStore = (): Store => {
 const getImageStore = (): Store => {
     return getStore(process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
 };
+
+const getBlobStore = (name: 'users' | 'images' | 'messages'): Store => {
+    return getStore({
+        name,
+        consistency: 'strong',
+        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id',
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token',
+    });
+};
+
 
 export async function GET(
   request: NextRequest,
@@ -87,22 +98,16 @@ export async function POST(
         await messagesStore.setJSON(conversationId, conversation);
         
         // Also deduct credits if sender is a sugar daddy
-        if (process.env.NETLIFY_BLOBS_TOKEN) { // A way to check if we are in a real env
-            const userStore = getStore('users');
-            const userIds = conversationId.split('--');
-            const recipientId = userIds.find(id => id !== senderId);
-            const [senderData, recipientData] = await Promise.all([
-                findUserById(userStore, senderId),
-                findUserById(userStore, recipientId!)
-            ]);
+        const userStore = getBlobStore('users');
+        const userIds = conversationId.split('--');
+        
+        const senderData = await findUserById(userStore, senderId);
 
-            if (senderData?.user.role === 'Sugar Daddy') {
-                const updatedCredits = (senderData.user.credits || 0) - 1;
-                const updatedUser = { ...senderData.user, credits: updatedCredits };
-                await userStore.setJSON(senderData.key, updatedUser);
-            }
+        if (senderData?.user.role === 'Sugar Daddy') {
+            const updatedCredits = (senderData.user.credits || 0) - 1;
+            const updatedUser = { ...senderData.user, credits: updatedCredits };
+            await userStore.setJSON(senderData.key, updatedUser);
         }
-
 
         return NextResponse.json(newMessage, { status: 201 });
 
@@ -118,13 +123,17 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
-        const user = await store.get(blob.key, { type: 'json' });
-        if (user.id === userId) {
-          return { key: blob.key, user };
+        const userData = await store.get(blob.key, { type: 'json' });
+        if (userData.id === userId) {
+          return { key: blob.key, user: userData };
         }
       } catch (e) {
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
+    }
+    const mockUser = mockUsers.find(u => u.id === userId);
+    if (mockUser) {
+        return { key: mockUser.email, user: mockUser };
     }
     return null;
 }
