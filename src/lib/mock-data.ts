@@ -15,6 +15,18 @@ export const mockUsers: UserProfile[] = [
   },
   {
     id: '2',
+    email: 'gabriellacorrente@hotmail.com',
+    name: 'Gabriella',
+    age: 26,
+    location: 'Rio, Brazil',
+    role: 'Admin',
+    sex: 'Male',
+    bio: 'Adminitrator',
+    interests: ['Art', 'Fine Dining', 'Photography', 'Museums'],
+    image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
+  },
+  {
+    id: '3',
     email: 'darianna2@gmail.com',
     name: 'Darianna',
     age: 23,
@@ -26,7 +38,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Darianna_Gemini_Generated_Image(small)-001.jpg',
   },
   {
-    id: '3',
+    id: '4',
     email: 'kateryna3@gmail.com',
     name: 'Kateryna',
     age: 21,
@@ -38,7 +50,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Kateryna_Gemini_Generated_Image(small)-001.jpg',
   },
   {
-    id: '4',
+    id: '5',
     email: 'sofia4gmail.com',
     name: 'Sofia',
     age: 25,
@@ -50,7 +62,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Sofia_Gemini_Generated_Image(small)-001.jpg',
   },
   {
-    id: '5',
+    id: '6',
     email: 'vanessa5gmail.com',
     name: 'Vanessa',
     age: 21,
@@ -62,7 +74,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Vansessa_Gemini_Generated_Image(small)-003.jpg',
   },
   {
-    id: '6',
+    id: '7',
     email: 'mark6gmail.com',
     name: 'Mark',
     age: 41,
@@ -74,7 +86,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
   }, 
   {
-    id: '7',
+    id: '8',
     email: 'cecilia7gmail.com',
     name: 'Cecilia',
     age: 25,
@@ -86,7 +98,7 @@ export const mockUsers: UserProfile[] = [
     image: '/user-profiles/Female_Gemini_Generated_Image(small)-001.jpg',
   },
   {
-    id: '8',
+    id: '9',
     email: 'olivia7gmail.com',
     name: 'Olivia',
     age: 23,
@@ -110,7 +122,7 @@ export type Testimonial = {
 
 export const mockTestimonials: Testimonial[] = [
   {
-    id: '2',
+    id: '3',
     name: 'Darianna',
     role: 'Sugar Baby',
     quote: 'Art student with a love for adventure and exploring new cultures.',
@@ -118,23 +130,15 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
   {
-    id: '3',
+    id: '4',
     name: 'Kateryna',
     role: 'Sugar Baby',
     quote: 'Recent graduate starting my career in marketing.',
     image: '/user-profiles/Kateryna_Gemini_Generated_Image(small)-001.jpg',
-    rating: 5,
+    rating: 4,
   },
   {
-    id: '6',
-    name: 'Mark',
-    role: 'Sugar Daddy',
-    quote: 'Investor and lover of the great outdoors.',
-    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
-    rating: 5,
-  },
-    {
-    id: '4',
+    id: '5',
     name: 'Sofia',
     role: 'Sugar Baby',
     quote: 'A perfect platform to meet genuine people.',
@@ -142,7 +146,15 @@ export const mockTestimonials: Testimonial[] = [
     rating: 5,
   },
   {
-    id: '99', // Placeholder ID for users not in mockUsers
+    id: '7',
+    name: 'Mark',
+    role: 'Sugar Daddy',
+    quote: 'Investor and lover of the great outdoors.',
+    image: '/user-profiles/Male_Gemini_Generated_Image(small)-002.jpg',
+    rating: 5,
+  },
+  {
+    id: '10', // Placeholder ID for users not in mockUsers
     name: 'John',
     role: 'Sugar Daddy',
     quote: 'Found exactly what I was looking for. Highly recommend.',
