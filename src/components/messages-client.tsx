@@ -235,6 +235,14 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         }
     };
 
+    const handleCall = (type: 'audio' | 'video') => {
+        if (!selectedConversation) return;
+        toast({
+            title: `${type === 'audio' ? 'Audio' : 'Video'} Call`,
+            description: `This feature is coming soon.`,
+        });
+    };
+
     return (
         <div className="container mx-auto">
             <div className="text-center mb-8">
@@ -308,8 +316,8 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 text-muted-foreground">
-                                    <Phone className="h-5 w-5 cursor-pointer hover:text-primary" />
-                                    <Video className="h-5 w-5 cursor-pointer hover:text-primary" />
+                                    <Phone className="h-5 w-5 cursor-pointer hover:text-primary" onClick={() => handleCall('audio')} />
+                                    <Video className="h-5 w-5 cursor-pointer hover:text-primary" onClick={() => handleCall('video')} />
                                     <MoreVertical className="h-5 w-5 cursor-pointer hover:text-primary" />
                                 </div>
                             </div>
