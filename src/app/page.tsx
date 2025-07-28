@@ -18,41 +18,6 @@ import { ByTheNumbersSection } from '@/components/by-the-numbers-section';
 import { SugarRelationshipSection } from '@/components/sugar-relationship-section';
 import { WhatIsSection } from '@/components/what-is-section';
 
-async function getFeaturedProfiles(): Promise<UserProfile[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
-    let users: UserProfile[];
-
-    if (!baseUrl) {
-      // Fallback for local dev or environments where URL is not set
-      console.warn("URL env var not set, falling back to mock users for featured profiles.");
-      users = [...mockUsers];
-    } else {
-      const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
-      const allUsers = [...mockUsers];
-      if (res.ok) {
-          const apiUsers = await res.json();
-          const mockUserIds = new Set(mockUsers.map(u => u.id));
-          for (const apiUser of apiUsers) {
-              if (!mockUserIds.has(apiUser.id)) {
-                  allUsers.push(apiUser);
-              }
-          }
-      } else {
-        console.warn(`API call failed with status ${res.status}, using only mock users for featured profiles.`);
-      }
-      users = allUsers;
-    }
-    // Filter out admin users and take the first 4 non-admin profiles
-    return users.filter((user: UserProfile) => user.role !== 'Admin').slice(0, 4);
-  } catch (error) {
-    console.error("Error fetching profiles, falling back to mock data:", error);
-    // Return mock data on any fetch error
-    return mockUsers.filter(user => user.role !== 'Admin').slice(0, 4);
-  }
-}
-
-
 export default function Home() {
   const [featuredProfiles, setFeaturedProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,37 +64,56 @@ export default function Home() {
   }, []);
   
   useEffect(() => {
-    const loadProfiles = async () => {
-      setLoading(true);
-      const profiles = await getFeaturedProfiles();
-      
-      let filteredProfilesForDisplay;
+    async function getFeaturedProfiles() {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/users', { cache: 'no-store' });
+            let users: UserProfile[];
+            const allUsers = [...mockUsers];
 
-      if (user?.role === 'Sugar Daddy') {
-        filteredProfilesForDisplay = profiles.filter(p => p.role === 'Sugar Baby');
-      } else if (user?.role === 'Sugar Baby') {
-        filteredProfilesForDisplay = profiles.filter(p => p.role === 'Sugar Daddy');
-      } else {
-        filteredProfilesForDisplay = profiles;
-      }
-      
-      // Ensure we always have up to 4 profiles if possible, filling with generic mocks if needed
-      if (filteredProfilesForDisplay.length < 4) {
-          const fallbackRole = user?.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
-          const fallbacks = mockUsers.filter(u => u.role === (user ? fallbackRole : u.role) && u.role !== 'Admin');
-          const existingIds = new Set(filteredProfilesForDisplay.map(p => p.id));
-          for (const fallback of fallbacks) {
-              if (filteredProfilesForDisplay.length >= 4) break;
-              if (!existingIds.has(fallback.id)) {
-                  filteredProfilesForDisplay.push(fallback);
-              }
-          }
-      }
+            if (res.ok) {
+                const apiUsers = await res.json();
+                const mockUserIds = new Set(mockUsers.map(u => u.id));
+                for (const apiUser of apiUsers) {
+                    if (!mockUserIds.has(apiUser.id)) {
+                        allUsers.push(apiUser);
+                    }
+                }
+            } else {
+                console.warn(`API call failed with status ${res.status}, using only mock users for featured profiles.`);
+            }
+            users = allUsers;
 
-      setFeaturedProfiles(filteredProfilesForDisplay.slice(0, 4));
-      setLoading(false);
-    };
-    loadProfiles();
+            let filteredProfilesForDisplay;
+            if (user?.role === 'Sugar Daddy') {
+                filteredProfilesForDisplay = users.filter(p => p.role === 'Sugar Baby');
+            } else if (user?.role === 'Sugar Baby') {
+                filteredProfilesForDisplay = users.filter(p => p.role === 'Sugar Daddy');
+            } else {
+                filteredProfilesForDisplay = users.filter((u: UserProfile) => u.role !== 'Admin');
+            }
+            
+            if (filteredProfilesForDisplay.length < 4) {
+                const fallbackRole = user?.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
+                const fallbacks = mockUsers.filter(u => u.role === (user ? fallbackRole : u.role) && u.role !== 'Admin');
+                const existingIds = new Set(filteredProfilesForDisplay.map(p => p.id));
+                for (const fallback of fallbacks) {
+                    if (filteredProfilesForDisplay.length >= 4) break;
+                    if (!existingIds.has(fallback.id)) {
+                        filteredProfilesForDisplay.push(fallback);
+                    }
+                }
+            }
+
+            setFeaturedProfiles(filteredProfilesForDisplay.slice(0, 4));
+        } catch (error) {
+            console.error("Error fetching profiles, falling back to mock data:", error);
+            setFeaturedProfiles(mockUsers.filter(user => user.role !== 'Admin').slice(0, 4));
+        } finally {
+            setLoading(false);
+        }
+    }
+    getFeaturedProfiles();
   }, [user]);
 
   return (

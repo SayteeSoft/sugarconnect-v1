@@ -27,7 +27,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/heart.svg" />
         <link rel="shortcut icon" href="/heart.svg" />
       </head>
-      <body className={`${poppins.className} font-body antialiased`}>
+      <body className={`${poppins.variable} font-body antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
