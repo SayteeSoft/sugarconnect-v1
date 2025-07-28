@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sendEmail } from "@/lib/email";
 
 type SettingsClientProps = {
   user: UserProfile;
@@ -55,6 +56,19 @@ export function SettingsClient({ user }: SettingsClientProps) {
             title: "Profile Updated",
             description: "Your username has been successfully changed.",
         });
+
+        // Send notification email
+        await sendEmail({
+            to: user.email,
+            recipientName: updatedUser.name,
+            subject: "Your Sugar Connect Profile has been updated",
+            body: `<p>This is a confirmation that your profile details on Sugar Connect were recently updated.</p><p>If you did not make this change, please contact our support team immediately.</p>`,
+            callToAction: {
+                text: 'View Your Profile',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${user.id}`
+            }
+        });
+
         router.refresh();
 
     } catch (error: any) {
@@ -107,6 +121,19 @@ export function SettingsClient({ user }: SettingsClientProps) {
             title: "Password Updated",
             description: "Your password has been changed successfully.",
         });
+
+        // Send notification email
+         await sendEmail({
+            to: user.email,
+            recipientName: user.name,
+            subject: "Your Sugar Connect password has been changed",
+            body: `<p>This is a security alert to inform you that your password on Sugar Connect was recently changed.</p><p>If you did not make this change, please secure your account and contact our support team immediately.</p>`,
+            callToAction: {
+                text: 'Go to Settings',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/settings`
+            }
+        });
+
         setPassword('');
         setConfirmPassword('');
     } catch (error: any) {
