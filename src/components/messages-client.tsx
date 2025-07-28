@@ -18,6 +18,7 @@ import { sendEmail } from '@/lib/email';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import Image from 'next/image';
+import { mockUsers } from '@/lib/mock-data';
 
 type Conversation = {
     user: UserProfile;
@@ -28,6 +29,8 @@ type MessagesClientProps = {
     currentUser: UserProfile;
     selectedUserId?: string | null;
 };
+
+const isMockUser = (userId: string) => mockUsers.some(u => u.id === userId);
 
 export function MessagesClient({ currentUser, selectedUserId }: MessagesClientProps) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -46,6 +49,21 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const getConversationId = (userId1: string, userId2: string) => {
         return [userId1, userId2].sort().join('--');
     };
+    
+    const loadMessagesForConversation = async (conversation: Conversation) => {
+        const conversationId = getConversationId(currentUser.id, conversation.user.id);
+        const bothAreMock = isMockUser(currentUser.id) && isMockUser(conversation.user.id);
+
+        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
+            const localMessages = localStorage.getItem(`messages_${conversationId}`);
+            return localMessages ? JSON.parse(localMessages) : [];
+        } else {
+             const res = await fetch(`/api/messages/${conversationId}`);
+            if (!res.ok) throw new Error('Failed to fetch messages');
+            return await res.json();
+        }
+    };
+
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -57,7 +75,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 if (!res.ok) throw new Error("Failed to fetch conversations");
                 const data: Conversation[] = await res.json();
                 
-                // Add onlineStatus randomly
                 const conversationsWithStatus = data.map(convo => ({
                     ...convo,
                     user: {
@@ -85,17 +102,14 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             }
         };
         if(currentUser) fetchConversations();
-    }, [selectedUserId, currentUser]);
+    }, [selectedUserId, currentUser.id]);
 
 
     const handleSelectConversation = async (conversation: Conversation) => {
         setSelectedConversation({ ...conversation, messages: [] }); // Clear old messages while loading
         setLoadingMessages(true);
         try {
-            const conversationId = getConversationId(currentUser.id, conversation.user.id);
-            const res = await fetch(`/api/messages/${conversationId}`);
-            if (!res.ok) throw new Error('Failed to fetch messages');
-            const messages: Message[] = await res.json();
+            const messages = await loadMessagesForConversation(conversation);
             setSelectedConversation({ ...conversation, messages });
         } catch (error) {
             console.error(error);
@@ -164,23 +178,24 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             conversationId: conversationId
         };
         
-        // Optimistic UI update
-        const updatedConversations = conversations.map(c => {
-            if (c.user.id === selectedConversation.user.id) {
-                return { ...c, messages: [...c.messages, optimisticMessage] };
-            }
-            return c;
-        });
-        setConversations(updatedConversations);
-        setSelectedConversation(updatedConversations.find(c => c.user.id === selectedConversation.user.id) || null);
+        setSelectedConversation(prev => prev ? { ...prev, messages: [...prev.messages, optimisticMessage] } : null);
 
-        // Clear input fields
         const currentNewMessage = newMessage;
         const currentImagePreview = imagePreview;
         setNewMessage("");
         setImageFile(null);
         setImagePreview(null);
         if(fileInputRef.current) fileInputRef.current.value = "";
+
+        const bothAreMock = isMockUser(currentUser.id) && isMockUser(selectedConversation.user.id);
+        
+        if (process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === 'true' && bothAreMock) {
+            const currentMessages = await loadMessagesForConversation(selectedConversation);
+            const newMessages = [...currentMessages, optimisticMessage];
+            localStorage.setItem(`messages_${conversationId}`, JSON.stringify(newMessages));
+            // No need to replace temp message with saved one as it's all local
+            return;
+        }
 
         try {
             if (localUser.role === 'Sugar Daddy') {
@@ -205,16 +220,8 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             if (!response.ok) throw new Error("Failed to send message");
 
             const savedMessage: Message = await response.json();
-
-            // Replace temporary message with saved one from server
-            const finalConversations = conversations.map(c => {
-                if (c.user.id === selectedConversation.user.id) {
-                    return { ...c, messages: c.messages.map(m => m.id === tempMessageId ? savedMessage : m) };
-                }
-                return c;
-            });
-            setConversations(finalConversations);
-            setSelectedConversation(finalConversations.find(c => c.user.id === selectedConversation.user.id) || null);
+            
+            setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.map(m => m.id === tempMessageId ? savedMessage : m) } : null);
 
             sendEmail({
                 to: selectedConversation.user.email,
@@ -229,7 +236,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         } catch(error) {
             console.error(error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to send message. Please try again.' });
-            // Revert optimistic update
+            setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.filter(m => m.id !== tempMessageId) } : null);
             setNewMessage(currentNewMessage);
             setImagePreview(currentImagePreview);
         }
