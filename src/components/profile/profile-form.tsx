@@ -187,7 +187,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     }), [profile]);
 
     useEffect(() => {
-        if (!isOwnProfile) {
+        if (!isOwnProfile && currentUser) {
             toast({
                 duration: 5000,
                 component: (
