@@ -4,11 +4,9 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
-import { headers } from 'next/headers'; 
 
 async function getCurrentUser(req: NextRequest): Promise<UserProfile | null> {
-    const headersList = headers();
-    const userId = headersList.get('x-user-id');
+    const userId = req.headers.get('x-user-id');
 
     if (!userId) return null;
     
