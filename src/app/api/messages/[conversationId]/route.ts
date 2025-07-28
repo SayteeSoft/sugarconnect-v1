@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
 import { generateReply } from '@/ai/flows/generate-reply';
+import { mockConversations } from '@/lib/mock-messages';
 
 async function getUserById(userId: string): Promise<UserProfile | null> {
     const mockUser = mockUsers.find(u => u.id === userId);
@@ -52,11 +53,7 @@ export async function GET(
     return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
   }
   
-  const adminUser = mockUsers.find(u => u.email === 'saytee.software@gmail.com');
-  const mockConversation = mockConversations.find(mc => 
-      mc.conversationId === conversationId && 
-      mc.participants.some(p => p.id === adminUser?.id)
-  );
+  const mockConversation = mockConversations.find(mc => mc.conversationId === conversationId);
   
   if (mockConversation) {
     return NextResponse.json(mockConversation.messages);
