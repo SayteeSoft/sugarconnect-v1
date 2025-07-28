@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,18 +30,66 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { mockUsers } from "@/lib/mock-data";
 
-type AdminClientProps = {
-  initialUsers: UserProfile[];
-};
 
-export function AdminClient({ initialUsers }: AdminClientProps) {
-  const [users, setUsers] = useState(initialUsers);
+export function AdminClient() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
+        let fetchedUsers: UserProfile[];
+
+        if (!baseUrl) {
+          console.warn("URL env var not set, falling back to mock users.");
+          fetchedUsers = [...mockUsers];
+        } else {
+            const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+            if (!res.ok) {
+                console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
+                fetchedUsers = [...mockUsers];
+            } else {
+                const apiUsers = await res.json();
+                const allUsers = [...mockUsers];
+                const mockUserIds = new Set(mockUsers.map(u => u.id));
+                for (const apiUser of apiUsers) {
+                    if (!mockUserIds.has(apiUser.id)) {
+                        allUsers.push(apiUser);
+                    }
+                }
+                fetchedUsers = allUsers;
+            }
+        }
+        
+        const sortedUsers = [...fetchedUsers].sort((a, b) => {
+            if (a.role === 'Admin' && b.role !== 'Admin') return -1;
+            if (a.role !== 'Admin' && b.role === 'Admin') return 1;
+            return 0;
+        });
+
+        setUsers(sortedUsers);
+      } catch (e) {
+        console.error("Error fetching users, falling back to mock users:", e);
+        const sortedMockUsers = [...mockUsers].sort((a, b) => {
+            if (a.role === 'Admin' && b.role !== 'Admin') return -1;
+            if (a.role !== 'Admin' && b.role === 'Admin') return 1;
+            return 0;
+        });
+        setUsers(sortedMockUsers);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUsers();
+
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -50,15 +98,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
         //
       }
     }
-    
-    // Sort users to ensure admins are always at the top
-    const sortedUsers = [...initialUsers].sort((a, b) => {
-        if (a.role === 'Admin' && b.role !== 'Admin') return -1;
-        if (a.role !== 'Admin' && b.role === 'Admin') return 1;
-        return 0;
-    });
-    setUsers(sortedUsers);
-  }, [initialUsers]);
+  }, []);
 
   const handleDelete = async (userId: string) => {
     try {
@@ -116,6 +156,11 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
       <Card className="shadow-xl">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
+             {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -190,6 +235,7 @@ export function AdminClient({ initialUsers }: AdminClientProps) {
                 ))}
               </TableBody>
             </Table>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -11,14 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import { Filter, Wifi, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Filter, Wifi, Sparkles, Image as ImageIcon, Loader2 } from "lucide-react";
+import { mockUsers } from "@/lib/mock-data";
 
-type SearchClientProps = {
-  initialProfiles: UserProfile[];
-};
-
-export function SearchClient({ initialProfiles }: SearchClientProps) {
-  const [profiles] = useState(initialProfiles);
+export function SearchClient() {
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [locationFilter, setLocationFilter] = useState("");
   const [ageRange, setAgeRange] = useState([18, 65]);
@@ -28,6 +25,44 @@ export function SearchClient({ initialProfiles }: SearchClientProps) {
   const [withPhoto, setWithPhoto] = useState(true);
 
   useEffect(() => {
+    const fetchProfiles = async () => {
+        setLoading(true);
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
+            let fetchedUsers: UserProfile[];
+
+            if (!baseUrl) {
+              console.warn("URL env var not set, falling back to mock users for search.");
+              fetchedUsers = [...mockUsers];
+            } else {
+                const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+                const allUsers = [...mockUsers];
+                if (res.ok) {
+                    const apiUsers = await res.json();
+                    const mockUserIds = new Set(mockUsers.map(u => u.id));
+                    for (const apiUser of apiUsers) {
+                        if (!mockUserIds.has(apiUser.id)) {
+                            allUsers.push(apiUser);
+                        }
+                    }
+                } else {
+                  console.warn(`API call failed with status ${res.status}, using only mock users for search.`);
+                }
+                fetchedUsers = allUsers;
+            }
+            
+            setProfiles(fetchedUsers.filter((user: UserProfile) => user.role !== 'Admin'));
+
+        } catch (error) {
+            console.error("Error fetching profiles for search, falling back to mock data:", error);
+            setProfiles(mockUsers.filter(user => user.role !== 'Admin'));
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+    fetchProfiles();
+
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
         try {
@@ -146,21 +181,29 @@ export function SearchClient({ initialProfiles }: SearchClientProps) {
                 </aside>
 
                 <main className="lg:col-span-3">
-                    <div className="mb-4">
-                        <p className="font-semibold text-muted-foreground">{filteredProfiles.length} Profiles found</p>
-                    </div>
-                     {filteredProfiles.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredProfiles.map((profile) => (
-                            <ProfileCard key={profile.id} user={profile} />
-                        ))}
+                     {loading ? (
+                        <div className="flex justify-center items-center h-full pt-16">
+                            <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
-                    ) : (
-                        <div className="text-center py-16">
-                        <p className="text-lg font-medium">No Profiles Found</p>
-                        <p className="text-muted-foreground">Try adjusting your filters to find more people.</p>
-                        </div>
-                    )}
+                     ) : (
+                        <>
+                            <div className="mb-4">
+                                <p className="font-semibold text-muted-foreground">{filteredProfiles.length} Profiles found</p>
+                            </div>
+                            {filteredProfiles.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredProfiles.map((profile) => (
+                                    <ProfileCard key={profile.id} user={profile} />
+                                ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16">
+                                <p className="text-lg font-medium">No Profiles Found</p>
+                                <p className="text-muted-foreground">Try adjusting your filters to find more people.</p>
+                                </div>
+                            )}
+                        </>
+                     )}
                 </main>
             </div>
         </div>

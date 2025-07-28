@@ -103,14 +103,30 @@ export default function Home() {
       setLoading(true);
       const profiles = await getFeaturedProfiles();
       
+      let filteredProfilesForDisplay;
+
       if (user?.role === 'Sugar Daddy') {
-        setFeaturedProfiles(profiles.filter(p => p.role === 'Sugar Baby'));
+        filteredProfilesForDisplay = profiles.filter(p => p.role === 'Sugar Baby');
       } else if (user?.role === 'Sugar Baby') {
-        setFeaturedProfiles(profiles.filter(p => p.role === 'Sugar Daddy'));
+        filteredProfilesForDisplay = profiles.filter(p => p.role === 'Sugar Daddy');
       } else {
-        setFeaturedProfiles(profiles);
+        filteredProfilesForDisplay = profiles;
+      }
+      
+      // Ensure we always have up to 4 profiles if possible, filling with generic mocks if needed
+      if (filteredProfilesForDisplay.length < 4) {
+          const fallbackRole = user?.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
+          const fallbacks = mockUsers.filter(u => u.role === (user ? fallbackRole : u.role) && u.role !== 'Admin');
+          const existingIds = new Set(filteredProfilesForDisplay.map(p => p.id));
+          for (const fallback of fallbacks) {
+              if (filteredProfilesForDisplay.length >= 4) break;
+              if (!existingIds.has(fallback.id)) {
+                  filteredProfilesForDisplay.push(fallback);
+              }
+          }
       }
 
+      setFeaturedProfiles(filteredProfilesForDisplay.slice(0, 4));
       setLoading(false);
     };
     loadProfiles();
@@ -125,6 +141,7 @@ export default function Home() {
             src="/sd-connect-hero-background.jpg"
             alt="Couple"
             fill
+            priority
             className="absolute inset-0 z-0 object-cover object-center"
             style={{ transform: `translateY(${offsetY + 5}px)` }}
             data-ai-hint="couple relationship"

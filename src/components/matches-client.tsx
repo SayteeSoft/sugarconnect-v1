@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Users, Eye, MessageSquare, Trash2 } from "lucide-react";
+import { Heart, Users, Eye, MessageSquare, Trash2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,15 +22,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-
-type MatchesClientProps = {
-  initialMatches: UserProfile[];
-};
+import { mockUsers } from "@/lib/mock-data";
 
 type ListType = 'favorites' | 'visitors' | 'viewed';
 
-export function MatchesClient({ initialMatches }: MatchesClientProps) {
+export function MatchesClient() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<UserProfile[]>([]);
   const [visitors, setVisitors] = useState<UserProfile[]>([]);
   const [viewed, setViewed] = useState<UserProfile[]>([]);
@@ -38,33 +36,76 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
   const { toast } = useToast();
 
   useEffect(() => {
+    const fetchMatches = async (user: UserProfile) => {
+        setLoading(true);
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
+            let fetchedUsers: UserProfile[];
+
+            if (!baseUrl) {
+              console.warn("URL env var not set, falling back to mock users for matches.");
+              fetchedUsers = [...mockUsers];
+            } else {
+                const res = await fetch(`${baseUrl}/api/users`, { cache: 'no-store' });
+                const allUsers = [...mockUsers];
+                if (res.ok) {
+                    const apiUsers = await res.json();
+                    const mockUserIds = new Set(mockUsers.map(u => u.id));
+                    for (const apiUser of apiUsers) {
+                        if (!mockUserIds.has(apiUser.id)) {
+                            allUsers.push(apiUser);
+                        }
+                    }
+                } else {
+                  console.warn(`API call failed with status ${res.status}, using only mock users for matches.`);
+                }
+                fetchedUsers = allUsers;
+            }
+            
+            const matches = fetchedUsers.filter((u: UserProfile) => u.role !== 'Admin' && u.id !== user.id);
+
+            let filteredMatches: UserProfile[];
+
+            if (user.role === 'Admin') {
+                filteredMatches = matches;
+            } else if (user.role === 'Sugar Baby') {
+                filteredMatches = matches.filter(u => u.role === 'Sugar Daddy');
+            } else if (user.role === 'Sugar Daddy') {
+                filteredMatches = matches.filter(u => u.role === 'Sugar Baby');
+            } else {
+                filteredMatches = [];
+            }
+            
+            // Simple random assignment for demonstration
+            setFavorites(filteredMatches.slice(0, 2));
+            setVisitors(filteredMatches.slice(1, 4).filter(u => !favorites.some(f => f.id === u.id)));
+            setViewed(filteredMatches.slice(2, 5).filter(u => !favorites.some(f => f.id === u.id) && !visitors.some(v => v.id === u.id)));
+        
+        } catch (error) {
+            console.error("Error fetching profiles for matches, falling back to mock data:", error);
+            const fallbackMatches = mockUsers.filter(u => u.role !== 'Admin');
+            setFavorites(fallbackMatches.slice(0, 2));
+            setVisitors(fallbackMatches.slice(1, 4));
+            setViewed(fallbackMatches.slice(2, 5));
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
         try {
             const parsedUser = JSON.parse(storedUser);
             setCurrentUser(parsedUser);
-
-            let filteredMatches: UserProfile[];
-
-            if (parsedUser.role === 'Admin') {
-                filteredMatches = initialMatches;
-            } else if (parsedUser.role === 'Sugar Baby') {
-                filteredMatches = initialMatches.filter(user => user.role === 'Sugar Daddy');
-            } else if (parsedUser.role === 'Sugar Daddy') {
-                filteredMatches = initialMatches.filter(user => user.role === 'Sugar Baby');
-            } else {
-                filteredMatches = [];
-            }
-            
-            setFavorites(filteredMatches.slice(0, 2));
-            setVisitors(filteredMatches.slice(1, 4).filter(u => !favorites.some(f => f.id === u.id)));
-            setViewed(filteredMatches.slice(2, 5).filter(u => !favorites.some(f => f.id === u.id) && !visitors.some(v => v.id === u.id)));
-
+            fetchMatches(parsedUser);
         } catch (e) {
             console.error("Failed to parse user from storage", e);
+            setLoading(false);
         }
+    } else {
+        setLoading(false);
     }
-  }, [initialMatches]);
+  }, []);
 
 
   const handleDelete = (userId: string, list: ListType) => {
@@ -146,6 +187,18 @@ export function MatchesClient({ initialMatches }: MatchesClientProps) {
         </div>
     )
   );
+
+  if (loading) {
+    return (
+        <div className="container mx-auto max-w-4xl text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+        </div>
+    )
+  }
+
+  if (!currentUser) {
+      return <div className="container mx-auto text-center text-muted-foreground">Please log in to see your matches.</div>
+  }
 
   return (
     <div className="container mx-auto max-w-4xl">
