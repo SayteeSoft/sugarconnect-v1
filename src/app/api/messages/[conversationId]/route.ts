@@ -129,21 +129,24 @@ export async function POST(
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    // First check mock users as they are fewer
+    // First, check the mock users array since it's small and in memory.
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
-        // We still need to check if this mock user exists in the blob store to get their "key" (email)
+        // We need to check if this mock user also exists in the blob store to get their latest data (like credits).
         try {
+            // The key in the blob store is the user's email.
             const storedUser = await store.get(mockUser.email, { type: 'json' });
-            // If they exist in blob store, return that version (it might have updated credits)
+            // If they exist in blob store, return that version as it's the most up-to-date.
             return { key: mockUser.email, user: storedUser };
         } catch (e) {
-            // If they don't exist in blob store, it's fine, we can still use the mock user object
+            // If they don't exist in the blob store (e.g., they are purely a mock user),
+            // we can return the mock user object. The key will be their email.
             return { key: mockUser.email, user: mockUser };
         }
     }
 
-    // Then check blob store by iterating
+    // If not found in mocks, iterate through the blob store.
+    // This is less efficient and should be a fallback.
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -152,8 +155,11 @@ async function findUserById(store: Store, userId: string): Promise<{key: string,
           return { key: blob.key, user: userData };
         }
       } catch (e) {
+        // This can happen if a blob is not valid JSON, we can safely ignore it.
         console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
       }
     }
+
+    // Return null if the user is not found anywhere.
     return null;
 }
