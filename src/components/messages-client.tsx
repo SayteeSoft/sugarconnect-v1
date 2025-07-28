@@ -70,7 +70,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
 
     const handleSelectConversation = async (conversation: Conversation) => {
-        if (selectedConversation?.user.id === conversation.user.id) return;
+        if (selectedConversation?.user.id === conversation.user.id && selectedConversation.messages.length > 0) return;
 
         setLoadingMessages(true);
         setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
@@ -106,16 +106,15 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
                 setConversations(conversationsWithStatus);
                 
-                let conversationIdToSelect = selectedUserId;
-                if (!conversationIdToSelect && conversationsWithStatus.length > 0) {
-                    conversationIdToSelect = conversationsWithStatus[0].user.id;
+                let conversationToSelect = null;
+                if (selectedUserId) {
+                    conversationToSelect = conversationsWithStatus.find(c => c.user.id === selectedUserId);
+                } else if (conversationsWithStatus.length > 0) {
+                    conversationToSelect = conversationsWithStatus[0];
                 }
 
-                if (conversationIdToSelect) {
-                    const conversationToSelect = conversationsWithStatus.find(c => c.user.id === conversationIdToSelect);
-                    if (conversationToSelect) {
-                       await handleSelectConversation(conversationToSelect);
-                    }
+                if (conversationToSelect) {
+                   await handleSelectConversation(conversationToSelect);
                 } else {
                     setSelectedConversation(null);
                 }
@@ -135,8 +134,16 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
     
     const scrollToBottom = () => {
-        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     };
+
+    useEffect(() => {
+        if(selectedConversation && selectedConversation.messages.length > 0){
+             scrollToBottom();
+        }
+    }, [selectedConversation?.messages]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -194,10 +201,11 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         };
         
         setSelectedConversation(prev => prev ? { ...prev, messages: [...prev.messages, optimisticMessage] } : null);
-        setTimeout(scrollToBottom, 100);
-
+        
         const currentNewMessage = newMessage;
         const currentImageFile = imageFile;
+        const currentImagePreview = imagePreview;
+
         setNewMessage("");
         setImageFile(null);
         setImagePreview(null);
@@ -246,7 +254,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 to: selectedConversation.user.email,
                 recipientName: selectedConversation.user.name,
                 subject: `You have a new message from ${currentUser.name}`,
-                body: `<p>You have received a new message from ${currentUser.name}:</p><p><i>"${currentNewMessage}"</i></p>${imagePreview ? '<p>(An image was attached)</p>' : ''}`,
+                body: `<p>You have received a new message from ${currentUser.name}:</p><p><i>"${currentNewMessage}"</i></p>${currentImagePreview ? '<p>(An image was attached)</p>' : ''}`,
                 callToAction: {
                     text: 'Click here to reply',
                     url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${currentUser.id}`
@@ -257,7 +265,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to send message. Please try again.' });
             setSelectedConversation(prev => prev ? { ...prev, messages: prev.messages.filter(m => m.id !== tempMessageId) } : null);
             setNewMessage(currentNewMessage);
-            setImagePreview(imagePreview);
+            setImagePreview(currentImagePreview);
             setImageFile(currentImageFile);
         }
     };
