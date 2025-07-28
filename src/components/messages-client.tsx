@@ -130,9 +130,9 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         }
     };
     
-    useEffect(() => {
+    const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [selectedConversation?.messages]);
+    };
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -190,6 +190,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         };
         
         setSelectedConversation(prev => prev ? { ...prev, messages: [...prev.messages, optimisticMessage] } : null);
+        setTimeout(scrollToBottom, 100);
 
         const currentNewMessage = newMessage;
         const currentImagePreview = imagePreview;
