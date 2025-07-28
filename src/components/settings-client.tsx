@@ -215,7 +215,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                             This action is permanent and cannot be undone. This will permanently delete your account and all associated data.
                         </AlertDescription>
                     </Alert>
-                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting} className="mt-4">
+                    <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting || user.email === 'saytee.software@gmail.com'} className="mt-4">
                         {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                         {isDeleting ? 'Deleting...' : 'Delete Account'}
                     </Button>
