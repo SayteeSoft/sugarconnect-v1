@@ -15,8 +15,8 @@ const getBlobStore = (name: 'users' | 'messages'): Store => {
     return getStore({
         name,
         consistency: 'strong',
-        siteID: process.env.NETLIFY_SITE_ID || 'fallback-site-id',
-        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token',
+        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
     });
 };
 
@@ -59,9 +59,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
         }
 
-        const existingUser = await userStore.get(lowerCaseEmail, { type: 'json' });
-        if (existingUser) {
-            return NextResponse.json({ message: 'User already exists' }, { status: 409 });
+        try {
+            const existingUser = await userStore.get(lowerCaseEmail);
+            if (existingUser) {
+                return NextResponse.json({ message: 'User already exists' }, { status: 409 });
+            }
+        } catch(e) {
+            // This is expected if the user does not exist
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
