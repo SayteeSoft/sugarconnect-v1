@@ -13,7 +13,7 @@ async function getProfileById(id: string): Promise<UserProfile | null> {
 
     try {
         const baseUrl = process.env.NEXT_PUBLIC_URL || '';
-        const response = await fetch(`${baseUrl}/api/users/${id}?t=${new Date().getTime()}`, { cache: 'no-store' });
+        const response = await fetch(`${baseUrl}/api/users/${id}`, { cache: 'no-store' });
 
         if (response.ok) {
             const user = await response.json();
@@ -21,22 +21,25 @@ async function getProfileById(id: string): Promise<UserProfile | null> {
         }
 
         if (response.status === 404) {
-            // If user is not in the API, check mock users
-            const mockUser = mockUsers.find(u => u.id === id);
-            if (mockUser) {
-                return mockUser;
+            // If user is not in the API, check mock users in dev
+            if (process.env.NODE_ENV !== 'production') {
+                const mockUser = mockUsers.find(u => u.id === id);
+                if (mockUser) {
+                    return mockUser;
+                }
             }
             return null; // Truly not found
         }
         
-        // For other non-404 errors, we might still want to check mocks as a fallback
         throw new Error(`Failed to fetch profile: ${response.statusText}`);
 
     } catch (e) {
       console.error(`Error fetching profile by id ${id}, checking mock data. Error:`, e);
-      // Fallback to mock users on any fetch error
-      const mockUser = mockUsers.find(u => u.id === id);
-      return mockUser || null;
+      if (process.env.NODE_ENV !== 'production') {
+        const mockUser = mockUsers.find(u => u.id === id);
+        return mockUser || null;
+      }
+      return null;
     }
 }
 
@@ -95,4 +98,3 @@ export default function ProfilePage() {
         <ProfileForm initialProfile={profile} currentUser={currentUser} />
     );
 }
-

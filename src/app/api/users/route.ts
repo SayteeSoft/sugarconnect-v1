@@ -17,11 +17,11 @@ export async function GET() {
   const store = getBlobStore();
   
   try {
-    const { blobs } = await store.list();
     let allUsers: UserProfile[] = [];
 
     // In production, only serve users from the blob store.
     if (process.env.NETLIFY) {
+        const { blobs } = await store.list();
         for (const blob of blobs) {
             try {
                 const user: UserProfile = await store.get(blob.key, { type: 'json' });
@@ -38,6 +38,7 @@ export async function GET() {
             return userToReturn as UserProfile;
         }));
 
+        const { blobs } = await store.list();
         for (const blob of blobs) {
           try {
             const user: UserProfile = await store.get(blob.key, { type: 'json' });
