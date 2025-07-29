@@ -78,32 +78,34 @@ export async function GET(request: NextRequest) {
         }
 
         const conversations = [];
+        const isAdmin = currentUser.email === 'saytee.software@gmail.com';
 
         for (const partner of potentialPartners) {
             const conversationId = [currentUser.id, partner.id].sort().join('--');
             let lastMessage: Message | null = null;
+            let hasMessages = false;
             
-            const isMockConversationForAdmin = currentUser.email === 'saytee.software@gmail.com' && 
-                                               mockConversations.some(mc => mc.conversationId === conversationId);
+            const isMockConversationForAdmin = isAdmin && mockConversations.some(mc => mc.conversationId === conversationId);
 
             if (isMockConversationForAdmin) {
                 const mockConvo = mockConversations.find(mc => mc.conversationId === conversationId);
                 if (mockConvo && mockConvo.messages.length > 0) {
                     lastMessage = mockConvo.messages[mockConvo.messages.length - 1];
+                    hasMessages = true;
                 }
             } else {
                  try {
                     const conversationData = await messagesStore.get(conversationId, { type: 'json' });
                     if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
                         lastMessage = conversationData.messages[conversationData.messages.length - 1];
+                        hasMessages = true;
                     }
                 } catch (error) {
                     // No messages yet for this conversation, which is fine
                 }
             }
             
-            // Only add conversation if it's for the admin's mock data or if it's a real conversation
-            if (isMockConversationForAdmin || ! (currentUser.email === 'saytee.software@gmail.com')) {
+            if (isAdmin || hasMessages) {
                 conversations.push({
                     user: {
                         id: partner.id,
