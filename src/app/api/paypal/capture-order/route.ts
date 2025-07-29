@@ -15,13 +15,10 @@ const paypalClient = new paypal.core.PayPalHttpClient(
 );
 
 const getBlobStore = (): Store => {
-  if (process.env.NETLIFY) {
-    return getStore('users');
-  }
   return getStore({
     name: 'users',
     consistency: 'strong',
-    siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+    siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
     token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
   });
 };

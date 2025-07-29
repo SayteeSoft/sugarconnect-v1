@@ -5,13 +5,10 @@ import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
 
 const getBlobStore = (): Store => {
-    if (process.env.NETLIFY) {
-        return getStore('users');
-    }
     return getStore({
         name: 'users',
         consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
         token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
     });
 };
@@ -21,15 +18,22 @@ export async function GET() {
   
   try {
     const { blobs } = await store.list();
-    const allUsers: UserProfile[] = [...mockUsers];
-    const mockUserEmails = new Set(mockUsers.map(u => u.email));
+    const allUsers: UserProfile[] = [];
+
+    // In production, only serve users from the blob store.
+    // In development, merge with mock users for testing.
+    if (process.env.NODE_ENV !== 'production') {
+        allUsers.push(...mockUsers);
+    }
 
     for (const blob of blobs) {
       try {
         const user: UserProfile = await store.get(blob.key, { type: 'json' });
-        if (user && user.email && !mockUserEmails.has(user.email)) {
-            // Omit password from the returned user list
-            const { password, ...userToReturn } = user;
+        // Omit password from the returned user list
+        const { password, ...userToReturn } = user;
+        
+        // Ensure no duplicate users are added if they exist in both mocks and blobs (dev only)
+        if (!allUsers.some(u => u.id === user.id)) {
             allUsers.push(userToReturn as UserProfile);
         }
       } catch (e) {

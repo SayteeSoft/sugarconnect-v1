@@ -30,8 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { mockUsers } from "@/lib/mock-data";
-
 
 export function AdminClient() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -44,29 +42,11 @@ export function AdminClient() {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
-        let fetchedUsers: UserProfile[];
-
-        if (!baseUrl) {
-          console.warn("URL env var not set, falling back to mock users.");
-          fetchedUsers = [...mockUsers];
-        } else {
-            const res = await fetch(`/api/users`, { cache: 'no-store' });
-            if (!res.ok) {
-                console.warn(`API call failed with status ${res.status}, falling back to mock users.`);
-                fetchedUsers = [...mockUsers];
-            } else {
-                const apiUsers = await res.json();
-                const allUsers = [...mockUsers];
-                const mockUserIds = new Set(mockUsers.map(u => u.id));
-                for (const apiUser of apiUsers) {
-                    if (!mockUserIds.has(apiUser.id)) {
-                        allUsers.push(apiUser);
-                    }
-                }
-                fetchedUsers = allUsers;
-            }
+        const res = await fetch(`/api/users`, { cache: 'no-store' });
+        if (!res.ok) {
+            throw new Error(`API call failed with status ${res.status}`);
         }
+        const fetchedUsers = await res.json();
         
         const sortedUsers = [...fetchedUsers].sort((a, b) => {
             if (a.role === 'Admin' && b.role !== 'Admin') return -1;
@@ -76,13 +56,8 @@ export function AdminClient() {
 
         setUsers(sortedUsers);
       } catch (e) {
-        console.error("Error fetching users, falling back to mock users:", e);
-        const sortedMockUsers = [...mockUsers].sort((a, b) => {
-            if (a.role === 'Admin' && b.role !== 'Admin') return -1;
-            if (a.role !== 'Admin' && b.role === 'Admin') return 1;
-            return 0;
-        });
-        setUsers(sortedMockUsers);
+        console.error("Error fetching users:", e);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch user data.'});
       } finally {
         setLoading(false);
       }
@@ -98,7 +73,7 @@ export function AdminClient() {
         //
       }
     }
-  }, []);
+  }, [toast]);
 
   const handleDelete = async (userId: string) => {
     try {

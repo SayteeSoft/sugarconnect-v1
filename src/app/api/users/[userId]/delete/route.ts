@@ -7,7 +7,12 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = params;
-  const userStore = getStore( process.env.NETLIFY ? 'users' : { name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  const userStore = getStore({ 
+      name: 'users', 
+      consistency: 'strong', 
+      siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id', 
+      token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'
+  });
 
   try {
     const { blobs } = await userStore.list();
@@ -34,14 +39,16 @@ export async function DELETE(
 
     // Delete image from blob store if it exists
     if (userBlob?.image && userBlob.image.startsWith('/api/images/')) {
-        const imageStore = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+        const imageStore = getStore({
+            name: 'images',
+            consistency: 'strong',
+            siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
+            token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'
+        });
         try {
-            // The image key is the user ID.
             const imageKey = userId;
             await imageStore.delete(imageKey);
         } catch (imgErr) {
-            // It's possible the image doesn't exist or another error occurred.
-            // We'll log it but proceed with deleting the user data.
             console.error(`Could not delete image for user ${userId}:`, imgErr);
         }
     }

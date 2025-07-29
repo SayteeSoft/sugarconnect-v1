@@ -15,8 +15,8 @@ const getBlobStore = (name: 'users' | 'messages'): Store => {
     return getStore({
         name,
         consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'fallback-site-id', // Add a fallback if env var is missing
-        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token', // Add a fallback
+        siteID: process.env.NETLIFY_SITE_ID || 'fallback-site-id',
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'fallback-token',
     });
 };
 
@@ -43,19 +43,22 @@ async function ensureAdminUser(store: Store): Promise<void> {
 export async function POST(request: NextRequest) {
     try {
         const userStore = getBlobStore('users');
-        await ensureAdminUser(userStore);
+        
+        // In dev, ensure admin exists. In prod, this should be handled manually.
+        if(process.env.NODE_ENV !== 'production') {
+            await ensureAdminUser(userStore);
+        }
 
         const { name, email, password, role } = await request.json();
+        const lowerCaseEmail = email.toLowerCase();
 
         if (!name || !email || !password || !role) {
             return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
         }
 
         try {
-            const existingUser = await userStore.get(email, {type: 'json'});
-            if (existingUser) {
-                return NextResponse.json({ message: 'User already exists' }, { status: 409 });
-            }
+            await userStore.get(lowerCaseEmail, {type: 'json'});
+            return NextResponse.json({ message: 'User already exists' }, { status: 409 });
         } catch (error) {
             // User does not exist, which is what we want.
         }
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
 
         const newUser: UserProfile = {
             id: uuidv4(),
-            email,
+            email: lowerCaseEmail,
             name,
             password: hashedPassword,
             role,
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
             credits: role === 'Sugar Daddy' ? 10 : undefined,
         };
 
-        await userStore.setJSON(email, newUser);
+        await userStore.setJSON(lowerCaseEmail, newUser);
 
         // Send welcome email
         await sendEmail({

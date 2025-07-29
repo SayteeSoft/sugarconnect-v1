@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Filter, Wifi, Sparkles, Image as ImageIcon, Loader2 } from "lucide-react";
-import { mockUsers } from "@/lib/mock-data";
+import { useToast } from "@/hooks/use-toast";
 
 export function SearchClient() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -23,39 +23,21 @@ export function SearchClient() {
   const [isNew, setIsNew] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [withPhoto, setWithPhoto] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProfiles = async () => {
         setLoading(true);
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
-            let fetchedUsers: UserProfile[];
-
-            if (!baseUrl) {
-              console.warn("URL env var not set, falling back to mock users for search.");
-              fetchedUsers = [...mockUsers];
-            } else {
-                const res = await fetch(`/api/users`, { cache: 'no-store' });
-                const allUsers = [...mockUsers];
-                if (res.ok) {
-                    const apiUsers = await res.json();
-                    const mockUserIds = new Set(mockUsers.map(u => u.id));
-                    for (const apiUser of apiUsers) {
-                        if (!mockUserIds.has(apiUser.id)) {
-                            allUsers.push(apiUser);
-                        }
-                    }
-                } else {
-                  console.warn(`API call failed with status ${res.status}, using only mock users for search.`);
-                }
-                fetchedUsers = allUsers;
+            const res = await fetch(`/api/users`, { cache: 'no-store' });
+             if (!res.ok) {
+                throw new Error(`API call failed with status ${res.status}`);
             }
-            
+            const fetchedUsers = await res.json();
             setProfiles(fetchedUsers.filter((user: UserProfile) => user.role !== 'Admin'));
-
         } catch (error) {
-            console.error("Error fetching profiles for search, falling back to mock data:", error);
-            setProfiles(mockUsers.filter(user => user.role !== 'Admin'));
+            console.error("Error fetching profiles for search:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load profiles.' });
         } finally {
             setLoading(false);
         }
@@ -72,7 +54,7 @@ export function SearchClient() {
             setCurrentUser(null);
         }
     }
-  }, []);
+  }, [toast]);
 
   const filteredProfiles = useMemo(() => {
     let roleFilteredProfiles = profiles;

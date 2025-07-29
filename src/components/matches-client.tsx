@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import { mockUsers } from "@/lib/mock-data";
 
 type ListType = 'favorites' | 'visitors' | 'viewed';
 
@@ -39,28 +38,11 @@ export function MatchesClient() {
     const fetchMatches = async (user: UserProfile) => {
         setLoading(true);
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.URL;
-            let fetchedUsers: UserProfile[];
-
-            if (!baseUrl) {
-              console.warn("URL env var not set, falling back to mock users for matches.");
-              fetchedUsers = [...mockUsers];
-            } else {
-                const res = await fetch(`/api/users`, { cache: 'no-store' });
-                const allUsers = [...mockUsers];
-                if (res.ok) {
-                    const apiUsers = await res.json();
-                    const mockUserIds = new Set(mockUsers.map(u => u.id));
-                    for (const apiUser of apiUsers) {
-                        if (!mockUserIds.has(apiUser.id)) {
-                            allUsers.push(apiUser);
-                        }
-                    }
-                } else {
-                  console.warn(`API call failed with status ${res.status}, using only mock users for matches.`);
-                }
-                fetchedUsers = allUsers;
+            const res = await fetch(`/api/users`, { cache: 'no-store' });
+            if (!res.ok) {
+                throw new Error(`API call failed with status ${res.status}`);
             }
+            const fetchedUsers = await res.json();
             
             const matches = fetchedUsers.filter((u: UserProfile) => u.role !== 'Admin' && u.id !== user.id);
 
@@ -82,11 +64,8 @@ export function MatchesClient() {
             setViewed(filteredMatches.slice(2, 5).filter(u => !favorites.some(f => f.id === u.id) && !visitors.some(v => v.id === u.id)));
         
         } catch (error) {
-            console.error("Error fetching profiles for matches, falling back to mock data:", error);
-            const fallbackMatches = mockUsers.filter(u => u.role !== 'Admin');
-            setFavorites(fallbackMatches.slice(0, 2));
-            setVisitors(fallbackMatches.slice(1, 4));
-            setViewed(fallbackMatches.slice(2, 5));
+            console.error("Error fetching profiles for matches:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load your matches.' });
         } finally {
             setLoading(false);
         }
@@ -105,7 +84,7 @@ export function MatchesClient() {
     } else {
         setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
 
   const handleDelete = (userId: string, list: ListType) => {

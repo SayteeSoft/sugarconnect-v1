@@ -8,13 +8,10 @@ import bcrypt from 'bcrypt';
 import { mockUsers } from '@/lib/mock-data';
 
 const getBlobStore = (): Store => {
-  if (process.env.NETLIFY) {
-    return getStore('users');
-  }
   return getStore({
     name: 'users',
     consistency: 'strong',
-    siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+    siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
     token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
   });
 };
@@ -63,13 +60,13 @@ export async function POST(request: NextRequest) {
     }
 
     let user: UserProfile | null = null;
-    const isMockAdmin = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'Admin');
+    const isAdminLoginAttempt = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'Admin');
 
-    if (isMockAdmin) {
+    if (process.env.NODE_ENV !== 'production' && isAdminLoginAttempt) {
       user = await ensureAdminUser(store, email.toLowerCase());
     } else {
       try {
-        user = (await store.get(email, { type: 'json' })) as UserProfile;
+        user = (await store.get(email.toLowerCase(), { type: 'json' })) as UserProfile;
       } catch (error) {
         return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
       }

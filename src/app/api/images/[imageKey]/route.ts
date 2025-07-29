@@ -11,7 +11,12 @@ export async function GET(
     return NextResponse.json({ message: 'Image key is required' }, { status: 400 });
   }
 
-  const store = getStore( process.env.NETLIFY ? 'images' : { name: 'images', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
+  const store = getStore({ 
+      name: 'images', 
+      consistency: 'strong', 
+      siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id', 
+      token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'
+  });
 
   try {
     const blob = await store.get(imageKey, { type: 'blob' });

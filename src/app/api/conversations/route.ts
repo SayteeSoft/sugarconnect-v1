@@ -8,22 +8,21 @@ import { mockUsers } from '@/lib/mock-data';
 import { mockConversations } from '@/lib/mock-messages';
 
 const getBlobStore = (name: 'users' | 'messages'): Store => {
-    if (process.env.NETLIFY) {
-        return getStore(name);
-    }
     return getStore({
         name,
         consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
         token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
     });
 };
 
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) {
-        return { key: mockUser.email, user: mockUser };
+    if (process.env.NODE_ENV !== 'production') {
+        const mockUser = mockUsers.find(u => u.id === userId);
+        if (mockUser) {
+            return { key: mockUser.email, user: mockUser };
+        }
     }
 
     const { blobs } = await store.list();
@@ -63,13 +62,17 @@ export async function GET(request: NextRequest) {
     try {
         const { blobs: userBlobs } = await userStore.list();
         
-        const allUsers: UserProfile[] = [...mockUsers];
-        const mockUserIds = new Set(mockUsers.map(u => u.id));
+        const allUsers: UserProfile[] = [];
+        // In production, only fetch from blobs. In dev, include mocks.
+        if (process.env.NODE_ENV !== 'production') {
+            allUsers.push(...mockUsers);
+        }
 
         for (const blob of userBlobs) {
             try {
                 const user = await userStore.get(blob.key, { type: 'json' });
-                if (!mockUserIds.has(user.id)) {
+                // Ensure no duplicate users if mocks are also used in dev
+                if (!allUsers.some(u => u.id === user.id)) {
                     allUsers.push(user);
                 }
             } catch (e) {
@@ -98,7 +101,7 @@ export async function GET(request: NextRequest) {
             
             const isMockConversationForAdmin = isAdmin && mockConversations.some(mc => mc.conversationId === conversationId);
 
-            if (isMockConversationForAdmin) {
+            if (isMockConversationForAdmin && process.env.NODE_ENV !== 'production') {
                 const mockConvo = mockConversations.find(mc => mc.conversationId === conversationId);
                 if (mockConvo && mockConvo.messages.length > 0) {
                     lastMessage = mockConvo.messages[mockConvo.messages.length - 1];
@@ -116,7 +119,9 @@ export async function GET(request: NextRequest) {
                 }
             }
             
-            if (isAdmin || hasMessages || currentUser.role === 'Sugar Daddy' || currentUser.role === 'Sugar Baby') {
+            // For non-admin users, only show conversations that have messages.
+            // Admin can see all potential conversations.
+            if (isAdmin || hasMessages) {
                 conversations.push({
                     user: {
                         id: partner.id,

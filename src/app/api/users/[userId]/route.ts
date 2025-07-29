@@ -24,13 +24,10 @@ async function findUserByKey(store: Store, userId: string): Promise<{key: string
 }
 
 const getBlobStore = (name: 'users' | 'images'): Store => {
-    if (process.env.NETLIFY) {
-        return getStore(name);
-    }
     return getStore({
         name,
         consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
         token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
     });
 };

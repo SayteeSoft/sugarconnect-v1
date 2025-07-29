@@ -10,21 +10,18 @@ import { generateReply } from '@/ai/flows/generate-reply';
 import { mockConversations } from '@/lib/mock-messages';
 
 const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
-    if (process.env.NETLIFY) {
-        return getStore(name);
-    }
     return getStore({
         name,
         consistency: 'strong',
-        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
         token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
     });
 };
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) {
-        return { key: mockUser.email, user: mockUser };
+    if (process.env.NODE_ENV !== 'production') {
+        const mockUser = mockUsers.find(u => u.id === userId);
+        if (mockUser) return { key: mockUser.email, user: mockUser };
     }
     
     const { blobs } = await store.list();
@@ -51,10 +48,11 @@ export async function GET(
     return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
   }
   
-  const mockConversation = mockConversations.find(mc => mc.conversationId === conversationId);
-  
-  if (mockConversation) {
-    return NextResponse.json(mockConversation.messages);
+  if (process.env.NODE_ENV !== 'production') {
+    const mockConversation = mockConversations.find(mc => mc.conversationId === conversationId);
+    if (mockConversation) {
+        return NextResponse.json(mockConversation.messages);
+    }
   }
 
   const store = getBlobStore('messages');
@@ -128,7 +126,7 @@ export async function POST(
 
         // AI Reply Logic
         const recipientId = conversationId.replace(senderId, '').replace('--', '');
-        const recipientIsMock = mockUsers.some(u => u.id === recipientId);
+        const recipientIsMock = process.env.NODE_ENV !== 'production' && mockUsers.some(u => u.id === recipientId);
 
         if (recipientIsMock) {
             const recipientResult = await findUserById(userStore, recipientId);
