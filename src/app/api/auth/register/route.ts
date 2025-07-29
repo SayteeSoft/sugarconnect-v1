@@ -20,37 +20,36 @@ const getBlobStore = (name: 'users' | 'messages'): Store => {
     });
 };
 
-async function ensureAdminUser(store: Store): Promise<void> {
+async function ensureAdminUser(store: Store): Promise<UserProfile> {
     const adminEmail = 'saytee.software@gmail.com';
-    try {
-        const adminData = await store.get(adminEmail, {type: 'json'});
-        if (!adminData) {
-           throw new Error('Admin not found, creating one.');
-        }
-    } catch (error) {
-        // Admin user does not exist, create it.
-        const adminTemplate = mockUsers.find(u => u.role === 'Admin');
-        if (adminTemplate) {
-            const hashedPassword = await bcrypt.hash('password123', 10);
-            const adminUser: UserProfile = {
-                ...adminTemplate,
-                email: adminEmail,
-                password: hashedPassword,
-            };
-            await store.setJSON(adminEmail, adminUser);
-        }
-    }
-}
+    let adminData: UserProfile | null = null;
 
+    try {
+        adminData = await store.get(adminEmail, {type: 'json'});
+    } catch (e) {
+        // Admin user does not exist, will create.
+    }
+
+    if (adminData) return adminData;
+
+    const adminTemplate = mockUsers.find(u => u.role === 'Admin');
+    if (!adminTemplate) throw new Error("Admin template not found in mock data.");
+
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    const adminUser: UserProfile = {
+        ...adminTemplate,
+        email: adminEmail,
+        password: hashedPassword,
+    };
+    await store.setJSON(adminEmail, adminUser);
+    return adminUser;
+}
 
 export async function POST(request: NextRequest) {
     try {
         const userStore = getBlobStore('users');
         
-        // In dev, ensure admin exists. In prod, this should be handled manually.
-        if(process.env.NODE_ENV !== 'production') {
-            await ensureAdminUser(userStore);
-        }
+        const adminUser = await ensureAdminUser(userStore);
 
         const { name, email, password, role } = await request.json();
         const lowerCaseEmail = email.toLowerCase();
@@ -92,15 +91,44 @@ export async function POST(request: NextRequest) {
             to: email,
             recipientName: name,
             subject: 'Welcome to Sugar Connect!',
-            body: `
-                <p>We are thrilled to have you join our community!</p>
-                <p>Get started by completing your profile to find your perfect match.</p>
-            `,
+            body: `We are thrilled to have you join our community! Get started by completing your profile to find your perfect match.`,
             callToAction: {
                 text: 'Complete Your Profile',
                 url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${newUser.id}?edit=true`
             }
         });
+
+        // Generate and send AI welcome message from Admin
+        const aiMessageResponse = await initiateConversation({
+            senderProfile: JSON.stringify(adminUser),
+            recipientProfile: JSON.stringify(newUser),
+            senderRole: 'Admin'
+        });
+
+        if (aiMessageResponse && aiMessageResponse.message) {
+            const messagesStore = getBlobStore('messages');
+            const conversationId = [adminUser.id, newUser.id].sort().join('--');
+            const welcomeMessage: Message = {
+                id: uuidv4(),
+                conversationId,
+                senderId: adminUser.id,
+                text: aiMessageResponse.message,
+                timestamp: new Date().toISOString()
+            };
+            await messagesStore.setJSON(conversationId, { messages: [welcomeMessage] });
+
+            // Notify user of new message
+            await sendEmail({
+                to: newUser.email,
+                recipientName: newUser.name,
+                subject: `You have a new message from ${adminUser.name}`,
+                body: `You have received a new message from ${adminUser.name} on Sugar Connect.\n\nMessage: "${welcomeMessage.text}"`,
+                callToAction: {
+                    text: 'Click here to reply',
+                    url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${adminUser.id}`
+                }
+            });
+        }
         
         const { password: _, ...userToReturn } = newUser;
 

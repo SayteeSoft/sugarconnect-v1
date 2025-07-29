@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates an introductory message from one user to another.
@@ -13,7 +14,7 @@ import {z} from 'genkit';
 const InitiateConversationInputSchema = z.object({
   senderProfile: z.string().describe("JSON string of the sender's profile."),
   recipientProfile: z.string().describe("JSON string of the recipient's profile."),
-  senderRole: z.enum(['Sugar Daddy', 'Sugar Baby']).describe("The role of the sender."),
+  senderRole: z.enum(['Sugar Daddy', 'Sugar Baby', 'Admin']).describe("The role of the sender."),
 });
 export type InitiateConversationInput = z.infer<typeof InitiateConversationInputSchema>;
 
@@ -40,10 +41,15 @@ const prompt = ai.definePrompt({
   Recipient's Profile (the person receiving the message):
   {{{recipientProfile}}}
 
-  Based on the profiles, write a short, friendly, and compelling introductory message (1-2 sentences). The message should reference a specific detail from the recipient's profile to make it feel personal.
+  Based on the profiles, write a short, friendly, and compelling introductory message (1-2 sentences). 
   
+  {{#if (eq senderRole 'Admin')}}
+  As the admin, welcome the new user to the platform. Mention that you're there to help if they have any questions. Keep it warm and professional.
+  {{else}}
+  The message should reference a specific detail from the recipient's profile to make it feel personal.
   Example: "Hi [Name], I was so impressed by your passion for [Interest]. I'd love to hear more about it sometime."
-  
+  {{/if}}
+
   Generated Message:`,
 });
 
