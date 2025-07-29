@@ -53,6 +53,12 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    useEffect(() => {
+        if (selectedConversation && selectedConversation.messages.length > 0) {
+            scrollToBottom();
+        }
+    }, [selectedConversation?.messages]);
+
     const getConversationId = (userId1: string, userId2: string) => {
         return [userId1, userId2].sort().join('--');
     };
@@ -197,7 +203,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         };
         
         setSelectedConversation(prev => prev ? { ...prev, messages: [...prev.messages, optimisticMessage] } : null);
-        scrollToBottom();
         
         const currentNewMessage = newMessage;
         const currentImageFile = imageFile;
