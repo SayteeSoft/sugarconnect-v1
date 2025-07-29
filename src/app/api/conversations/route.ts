@@ -3,8 +3,9 @@ import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { Message } from '@/lib/messages';
+import { mockUsers } from '@/lib/mock-data';
 
-const getStoreCached = (name: 'users' | 'messages') => getStore({
+const getBlobStore = (name: 'users' | 'messages') => getStore({
     name,
     consistency: 'strong',
     siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
@@ -21,7 +22,7 @@ async function findUserById(userStore: Store, userId: string): Promise<UserProfi
                 return userToReturn as UserProfile;
             }
         } catch (e) {
-            console.warn(`Could not parse blob ${blob.key} as a user profile while searching for ID ${userId}.`, e);
+            // Ignore blobs that are not valid JSON or don't match
         }
     }
     return null;
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized: Missing user credentials" }, { status: 401 });
     }
 
-    const userStore = getStoreCached('users');
-    const messagesStore = getStoreCached('messages');
+    const userStore = getBlobStore('users');
+    const messagesStore = getBlobStore('messages');
     
     try {
         const currentUser: UserProfile | null = await userStore.get(currentUserEmail.toLowerCase(), { type: 'json' }).catch(() => null);
@@ -47,68 +48,74 @@ export async function GET(request: NextRequest) {
 
         const { blobs: messageBlobs } = await messagesStore.list({ prefix: '', cache: 'no-store' });
         
-        const conversations = [];
-        const allUsers: UserProfile[] = [];
-        const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
-        for (const blob of userBlobs) {
-            try {
-                const user = await userStore.get(blob.key, { type: 'json' });
-                const { password, ...userToReturn } = user;
-                allUsers.push(userToReturn as UserProfile);
-            } catch (e) {
-                 console.warn(`Could not parse user blob ${blob.key}`, e);
-            }
-        }
-
+        const conversations = new Map<string, { user: UserProfile; lastMessage: Message }>();
+        const userCache = new Map<string, UserProfile>();
 
         for (const blob of messageBlobs) {
-            // Check if the conversation key includes the current user's ID
             if (blob.key.includes(currentUserId)) {
                 const participantIds = blob.key.split('--');
                 const otherUserId = participantIds.find(id => id !== currentUserId);
 
                 if (otherUserId) {
-                    const partner = allUsers.find(u => u.id === otherUserId);
-                    if (partner) {
+                    try {
                         const conversationData = await messagesStore.get(blob.key, { type: 'json' });
-                        let lastMessage: Message | null = null;
                         if (conversationData && Array.isArray(conversationData.messages) && conversationData.messages.length > 0) {
-                            lastMessage = conversationData.messages[conversationData.messages.length - 1];
+                            
+                            let partner = userCache.get(otherUserId);
+                            if (!partner) {
+                                partner = await findUserById(userStore, otherUserId);
+                                if (partner) {
+                                    userCache.set(otherUserId, partner);
+                                }
+                            }
+
+                            if (partner) {
+                                const lastMessage = conversationData.messages[conversationData.messages.length - 1];
+                                if (!conversations.has(otherUserId) || new Date(lastMessage.timestamp) > new Date(conversations.get(otherUserId)!.lastMessage.timestamp)) {
+                                    conversations.set(otherUserId, {
+                                        user: partner,
+                                        lastMessage: lastMessage
+                                    });
+                                }
+                            }
                         }
-                        
-                        // Only add conversations that actually have messages
-                        if (lastMessage) {
-                             conversations.push({
-                                user: partner,
-                                messages: [lastMessage]
-                            });
-                        }
+                    } catch (e) {
+                        console.warn(`Could not process conversation blob ${blob.key}`, e);
                     }
                 }
             }
         }
         
-        // Add mock users for admin in development
         if (currentUser.role === 'Admin' && process.env.NODE_ENV !== 'production') {
-            const { mockUsers } = await import('@/lib/mock-data');
             const otherUsers = mockUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
             for(const partner of otherUsers) {
-                if (!conversations.some(c => c.user.id === partner.id)) {
-                    conversations.push({
+                if (!conversations.has(partner.id)) {
+                    conversations.set(partner.id, {
                         user: partner,
-                        messages: []
+                        lastMessage: {
+                            id: `mock-${partner.id}`,
+                            conversationId: `${currentUser.id}--${partner.id}`,
+                            senderId: partner.id,
+                            text: "Click to start a conversation...",
+                            timestamp: new Date(0).toISOString()
+                        }
                     });
                 }
             }
         }
 
-        conversations.sort((a, b) => {
-            const timeA = a.messages.length > 0 ? new Date(a.messages[0].timestamp).getTime() : 0;
-            const timeB = b.messages.length > 0 ? new Date(b.messages[0].timestamp).getTime() : 0;
+        const formattedConversations = Array.from(conversations.values()).map(c => ({
+            user: c.user,
+            messages: [c.lastMessage]
+        }));
+        
+        formattedConversations.sort((a, b) => {
+            const timeA = new Date(a.messages[0].timestamp).getTime();
+            const timeB = new Date(b.messages[0].timestamp).getTime();
             return timeB - timeA;
         });
 
-        return NextResponse.json(conversations);
+        return NextResponse.json(formattedConversations);
 
     } catch (error) {
         console.error('Failed to get conversations:', error);
