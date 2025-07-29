@@ -19,11 +19,6 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
 };
 
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    if (process.env.NODE_ENV !== 'production') {
-        const mockUser = mockUsers.find(u => u.id === userId);
-        if (mockUser) return { key: mockUser.email, user: mockUser };
-    }
-    
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
@@ -123,35 +118,7 @@ export async function POST(
             const updatedUser = { ...senderResult.user, credits: updatedCredits };
             await userStore.setJSON(senderResult.key, updatedUser);
         }
-
-        // AI Reply Logic
-        const recipientId = conversationId.replace(senderId, '').replace('--', '');
-        const recipientIsMock = process.env.NODE_ENV !== 'production' && mockUsers.some(u => u.id === recipientId);
-
-        if (recipientIsMock) {
-            const recipientResult = await findUserById(userStore, recipientId);
-            
-            if (recipientResult && senderResult) {
-                const { reply: aiReply } = await generateReply({
-                    conversationHistory: conversation.messages.map(m => ({ senderId: m.senderId, text: m.text })),
-                    responderProfile: JSON.stringify(recipientResult.user),
-                    recipientProfile: JSON.stringify(senderResult.user),
-                    responderRole: recipientResult.user.role as 'Sugar Daddy' | 'Sugar Baby',
-                });
-                
-                const aiMessage: Message = {
-                    id: uuidv4(),
-                    conversationId,
-                    senderId: recipientId,
-                    text: aiReply,
-                    timestamp: new Date(Date.now() + 1000).toISOString(),
-                };
-                
-                conversation.messages.push(aiMessage);
-                await messagesStore.setJSON(conversationId, conversation);
-            }
-        }
-
+        
         return NextResponse.json(newMessage, { status: 201 });
 
     } catch (error) {
