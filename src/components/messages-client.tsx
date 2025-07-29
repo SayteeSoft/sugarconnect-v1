@@ -44,6 +44,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messageCountRef = useRef(0);
 
     useEffect(() => {
         setLocalUser(currentUser);
@@ -54,9 +55,10 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     };
 
     useEffect(() => {
-        if (selectedConversation && selectedConversation.messages.length > 0) {
+        if (selectedConversation && selectedConversation.messages.length > messageCountRef.current) {
             scrollToBottom();
         }
+        messageCountRef.current = selectedConversation?.messages.length ?? 0;
     }, [selectedConversation?.messages]);
 
     const getConversationId = (userId1: string, userId2: string) => {
@@ -90,6 +92,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         setSelectedConversation({ ...conversation, messages: [] }); // Show skeleton while loading
         try {
             const messages = await loadMessagesForConversation(conversation);
+            messageCountRef.current = messages.length;
             setSelectedConversation({ ...conversation, messages });
         } catch (error) {
             console.error(error);
