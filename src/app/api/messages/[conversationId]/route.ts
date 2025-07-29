@@ -9,53 +9,29 @@ import { mockUsers } from '@/lib/mock-data';
 import { generateReply } from '@/ai/flows/generate-reply';
 import { mockConversations } from '@/lib/mock-messages';
 
-async function findUserById(userId: string): Promise<UserProfile | null> {
+async function getUserById(userId: string): Promise<UserProfile | null> {
     const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) return mockUser;
+    if (mockUser) {
+        return mockUser;
+    }
 
-    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
+    const store = getStore({ name: 'users', siteID: process.env.NETLIFY_SITE_ID, token: process.env.NETLIFY_BLOBS_TOKEN });
     try {
-        const { blobs } = await userStore.list();
+        const { blobs } = await store.list();
         for (const blob of blobs) {
             try {
-                const user = await userStore.get(blob.key, { type: 'json' });
+                const user = await store.get(blob.key, { type: 'json' });
                 if (user.id === userId) {
-                    return user;
+                    return user as UserProfile;
                 }
             } catch (e) {
                 // Ignore blobs that can't be parsed
             }
         }
-    } catch(e) {
+    } catch (e) {
         console.error("Error fetching user by ID from blob store", e);
     }
-    return null;
-}
 
-
-async function findUserKeyByEmail(store: Store, userEmail: string): Promise<string | null> {
-    try {
-        // Direct lookup by email key, which is the common case
-        const user = await store.get(userEmail, {type: 'json'});
-        if (user && user.email.toLowerCase() === userEmail.toLowerCase()) {
-            return userEmail;
-        }
-    } catch(e) {
-        // Fallback for safety if the key is not the email
-    }
-    
-    // Fallback scan if direct lookup fails
-    const { blobs } = await store.list();
-    for (const blob of blobs) {
-        try {
-            const user = await store.get(blob.key, { type: 'json' });
-            if (user.email && user.email.toLowerCase() === userEmail.toLowerCase()) {
-                return blob.key;
-            }
-        } catch (e) {
-            // ignore blobs that can't be parsed
-        }
-    }
     return null;
 }
 
@@ -136,15 +112,12 @@ export async function POST(
         await messagesStore.setJSON(conversationId, conversation);
         
         const userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-        const senderData = await findUserById(senderId);
+        const senderData = await getUserById(senderId);
 
         if (senderData?.role === 'Sugar Daddy') {
-            const userKey = await findUserKeyByEmail(userStore, senderData.email);
-            if(userKey) {
-                const updatedCredits = (senderData.credits || 0) - 1;
-                const updatedUser = { ...senderData, credits: updatedCredits };
-                await userStore.setJSON(userKey, updatedUser);
-            }
+            const updatedCredits = (senderData.credits || 0) - 1;
+            const updatedUser = { ...senderData, credits: updatedCredits };
+            await userStore.setJSON(senderData.email, updatedUser);
         }
 
         // AI Reply Logic
@@ -152,9 +125,9 @@ export async function POST(
         const recipientIsMock = mockUsers.some(u => u.id === recipientId);
 
         if (recipientIsMock) {
-            const recipientProfile = await findUserById(recipientId);
+            const recipientProfile = await getUserById(recipientId);
             
-            if (recipientProfile) {
+            if (recipientProfile && senderData) {
                 const { reply: aiReply } = await generateReply({
                     conversationHistory: conversation.messages.map(m => ({ senderId: m.senderId, text: m.text })),
                     responderProfile: JSON.stringify(recipientProfile),
