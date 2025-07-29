@@ -59,13 +59,16 @@ export function SearchClient() {
   const filteredProfiles = useMemo(() => {
     let roleFilteredProfiles = profiles;
 
-    if (currentUser && currentUser.role !== 'Admin') {
-        if (currentUser.role === 'Sugar Baby') {
-            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
-        } else if (currentUser.role === 'Sugar Daddy') {
+    if (currentUser) {
+        if (currentUser.role === 'Sugar Daddy') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Baby');
+        } else if (currentUser.role === 'Sugar Baby') {
+            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
+        } else if (currentUser.role === 'Admin') {
+            // Admin can see everyone
+            roleFilteredProfiles = profiles;
         }
-    } else if (!currentUser) {
+    } else {
         // Not logged in, show everyone except admin
         roleFilteredProfiles = profiles.filter(p => p.role !== 'Admin');
     }
