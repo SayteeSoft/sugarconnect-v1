@@ -10,6 +10,9 @@ import { generateReply } from '@/ai/flows/generate-reply';
 import { mockConversations } from '@/lib/mock-messages';
 
 const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
+    if (process.env.NETLIFY) {
+        return getStore(name);
+    }
     return getStore({
         name,
         consistency: 'strong',
@@ -18,7 +21,7 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     });
 };
 
-async function findUserByKey(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
         return { key: mockUser.email, user: mockUser };
@@ -27,7 +30,7 @@ async function findUserByKey(store: Store, userId: string): Promise<{key: string
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
-        const user = await store.get(blob.key, { type: 'json' });
+        const user: UserProfile = await store.get(blob.key, { type: 'json' });
         if (user.id === userId) {
           return { key: blob.key, user };
         }
@@ -115,7 +118,7 @@ export async function POST(
         await messagesStore.setJSON(conversationId, conversation);
         
         const userStore = getBlobStore('users');
-        const senderResult = await findUserByKey(userStore, senderId);
+        const senderResult = await findUserById(userStore, senderId);
 
         if (senderResult && senderResult.user.role === 'Sugar Daddy') {
             const updatedCredits = (senderResult.user.credits || 0) - 1;
@@ -128,7 +131,7 @@ export async function POST(
         const recipientIsMock = mockUsers.some(u => u.id === recipientId);
 
         if (recipientIsMock) {
-            const recipientResult = await findUserByKey(userStore, recipientId);
+            const recipientResult = await findUserById(userStore, recipientId);
             
             if (recipientResult && senderResult) {
                 const { reply: aiReply } = await generateReply({

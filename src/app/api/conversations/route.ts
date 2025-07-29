@@ -7,18 +7,29 @@ import { Message } from '@/lib/messages';
 import { mockUsers } from '@/lib/mock-data';
 import { mockConversations } from '@/lib/mock-messages';
 
+const getBlobStore = (name: 'users' | 'messages'): Store => {
+    if (process.env.NETLIFY) {
+        return getStore(name);
+    }
+    return getStore({
+        name,
+        consistency: 'strong',
+        siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id',
+        token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
+    });
+};
+
+
 async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    // First check mock users as they are fewer
     const mockUser = mockUsers.find(u => u.id === userId);
     if (mockUser) {
         return { key: mockUser.email, user: mockUser };
     }
 
-    // Then check blob store
     const { blobs } = await store.list();
     for (const blob of blobs) {
       try {
-        const userData = await store.get(blob.key, { type: 'json' });
+        const userData: UserProfile = await store.get(blob.key, { type: 'json' });
         if (userData.id === userId) {
           return { key: blob.key, user: userData };
         }
@@ -33,7 +44,7 @@ async function getCurrentUser(req: NextRequest): Promise<UserProfile | null> {
     const userId = req.headers.get('x-user-id');
     if (!userId) return null;
     
-    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
+    const userStore = getBlobStore('users');
     const result = await findUserById(userStore, userId);
     return result?.user || null;
 }
@@ -46,8 +57,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     
-    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
-    const messagesStore = getStore({ name: 'messages', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
+    const userStore = getBlobStore('users');
+    const messagesStore = getBlobStore('messages');
     
     try {
         const { blobs: userBlobs } = await userStore.list();
@@ -105,7 +116,7 @@ export async function GET(request: NextRequest) {
                 }
             }
             
-            if (isAdmin || hasMessages) {
+            if (isAdmin || hasMessages || currentUser.role === 'Sugar Daddy' || currentUser.role === 'Sugar Baby') {
                 conversations.push({
                     user: {
                         id: partner.id,
