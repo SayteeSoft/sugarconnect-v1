@@ -48,6 +48,18 @@ export async function GET(request: NextRequest) {
         const { blobs: messageBlobs } = await messagesStore.list({ prefix: '', cache: 'no-store' });
         
         const conversations = [];
+        const allUsers: UserProfile[] = [];
+        const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
+        for (const blob of userBlobs) {
+            try {
+                const user = await userStore.get(blob.key, { type: 'json' });
+                const { password, ...userToReturn } = user;
+                allUsers.push(userToReturn as UserProfile);
+            } catch (e) {
+                 console.warn(`Could not parse user blob ${blob.key}`, e);
+            }
+        }
+
 
         for (const blob of messageBlobs) {
             // Check if the conversation key includes the current user's ID
@@ -56,7 +68,7 @@ export async function GET(request: NextRequest) {
                 const otherUserId = participantIds.find(id => id !== currentUserId);
 
                 if (otherUserId) {
-                    const partner = await findUserById(userStore, otherUserId);
+                    const partner = allUsers.find(u => u.id === otherUserId);
                     if (partner) {
                         const conversationData = await messagesStore.get(blob.key, { type: 'json' });
                         let lastMessage: Message | null = null;

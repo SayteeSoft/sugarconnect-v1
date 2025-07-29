@@ -163,8 +163,15 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                     const parsedUser = JSON.parse(storedUser);
                     const newCredits = (parsedUser.credits || 0) - 1;
                     const updatedUser = {...parsedUser, credits: newCredits};
+                    const userUpdateFormData = new FormData();
+                    userUpdateFormData.append('email', updatedUser.email);
+                    userUpdateFormData.append('credits', newCredits.toString());
+                    
                     localStorage.setItem('user', JSON.stringify(updatedUser));
                     window.dispatchEvent(new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(updatedUser) }));
+
+                    // Asynchronously save to backend
+                    fetch(`/api/users/${currentUser.id}`, { method: 'PUT', body: userUpdateFormData });
                 }
             }
 
