@@ -94,14 +94,14 @@ export async function POST(request: NextRequest) {
             }
         });
         
-        // If new user is a Sugar Daddy, initiate 3 conversations from mock Sugar Babies
+        // If new user is a Sugar Daddy, initiate 2 conversations from mock Sugar Babies
         if (newUser.role === 'Sugar Daddy') {
             const sugarBabies = mockUsers.filter(u => u.role === 'Sugar Baby');
             const messagesStore = getBlobStore('messages');
             
-            // Shuffle babies to get random ones, and take the first 3
+            // Shuffle babies to get random ones, and take the first 2
             const shuffledBabies = sugarBabies.sort(() => 0.5 - Math.random());
-            const selectedSenders = shuffledBabies.slice(0, 3);
+            const selectedSenders = shuffledBabies.slice(0, 2);
 
             for (const sender of selectedSenders) {
                 try {
