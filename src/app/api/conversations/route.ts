@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
     const currentUserEmail = request.headers.get('x-user-email');
 
     if (!currentUserEmail) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ message: "Unauthorized: Missing user email" }, { status: 401 });
     }
 
     const userStore = getStoreCached('users');
     const messagesStore = getStoreCached('messages');
     
     try {
-        const currentUser: UserProfile = await userStore.get(currentUserEmail.toLowerCase(), { type: 'json' });
+        const currentUser: UserProfile | null = await userStore.get(currentUserEmail.toLowerCase(), { type: 'json' }).catch(() => null);
 
         if (!currentUser) {
             return NextResponse.json({ message: "Current user not found" }, { status: 404 });
@@ -33,11 +33,12 @@ export async function GET(request: NextRequest) {
         for (const blob of userBlobs) {
             try {
                 const user = await userStore.get(blob.key, { type: 'json' });
-                // Exclude password from the user object
-                const { password, ...userToReturn } = user;
-                allUsers.push(userToReturn as UserProfile);
+                if (user && user.id) { // Basic validation
+                    const { password, ...userToReturn } = user;
+                    allUsers.push(userToReturn as UserProfile);
+                }
             } catch (e) {
-                // Ignore parse errors for blobs that aren't valid user profiles
+                console.warn(`Could not parse or validate blob ${blob.key} as a user profile.`, e);
             }
         }
         
@@ -51,6 +52,9 @@ export async function GET(request: NextRequest) {
 
         const conversations = [];
         for (const partner of potentialPartners) {
+            // Ensure we don't create a conversation with oneself
+            if (currentUser.id === partner.id) continue;
+
             const conversationId = [currentUser.id, partner.id].sort().join('--');
             let lastMessage: Message | null = null;
             
@@ -60,14 +64,12 @@ export async function GET(request: NextRequest) {
                     lastMessage = conversationData.messages[conversationData.messages.length - 1];
                 }
             } catch (error) {
-                // No messages yet, which is fine
+                // No messages yet, which is fine, blob will not be found.
             }
             
-            // Only show conversations that have messages, or all for admin
             if (currentUser.role === 'Admin' || lastMessage) {
-                const { password, ...partnerToReturn } = partner;
                 conversations.push({
-                    user: partnerToReturn,
+                    user: partner, // password is already stripped
                     messages: lastMessage ? [lastMessage] : []
                 });
             }
@@ -83,6 +85,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('Failed to get conversations:', error);
-        return NextResponse.json({ message: 'Failed to get conversations' }, { status: 500 });
+        return NextResponse.json({ message: 'An internal server error occurred while fetching conversations.' }, { status: 500 });
     }
 }
