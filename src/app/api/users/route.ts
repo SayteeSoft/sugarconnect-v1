@@ -18,28 +18,42 @@ export async function GET() {
   
   try {
     const { blobs } = await store.list();
-    const allUsers: UserProfile[] = [];
+    let allUsers: UserProfile[] = [];
 
     // In production, only serve users from the blob store.
-    // In development, merge with mock users for testing.
-    if (process.env.NODE_ENV !== 'production') {
-        allUsers.push(...mockUsers);
-    }
-
-    for (const blob of blobs) {
-      try {
-        const user: UserProfile = await store.get(blob.key, { type: 'json' });
-        // Omit password from the returned user list
-        const { password, ...userToReturn } = user;
-        
-        // Ensure no duplicate users are added if they exist in both mocks and blobs (dev only)
-        if (!allUsers.some(u => u.id === user.id)) {
-            allUsers.push(userToReturn as UserProfile);
+    if (process.env.NETLIFY) {
+        for (const blob of blobs) {
+            try {
+                const user: UserProfile = await store.get(blob.key, { type: 'json' });
+                const { password, ...userToReturn } = user;
+                allUsers.push(userToReturn as UserProfile);
+            } catch (e) {
+                console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
+            }
         }
-      } catch (e) {
-          console.warn(`Could not parse blob ${blob.key} as JSON, or it was a duplicate.`, e);
-      }
+    } else {
+        // In development, merge with mock users for testing.
+        allUsers.push(...mockUsers.map(u => {
+            const { password, ...userToReturn } = u;
+            return userToReturn as UserProfile;
+        }));
+
+        for (const blob of blobs) {
+          try {
+            const user: UserProfile = await store.get(blob.key, { type: 'json' });
+            // Omit password from the returned user list
+            const { password, ...userToReturn } = user;
+            
+            // Ensure no duplicate users are added if they exist in both mocks and blobs
+            if (!allUsers.some(u => u.id === user.id)) {
+                allUsers.push(userToReturn as UserProfile);
+            }
+          } catch (e) {
+              console.warn(`Could not parse blob ${blob.key} as JSON, or it was a duplicate.`, e);
+          }
+        }
     }
+    
     return NextResponse.json(allUsers);
   } catch (error) {
     console.error('Failed to list users:', error);
