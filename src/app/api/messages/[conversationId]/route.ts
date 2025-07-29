@@ -18,22 +18,6 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     });
 };
 
-async function findUserById(store: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    const { blobs } = await store.list();
-    for (const blob of blobs) {
-      try {
-        const user: UserProfile = await store.get(blob.key, { type: 'json' });
-        if (user.id === userId) {
-          return { key: blob.key, user };
-        }
-      } catch (e) {
-        console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
-      }
-    }
-    return null;
-}
-
-
 export async function GET(
   request: NextRequest,
   { params }: { params: { conversationId: string } }
@@ -109,15 +93,6 @@ export async function POST(
         conversation.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         await messagesStore.setJSON(conversationId, conversation);
-        
-        const userStore = getBlobStore('users');
-        const senderResult = await findUserById(userStore, senderId);
-
-        if (senderResult && senderResult.user.role === 'Sugar Daddy') {
-            const updatedCredits = (senderResult.user.credits || 0) - 1;
-            const updatedUser = { ...senderResult.user, credits: updatedCredits };
-            await userStore.setJSON(senderResult.key, updatedUser);
-        }
         
         return NextResponse.json(newMessage, { status: 201 });
 

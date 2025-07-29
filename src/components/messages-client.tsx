@@ -147,6 +147,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         if(currentUser) {
             fetchConversationsAndSelect();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedUserId, currentUser.id]);
     
 
@@ -231,10 +232,20 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
 
         try {
             if (localUser.role === 'Sugar Daddy') {
-                const updatedUser = { ...localUser, credits: (localUser.credits ?? 0) - 1 };
+                const updatedCredits = (localUser.credits ?? 0) - 1;
+                const updatedUser = { ...localUser, credits: updatedCredits };
                 setLocalUser(updatedUser);
                 localStorage.setItem('user', JSON.stringify(updatedUser));
                 window.dispatchEvent(new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(updatedUser) }));
+                
+                // Persist credit change in the background
+                const creditFormData = new FormData();
+                creditFormData.append('email', updatedUser.email);
+                creditFormData.append('credits', updatedUser.credits.toString());
+                fetch(`/api/users/${updatedUser.id}`, {
+                    method: 'PUT',
+                    body: creditFormData,
+                }).catch(e => console.error("Failed to persist credit update:", e));
             }
 
             const formData = new FormData();
