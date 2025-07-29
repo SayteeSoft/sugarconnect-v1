@@ -45,7 +45,7 @@ function MessagesPageComponent() {
         return (
             <div className="container mx-auto text-center">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Messages</h1>
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2"></h1>
                 </div>
                 <Card className="max-w-md mx-auto">
                     <CardContent className="p-8">

@@ -41,16 +41,6 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        if (selectedConversation) {
-            scrollToBottom();
-        }
-    }, [selectedConversation?.messages]);
-
     const handleSelectConversation = useCallback(async (conversation: Conversation) => {
         if (selectedConversation?.user.id === conversation.user.id) return;
 
@@ -210,7 +200,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     return (
         <div className="container mx-auto">
              <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Messages</h1>
+                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2"></h1>
             </div>
             <Card className="h-[70vh] flex shadow-xl">
                 {/* Left Column */}
