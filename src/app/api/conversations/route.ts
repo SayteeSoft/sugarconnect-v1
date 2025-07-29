@@ -1,5 +1,4 @@
 
-
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
@@ -8,12 +7,17 @@ import { mockUsers } from '@/lib/mock-data';
 import { mockConversations } from '@/lib/mock-messages';
 
 const getBlobStore = (name: 'users' | 'messages'): Store => {
-    return getStore({
-        name,
-        consistency: 'strong',
-        siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
-        token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
-    });
+    const storeName = name;
+    if (process.env.NETLIFY) {
+        return getStore(storeName);
+    } else {
+        return getStore({
+            name: storeName,
+            consistency: 'strong',
+            siteID: process.env.NETLIFY_SITE_ID || 'studio-mock-site-id',
+            token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
+        });
+    }
 };
 
 
@@ -60,23 +64,32 @@ export async function GET(request: NextRequest) {
     const messagesStore = getBlobStore('messages');
     
     try {
-        const { blobs: userBlobs } = await userStore.list();
-        
-        const allUsers: UserProfile[] = [];
-        // In production, only fetch from blobs. In dev, include mocks.
-        if (process.env.NODE_ENV !== 'production') {
-            allUsers.push(...mockUsers);
-        }
+        let allUsers: UserProfile[] = [];
 
-        for (const blob of userBlobs) {
-            try {
-                const user = await userStore.get(blob.key, { type: 'json' });
-                // Ensure no duplicate users if mocks are also used in dev
-                if (!allUsers.some(u => u.id === user.id)) {
+        // In production, only serve users from the blob store.
+        if (process.env.NETLIFY) {
+            const { blobs: userBlobs } = await userStore.list();
+            for (const blob of userBlobs) {
+                try {
+                    const user = await userStore.get(blob.key, { type: 'json' });
                     allUsers.push(user);
+                } catch (e) {
+                    console.warn(`Could not parse blob ${blob.key} as JSON.`);
                 }
-            } catch (e) {
-                //
+            }
+        } else {
+            // In development, merge with mock users for testing.
+            allUsers.push(...mockUsers);
+            const { blobs: userBlobs } = await userStore.list();
+            for (const blob of userBlobs) {
+                try {
+                    const user = await userStore.get(blob.key, { type: 'json' });
+                    if (!allUsers.some(u => u.id === user.id)) {
+                        allUsers.push(user);
+                    }
+                } catch (e) {
+                    //
+                }
             }
         }
         
