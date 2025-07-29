@@ -51,6 +51,22 @@ export async function GET(request: NextRequest) {
         const conversations = new Map<string, { user: UserProfile; lastMessage: Message }>();
         const userCache = new Map<string, UserProfile>();
 
+        // Pre-cache all users to avoid multiple lookups inside the loop
+        const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
+        const allUsers: UserProfile[] = [];
+        for (const blob of userBlobs) {
+            try {
+                const user = await userStore.get(blob.key, { type: 'json' });
+                if (user) {
+                    const { password, ...userToReturn } = user;
+                    allUsers.push(userToReturn as UserProfile);
+                    userCache.set(user.id, userToReturn as UserProfile);
+                }
+            } catch (e) {
+                 console.warn(`Could not process user blob ${blob.key}`, e);
+            }
+        }
+
         for (const blob of messageBlobs) {
             if (blob.key.includes(currentUserId)) {
                 const participantIds = blob.key.split('--');
@@ -61,13 +77,7 @@ export async function GET(request: NextRequest) {
                         const conversationData = await messagesStore.get(blob.key, { type: 'json' });
                         if (conversationData && Array.isArray(conversationData.messages) && conversationData.messages.length > 0) {
                             
-                            let partner = userCache.get(otherUserId);
-                            if (!partner) {
-                                partner = await findUserById(userStore, otherUserId);
-                                if (partner) {
-                                    userCache.set(otherUserId, partner);
-                                }
-                            }
+                            const partner = userCache.get(otherUserId);
 
                             if (partner) {
                                 const lastMessage = conversationData.messages[conversationData.messages.length - 1];
@@ -86,7 +96,8 @@ export async function GET(request: NextRequest) {
             }
         }
         
-        if (currentUser.role === 'Admin' && process.env.NODE_ENV !== 'production') {
+        // In dev mode, add mock users who aren't in conversations yet
+        if (process.env.NODE_ENV !== 'production' && currentUser.role === 'Admin') {
             const otherUsers = mockUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
             for(const partner of otherUsers) {
                 if (!conversations.has(partner.id)) {
@@ -94,7 +105,24 @@ export async function GET(request: NextRequest) {
                         user: partner,
                         lastMessage: {
                             id: `mock-${partner.id}`,
-                            conversationId: `${currentUser.id}--${partner.id}`,
+                            conversationId: [currentUser.id, partner.id].sort().join('--'),
+                            senderId: partner.id,
+                            text: "Click to start a conversation...",
+                            timestamp: new Date(0).toISOString()
+                        }
+                    });
+                }
+            }
+        } else if (currentUser.role === 'Admin') {
+            // For production admin, show all real users not in conversations
+            const otherRealUsers = allUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
+            for(const partner of otherRealUsers) {
+                 if (!conversations.has(partner.id)) {
+                    conversations.set(partner.id, {
+                        user: partner,
+                        lastMessage: {
+                            id: `mock-${partner.id}`,
+                            conversationId: [currentUser.id, partner.id].sort().join('--'),
                             senderId: partner.id,
                             text: "Click to start a conversation...",
                             timestamp: new Date(0).toISOString()

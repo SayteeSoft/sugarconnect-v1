@@ -15,6 +15,16 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     });
 };
 
+async function findUserByKey(store: Store, userKey: string): Promise<UserProfile | null> {
+    try {
+        const user = await store.get(userKey, { type: 'json' });
+        return user as UserProfile;
+    } catch (e) {
+        // User not found by this key
+        return null;
+    }
+}
+
 async function findUserById(userStore: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
     const { blobs } = await userStore.list({ cache: 'no-store' });
     for (const blob of blobs) {
@@ -71,6 +81,10 @@ export async function POST(
         
         if (!senderId) {
             return NextResponse.json({ message: 'Sender ID is required' }, { status: 400 });
+        }
+        
+        if (!text && !imageFile) {
+            return NextResponse.json({ message: 'Message text or image is required' }, { status: 400 });
         }
 
         const userStore = getBlobStore('users');
