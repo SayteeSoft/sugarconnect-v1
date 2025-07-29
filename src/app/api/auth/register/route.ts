@@ -23,7 +23,10 @@ const getBlobStore = (name: 'users' | 'messages'): Store => {
 async function ensureAdminUser(store: Store): Promise<void> {
     const adminEmail = 'saytee.software@gmail.com';
     try {
-        await store.get(adminEmail, {type: 'json'});
+        const adminData = await store.get(adminEmail, {type: 'json'});
+        if (!adminData) {
+           throw new Error('Admin not found, creating one.');
+        }
     } catch (error) {
         // Admin user does not exist, create it.
         const adminTemplate = mockUsers.find(u => u.role === 'Admin');
@@ -56,13 +59,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
         }
 
-        try {
-            await userStore.get(lowerCaseEmail, {type: 'json'});
+        const existingUser = await userStore.get(lowerCaseEmail, { type: 'json' });
+        if (existingUser) {
             return NextResponse.json({ message: 'User already exists' }, { status: 409 });
-        } catch (error) {
-            // User does not exist, which is what we want.
         }
-
+        
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser: UserProfile = {
