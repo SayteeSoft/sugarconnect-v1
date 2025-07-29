@@ -20,7 +20,7 @@ async function populateUserCache(userStore: Store) {
     for (const blob of userBlobs) {
         try {
             const user = await userStore.get(blob.key, { type: 'json' });
-            if (user) {
+            if (user && user.id) {
                 const { password, ...userToReturn } = user;
                 userCache.set(user.id, userToReturn as UserProfile);
             }
@@ -94,7 +94,8 @@ export async function GET(request: NextRequest) {
         
         // In dev mode or for admin, add users who aren't in conversations yet
         if (currentUser.role === 'Admin') {
-            const otherUsers = Array.from(userCache.values()).filter(u => u.id !== currentUser.id && u.role !== 'Admin');
+            const testingUsers = ['Darianna', 'Kateryna', 'Sofia'];
+            const otherUsers = Array.from(userCache.values()).filter(u => testingUsers.includes(u.name));
             for(const partner of otherUsers) {
                 if (!conversations.has(partner.id)) {
                     conversations.set(partner.id, {
