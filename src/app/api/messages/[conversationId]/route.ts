@@ -9,35 +9,51 @@ import { mockUsers } from '@/lib/mock-data';
 import { generateReply } from '@/ai/flows/generate-reply';
 import { mockConversations } from '@/lib/mock-messages';
 
-async function getUserById(userId: string): Promise<UserProfile | null> {
+async function findUserById(userId: string): Promise<UserProfile | null> {
     const mockUser = mockUsers.find(u => u.id === userId);
-    if (mockUser) {
-        return mockUser;
-    }
+    if (mockUser) return mockUser;
+
+    const userStore = getStore({ name: 'users', consistency: 'strong', siteID: process.env.NETLIFY_PROJECT_ID || 'studio-mock-site-id', token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token'});
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_URL || '';
-        const response = await fetch(`${baseUrl}/api/users/${userId}?t=${new Date().getTime()}`, { cache: 'no-store' });
-        if (response.ok) {
-            return await response.json();
+        const { blobs } = await userStore.list();
+        for (const blob of blobs) {
+            try {
+                const user = await userStore.get(blob.key, { type: 'json' });
+                if (user.id === userId) {
+                    return user;
+                }
+            } catch (e) {
+                // Ignore blobs that can't be parsed
+            }
         }
-        return null;
-    } catch (e) {
-        return null;
+    } catch(e) {
+        console.error("Error fetching user by ID from blob store", e);
     }
+    return null;
 }
+
 
 async function findUserKeyByEmail(store: Store, userEmail: string): Promise<string | null> {
     try {
-        // Direct lookup by email key
-        await store.get(userEmail);
-        return userEmail;
+        // Direct lookup by email key, which is the common case
+        const user = await store.get(userEmail, {type: 'json'});
+        if (user && user.email.toLowerCase() === userEmail.toLowerCase()) {
+            return userEmail;
+        }
     } catch(e) {
-        // Fallback for safety, should not be needed often
-        const { blobs } = await store.list();
-        for (const blob of blobs) {
-          if (blob.key.toLowerCase() === userEmail.toLowerCase()) {
-            return blob.key;
-          }
+        // Fallback for safety if the key is not the email
+    }
+    
+    // Fallback scan if direct lookup fails
+    const { blobs } = await store.list();
+    for (const blob of blobs) {
+        try {
+            const user = await store.get(blob.key, { type: 'json' });
+            if (user.email && user.email.toLowerCase() === userEmail.toLowerCase()) {
+                return blob.key;
+            }
+        } catch (e) {
+            // ignore blobs that can't be parsed
         }
     }
     return null;
@@ -120,7 +136,7 @@ export async function POST(
         await messagesStore.setJSON(conversationId, conversation);
         
         const userStore = getStore({ name: 'users', consistency: 'strong', siteID: 'studio-mock-site-id', token: 'studio-mock-token'});
-        const senderData = await getUserById(senderId);
+        const senderData = await findUserById(senderId);
 
         if (senderData?.role === 'Sugar Daddy') {
             const userKey = await findUserKeyByEmail(userStore, senderData.email);
@@ -136,7 +152,7 @@ export async function POST(
         const recipientIsMock = mockUsers.some(u => u.id === recipientId);
 
         if (recipientIsMock) {
-            const recipientProfile = await getUserById(recipientId);
+            const recipientProfile = await findUserById(recipientId);
             
             if (recipientProfile) {
                 const { reply: aiReply } = await generateReply({
