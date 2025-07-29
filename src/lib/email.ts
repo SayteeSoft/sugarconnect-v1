@@ -16,38 +16,22 @@ type EmailPayload = {
 export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction }: EmailPayload) {
   const ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY || "3ee1a7f3-b3d8-4b7d-a39a-3f40659920cb";
   
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; background-color: #f2f2f2; margin: 0; padding: 0; }
-            .container { background-color: #ffffff; width: 100%; max-width: 600px; margin: 20px auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            .header { font-size: 24px; font-weight: bold; color: #333333; }
-            .content { font-size: 16px; color: #555555; line-height: 1.6; }
-            .cta-button { display: inline-block; background-color: #e83e8c; color: #ffffff; padding: 12px 24px; margin-top: 20px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <p class="header">Hello, ${recipientName}.</p>
-            <div class="content">
-                ${body}
-                ${callToAction ? `<br><br><a href="${callToAction.url}" class="cta-button">${callToAction.text}</a>` : ''}
-            </div>
-        </div>
-    </body>
-    </html>
-  `;
-
+  // Construct a human-readable, plain-text email body
+  let textContent = `Hello ${recipientName},\n\n`;
+  textContent += `${body}\n\n`;
+  
+  if (callToAction) {
+      textContent += `You can view this by clicking the link below:\n`;
+      textContent += `${callToAction.url}\n\n`;
+  }
+  
+  textContent += `Thank you,\nThe Sugar Connect Team`;
 
   const payload = {
     access_key: ACCESS_KEY,
     to,
     subject,
-    html: htmlContent,
+    message: textContent, // Use 'message' for plain text
     from_name,
   };
 

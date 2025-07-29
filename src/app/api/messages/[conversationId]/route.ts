@@ -1,13 +1,10 @@
 
-
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { Message } from '@/lib/messages';
 import { v4 as uuidv4 } from 'uuid';
 import { UserProfile } from '@/lib/users';
-import { mockUsers } from '@/lib/mock-data';
-import { generateReply } from '@/ai/flows/generate-reply';
-import { mockConversations } from '@/lib/mock-messages';
+import { sendEmail } from '@/lib/email';
 
 const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     return getStore({
@@ -18,38 +15,52 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     });
 };
 
+async function findUserById(userStore: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    const { blobs } = await userStore.list({ cache: 'no-store' });
+    for (const blob of blobs) {
+      try {
+        const user = await userStore.get(blob.key, { type: 'json' });
+        if (user.id === userId) {
+          return { key: blob.key, user };
+        }
+      } catch (e) {
+        console.warn(`Could not parse blob ${blob.key} as JSON.`);
+      }
+    }
+    return null;
+}
+
+// GET messages for a conversation
 export async function GET(
   request: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
-  const { conversationId } = params;
-  if (!conversationId) {
-    return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
-  }
-  
-  if (process.env.NODE_ENV !== 'production') {
-    const mockConversation = mockConversations.find(mc => mc.conversationId === conversationId);
-    if (mockConversation) {
-        return NextResponse.json(mockConversation.messages);
-    }
+  const otherUserId = params.conversationId;
+  const currentUserId = request.headers.get('x-user-id');
+
+  if (!currentUserId || !otherUserId) {
+    return NextResponse.json({ message: 'User IDs are required' }, { status: 400 });
   }
 
+  const conversationId = [currentUserId, otherUserId].sort().join('--');
   const store = getBlobStore('messages');
   try {
     const messagesData = await store.get(conversationId, { type: 'json' });
     return NextResponse.json(messagesData?.messages || []);
   } catch (error) {
+    // This is expected if the conversation doesn't exist yet, return empty array.
     return NextResponse.json([]);
   }
 }
 
+// POST a new message to a conversation
 export async function POST(
   request: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
-    const { conversationId } = params;
-    if (!conversationId) {
-        return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
+    const otherUserId = params.conversationId;
+    if (!otherUserId) {
+        return NextResponse.json({ message: 'Recipient User ID is required' }, { status: 400 });
     }
 
     try {
@@ -62,10 +73,31 @@ export async function POST(
             return NextResponse.json({ message: 'Sender ID is required' }, { status: 400 });
         }
 
+        const userStore = getBlobStore('users');
         const messagesStore = getBlobStore('messages');
         const imageStore = getBlobStore('images');
         
+        // Fetch sender and recipient profiles
+        const senderResult = await findUserById(userStore, senderId);
+        const recipientResult = await findUserById(userStore, otherUserId);
+
+        if (!senderResult || !recipientResult) {
+            return NextResponse.json({ message: 'Sender or recipient not found' }, { status: 404 });
+        }
+        const sender = senderResult.user;
+        const recipient = recipientResult.user;
+
+        // Handle credit deduction for Sugar Daddy
+        if (sender.role === 'Sugar Daddy') {
+            if ((sender.credits ?? 0) <= 0) {
+                return NextResponse.json({ message: 'No Credits Remaining. Please purchase more credits to send messages.' }, { status: 402 });
+            }
+            const updatedCredits = (sender.credits ?? 0) - 1;
+            await userStore.setJSON(senderResult.key, { ...sender, credits: updatedCredits });
+        }
+
         let imageUrl: string | undefined = undefined;
+        const conversationId = [senderId, otherUserId].sort().join('--');
         if (imageFile) {
             const imageBuffer = await imageFile.arrayBuffer();
             const imageKey = `message-${conversationId}-${uuidv4()}`;
@@ -94,6 +126,18 @@ export async function POST(
 
         await messagesStore.setJSON(conversationId, conversation);
         
+        // Send email notification
+        await sendEmail({
+            to: recipient.email,
+            recipientName: recipient.name,
+            subject: `You have a new message from ${sender.name}`,
+            body: `You have received a new message from ${sender.name} on Sugar Connect.\n\nMessage: "${text}"`,
+            callToAction: {
+                text: 'Click here to reply',
+                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${sender.id}`
+            }
+        });
+
         return NextResponse.json(newMessage, { status: 201 });
 
     } catch (error) {

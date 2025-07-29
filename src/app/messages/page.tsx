@@ -46,7 +46,6 @@ function MessagesPageComponent() {
             <div className="container mx-auto text-center">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-2">Messages</h1>
-                    <p className="text-lg text-muted-foreground">Please log in to view your conversations.</p>
                 </div>
                 <Card className="max-w-md mx-auto">
                     <CardContent className="p-8">
