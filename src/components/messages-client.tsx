@@ -76,7 +76,10 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         const fetchConversations = async () => {
             setLoadingConversations(true);
             try {
-                const res = await fetch(`/api/conversations`, { headers: { 'x-user-id': currentUser.id }, cache: 'no-store' });
+                const res = await fetch(`/api/conversations`, { 
+                    headers: { 'x-user-id': currentUser.id, 'x-user-email': currentUser.email }, 
+                    cache: 'no-store' 
+                });
                 if (!res.ok) throw new Error("Failed to fetch conversations");
                 const loadedConversations: Conversation[] = await res.json();
                 
@@ -102,7 +105,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
             }
         };
         fetchConversations();
-    }, [currentUser.id, selectedUserId, toast, handleSelectConversation]);
+    }, [currentUser.id, currentUser.email, selectedUserId, toast, handleSelectConversation]);
 
     const filteredConversations = useMemo(() => {
         return conversations.filter(c => c.user.name.toLowerCase().includes(searchTerm.toLowerCase()));

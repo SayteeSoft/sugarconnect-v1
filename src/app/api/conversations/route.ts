@@ -11,24 +11,10 @@ const getStoreCached = (name: 'users' | 'messages') => getStore({
     token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
 });
 
-async function findUserById(userStore: Store, userId: string): Promise<UserProfile | null> {
-    const { blobs } = await userStore.list({ cache: 'no-store' });
-    for (const blob of blobs) {
-      try {
-        const userData: UserProfile = await userStore.get(blob.key, { type: 'json' });
-        if (userData.id === userId) {
-          return userData;
-        }
-      } catch (e) {
-        console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
-      }
-    }
-    return null;
-}
-
 export async function GET(request: NextRequest) {
-    const currentUserId = request.headers.get('x-user-id');
-    if (!currentUserId) {
+    const currentUserEmail = request.headers.get('x-user-email');
+
+    if (!currentUserEmail) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -36,7 +22,8 @@ export async function GET(request: NextRequest) {
     const messagesStore = getStoreCached('messages');
     
     try {
-        const currentUser = await findUserById(userStore, currentUserId);
+        const currentUser: UserProfile = await userStore.get(currentUserEmail.toLowerCase(), { type: 'json' });
+
         if (!currentUser) {
             return NextResponse.json({ message: "Current user not found" }, { status: 404 });
         }
@@ -45,9 +32,12 @@ export async function GET(request: NextRequest) {
         const allUsers: UserProfile[] = [];
         for (const blob of userBlobs) {
             try {
-                allUsers.push(await userStore.get(blob.key, { type: 'json' }));
+                const user = await userStore.get(blob.key, { type: 'json' });
+                // Exclude password from the user object
+                const { password, ...userToReturn } = user;
+                allUsers.push(userToReturn as UserProfile);
             } catch (e) {
-                // Ignore parse errors
+                // Ignore parse errors for blobs that aren't valid user profiles
             }
         }
         
@@ -66,7 +56,7 @@ export async function GET(request: NextRequest) {
             
             try {
                 const conversationData = await messagesStore.get(conversationId, { type: 'json' });
-                if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
+                if (conversationData && Array.isArray(conversationData.messages) && conversationData.messages.length > 0) {
                     lastMessage = conversationData.messages[conversationData.messages.length - 1];
                 }
             } catch (error) {
@@ -75,7 +65,7 @@ export async function GET(request: NextRequest) {
             
             // Only show conversations that have messages, or all for admin
             if (currentUser.role === 'Admin' || lastMessage) {
-                 const { password, ...partnerToReturn } = partner;
+                const { password, ...partnerToReturn } = partner;
                 conversations.push({
                     user: partnerToReturn,
                     messages: lastMessage ? [lastMessage] : []
