@@ -12,21 +12,33 @@ const getBlobStore = (name: 'users' | 'messages') => getStore({
     token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
 });
 
-async function findUserById(userStore: Store, userId: string): Promise<UserProfile | null> {
-    const { blobs } = await userStore.list({ cache: 'no-store' });
-    for (const blob of blobs) {
+const userCache = new Map<string, UserProfile>();
+
+async function populateUserCache(userStore: Store) {
+    if (userCache.size > 0) return;
+    const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
+    for (const blob of userBlobs) {
         try {
             const user = await userStore.get(blob.key, { type: 'json' });
-            if (user && user.id === userId) {
+            if (user) {
                 const { password, ...userToReturn } = user;
-                return userToReturn as UserProfile;
+                userCache.set(user.id, userToReturn as UserProfile);
             }
         } catch (e) {
-            // Ignore blobs that are not valid JSON or don't match
+             console.warn(`Could not process user blob ${blob.key}`, e);
         }
     }
-    return null;
+    // Also add mock users to cache for dev env
+    if (process.env.NODE_ENV !== 'production') {
+        mockUsers.forEach(u => {
+            if (!userCache.has(u.id)) {
+                const { password, ...userToReturn } = u;
+                userCache.set(u.id, userToReturn as UserProfile);
+            }
+        })
+    }
 }
+
 
 export async function GET(request: NextRequest) {
     const currentUserId = request.headers.get('x-user-id');
@@ -40,7 +52,8 @@ export async function GET(request: NextRequest) {
     const messagesStore = getBlobStore('messages');
     
     try {
-        const currentUser: UserProfile | null = await userStore.get(currentUserEmail.toLowerCase(), { type: 'json' }).catch(() => null);
+        await populateUserCache(userStore);
+        const currentUser = userCache.get(currentUserId);
 
         if (!currentUser) {
             return NextResponse.json({ message: "Current user not found" }, { status: 404 });
@@ -49,23 +62,6 @@ export async function GET(request: NextRequest) {
         const { blobs: messageBlobs } = await messagesStore.list({ prefix: '', cache: 'no-store' });
         
         const conversations = new Map<string, { user: UserProfile; lastMessage: Message }>();
-        const userCache = new Map<string, UserProfile>();
-
-        // Pre-cache all users to avoid multiple lookups inside the loop
-        const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
-        const allUsers: UserProfile[] = [];
-        for (const blob of userBlobs) {
-            try {
-                const user = await userStore.get(blob.key, { type: 'json' });
-                if (user) {
-                    const { password, ...userToReturn } = user;
-                    allUsers.push(userToReturn as UserProfile);
-                    userCache.set(user.id, userToReturn as UserProfile);
-                }
-            } catch (e) {
-                 console.warn(`Could not process user blob ${blob.key}`, e);
-            }
-        }
 
         for (const blob of messageBlobs) {
             if (blob.key.includes(currentUserId)) {
@@ -96,28 +92,11 @@ export async function GET(request: NextRequest) {
             }
         }
         
-        // In dev mode, add mock users who aren't in conversations yet
-        if (process.env.NODE_ENV !== 'production' && currentUser.role === 'Admin') {
-            const otherUsers = mockUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
+        // In dev mode or for admin, add users who aren't in conversations yet
+        if (currentUser.role === 'Admin') {
+            const otherUsers = Array.from(userCache.values()).filter(u => u.id !== currentUser.id && u.role !== 'Admin');
             for(const partner of otherUsers) {
                 if (!conversations.has(partner.id)) {
-                    conversations.set(partner.id, {
-                        user: partner,
-                        lastMessage: {
-                            id: `mock-${partner.id}`,
-                            conversationId: [currentUser.id, partner.id].sort().join('--'),
-                            senderId: partner.id,
-                            text: "Click to start a conversation...",
-                            timestamp: new Date(0).toISOString()
-                        }
-                    });
-                }
-            }
-        } else if (currentUser.role === 'Admin') {
-            // For production admin, show all real users not in conversations
-            const otherRealUsers = allUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
-            for(const partner of otherRealUsers) {
-                 if (!conversations.has(partner.id)) {
                     conversations.set(partner.id, {
                         user: partner,
                         lastMessage: {
