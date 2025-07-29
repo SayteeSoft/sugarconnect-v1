@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, Wand2, ShieldCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Camera, PlusCircle, Loader2, Heart, MessageSquare, Flag, Ban, ShieldCheck, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { wantsOptions, interestsOptions, bodyTypeOptions, ethnicityOptions, hairColorOptions, eyeColorOptions, smokerOptions, drinkerOptions, piercingsOptions, tattoosOptions, relationshipStatusOptions, childrenOptions } from '@/lib/options';
 import { MultiSelect } from '../ui/multi-select';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -30,7 +30,7 @@ type ProfileFormProps = {
     currentUser: UserProfile;
 };
 
-const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onAction: (action: string) => void, onCuteMessage: () => void, viewerRole?: UserProfile['role'] }) => {
+const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void }) => {
     const actions = [
         { id: 'favorite', icon: <Heart className="h-5 w-5" />, label: 'Add to Favorites' },
         { id: 'message', icon: <MessageSquare className="h-5 w-5" />, label: 'Send Message' },
@@ -56,18 +56,6 @@ const ProfileActionButtons = ({ onAction, onCuteMessage, viewerRole }: { onActio
                         </TooltipContent>
                     </Tooltip>
                 ))}
-                 {viewerRole === 'Sugar Baby' && (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={onCuteMessage}>
-                                <Wand2 className="h-5 w-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Send Cute Message</p>
-                        </TooltipContent>
-                    </Tooltip>
-                )}
                  <div className="border-l h-6 mx-2"></div>
                  {secondaryActions.map(action => (
                     <Tooltip key={action.id}>
@@ -208,7 +196,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                         const actions = [
                             { type: 'favorite', text: 'just favorited your profile!', subject: 'You have a new admirer!' },
                             { type: 'visit', text: 'just visited your profile!', subject: 'Someone is interested in you!' },
-                            { type: 'message', text: `sent you a message: "I love your style! Your profile is so captivating."`, subject: 'You have a new message!' },
                         ];
                         const randomAction = actions[Math.floor(Math.random() * actions.length)];
 
@@ -240,61 +227,43 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     }, [isOwnProfile, currentUser, profile, toast]);
 
     const handleAction = (action: string) => {
+        if (action === 'message') {
+            router.push(`/messages?userId=${profile.id}`);
+            return;
+        }
+        
         const actionTextMap: Record<string, string> = {
-            favorite: "just favorited your profile!",
-            message: "just sent you a message!",
-            report: "just reported your profile.",
-            block: "just blocked you."
+            favorite: "Added to your favorites.",
+            report: "Profile reported. Our team will review it.",
+            block: "User blocked. You will no longer see their profile."
+        };
+        
+        const emailBodyMap: Record<string, string> = {
+            favorite: `added you to their favorites!`,
+            report: `reported your profile.`,
+            block: `blocked your profile.`
         };
 
         const subjectMap: Record<string, string> = {
-            favorite: "You have a new favorite!",
-            message: "You have a new message!",
+            favorite: "You have a new admirer!",
             report: "Your profile has been reported",
             block: "A user has blocked you"
         };
         
         toast({
-            duration: 5000,
-            component: (
-                 <NotificationToast
-                    user={currentUser}
-                    actionText={actionTextMap[action] || `performed action: ${action}`}
-                    profileUrl={`/dashboard/profile/${currentUser.id}`}
-                />
-            )
+            title: "Action Confirmed",
+            description: actionTextMap[action] || `Action '${action}' completed.`,
         });
 
         sendEmail({
             to: profile.email,
             recipientName: profile.name,
             subject: subjectMap[action] || 'New activity on your profile',
-            body: `${currentUser.name} ${actionTextMap[action]}.`,
+            body: `${currentUser.name} ${emailBodyMap[action]}.`,
             callToAction: {
                 text: 'View Their Profile',
                 url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
             }
-        });
-    }
-    
-    const handleSendCuteMessage = () => {
-        const cuteMessages = [
-            "I love your style! That watch in your photo is stunning.",
-            "You have amazing taste. We should go shopping on Rodeo Drive sometime!",
-            "Your profile has such a classy vibe. I'm already picturing our first elegant dinner.",
-            "Just wanted to say you have a fantastic sense of fashion. ✨"
-        ];
-        const randomMessage = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
-        
-        toast({
-            duration: 5000,
-            component: (
-                <NotificationToast
-                    user={currentUser}
-                    actionText={`sent you a message: "${randomMessage}"`}
-                    profileUrl={`/dashboard/profile/${currentUser.id}`}
-                />
-            )
         });
     }
 
@@ -622,7 +591,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <CardTitle>{`About ${profile.name}`}</CardTitle>
                                 <Badge variant="outline">{completionPercentages.about}%</Badge>
                             </div>
-                           <ProfileActionButtons onAction={handleAction} onCuteMessage={handleSendCuteMessage} viewerRole={currentUser.role} />
+                           <ProfileActionButtons onAction={handleAction} />
                         </CardHeader>
                         <CardContent>
                             {isEditMode ? (
@@ -833,4 +802,5 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
