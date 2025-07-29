@@ -11,11 +11,28 @@ const getStoreCached = (name: 'users' | 'messages') => getStore({
     token: process.env.NETLIFY_BLOBS_TOKEN || 'studio-mock-token',
 });
 
+async function findUserById(userStore: Store, userId: string): Promise<UserProfile | null> {
+    const { blobs } = await userStore.list({ cache: 'no-store' });
+    for (const blob of blobs) {
+        try {
+            const user = await userStore.get(blob.key, { type: 'json' });
+            if (user && user.id === userId) {
+                const { password, ...userToReturn } = user;
+                return userToReturn as UserProfile;
+            }
+        } catch (e) {
+            console.warn(`Could not parse blob ${blob.key} as a user profile while searching for ID ${userId}.`, e);
+        }
+    }
+    return null;
+}
+
 export async function GET(request: NextRequest) {
+    const currentUserId = request.headers.get('x-user-id');
     const currentUserEmail = request.headers.get('x-user-email');
 
-    if (!currentUserEmail) {
-        return NextResponse.json({ message: "Unauthorized: Missing user email" }, { status: 401 });
+    if (!currentUserId || !currentUserEmail) {
+        return NextResponse.json({ message: "Unauthorized: Missing user credentials" }, { status: 401 });
     }
 
     const userStore = getStoreCached('users');
@@ -28,53 +45,51 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ message: "Current user not found" }, { status: 404 });
         }
 
-        const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
-        const allUsers: UserProfile[] = [];
-        for (const blob of userBlobs) {
-            try {
-                const user = await userStore.get(blob.key, { type: 'json' });
-                if (user && user.id) { // Basic validation
-                    const { password, ...userToReturn } = user;
-                    allUsers.push(userToReturn as UserProfile);
-                }
-            } catch (e) {
-                console.warn(`Could not parse or validate blob ${blob.key} as a user profile.`, e);
-            }
-        }
+        const { blobs: messageBlobs } = await messagesStore.list({ prefix: '', cache: 'no-store' });
         
-        let potentialPartners: UserProfile[];
-        if (currentUser.role === 'Admin') {
-            potentialPartners = allUsers.filter(u => u.id !== currentUser.id);
-        } else {
-            const oppositeRole = currentUser.role === 'Sugar Daddy' ? 'Sugar Baby' : 'Sugar Daddy';
-            potentialPartners = allUsers.filter(u => u.role === oppositeRole);
-        }
-
         const conversations = [];
-        for (const partner of potentialPartners) {
-            // Ensure we don't create a conversation with oneself
-            if (currentUser.id === partner.id) continue;
 
-            const conversationId = [currentUser.id, partner.id].sort().join('--');
-            let lastMessage: Message | null = null;
-            
-            try {
-                const conversationData = await messagesStore.get(conversationId, { type: 'json' });
-                if (conversationData && Array.isArray(conversationData.messages) && conversationData.messages.length > 0) {
-                    lastMessage = conversationData.messages[conversationData.messages.length - 1];
+        for (const blob of messageBlobs) {
+            // Check if the conversation key includes the current user's ID
+            if (blob.key.includes(currentUserId)) {
+                const participantIds = blob.key.split('--');
+                const otherUserId = participantIds.find(id => id !== currentUserId);
+
+                if (otherUserId) {
+                    const partner = await findUserById(userStore, otherUserId);
+                    if (partner) {
+                        const conversationData = await messagesStore.get(blob.key, { type: 'json' });
+                        let lastMessage: Message | null = null;
+                        if (conversationData && Array.isArray(conversationData.messages) && conversationData.messages.length > 0) {
+                            lastMessage = conversationData.messages[conversationData.messages.length - 1];
+                        }
+                        
+                        // Only add conversations that actually have messages
+                        if (lastMessage) {
+                             conversations.push({
+                                user: partner,
+                                messages: [lastMessage]
+                            });
+                        }
+                    }
                 }
-            } catch (error) {
-                // No messages yet, which is fine, blob will not be found.
-            }
-            
-            if (currentUser.role === 'Admin' || lastMessage) {
-                conversations.push({
-                    user: partner, // password is already stripped
-                    messages: lastMessage ? [lastMessage] : []
-                });
             }
         }
         
+        // Add mock users for admin in development
+        if (currentUser.role === 'Admin' && process.env.NODE_ENV !== 'production') {
+            const { mockUsers } = await import('@/lib/mock-data');
+            const otherUsers = mockUsers.filter(u => u.id !== currentUser.id && u.role !== 'Admin');
+            for(const partner of otherUsers) {
+                if (!conversations.some(c => c.user.id === partner.id)) {
+                    conversations.push({
+                        user: partner,
+                        messages: []
+                    });
+                }
+            }
+        }
+
         conversations.sort((a, b) => {
             const timeA = a.messages.length > 0 ? new Date(a.messages[0].timestamp).getTime() : 0;
             const timeB = b.messages.length > 0 ? new Date(b.messages[0].timestamp).getTime() : 0;
@@ -85,6 +100,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('Failed to get conversations:', error);
-        return NextResponse.json({ message: 'An internal server error occurred while fetching conversations.' }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        return NextResponse.json({ message: 'An internal server error occurred while fetching conversations.', error: errorMessage }, { status: 500 });
     }
 }
