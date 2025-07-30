@@ -26,7 +26,7 @@ export function SearchClient() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const fetchProfilesAndUser = async () => {
         setLoading(true);
         try {
             const res = await fetch(`/api/users`, { cache: 'no-store' });
@@ -35,6 +35,11 @@ export function SearchClient() {
             }
             const fetchedUsers = await res.json();
             setProfiles(fetchedUsers.filter((user: UserProfile) => user.role !== 'Admin'));
+
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                setCurrentUser(JSON.parse(storedUser));
+            }
         } catch (error) {
             console.error("Error fetching profiles for search:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load profiles.' });
@@ -43,23 +48,10 @@ export function SearchClient() {
         }
     }
     
-    fetchProfiles();
-
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-        try {
-            setCurrentUser(JSON.parse(storedUser));
-        } catch (e) {
-            console.error("Failed to parse user from local storage", e);
-            setCurrentUser(null);
-        }
-    }
+    fetchProfilesAndUser();
   }, [toast]);
 
   const filteredProfiles = useMemo(() => {
-    // Wait until the current user is determined to apply role-based filtering
-    if (loading) return [];
-
     let roleFilteredProfiles = profiles;
     
     if (currentUser) {
@@ -68,9 +60,7 @@ export function SearchClient() {
         } else if (currentUser.role === 'Sugar Baby') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
         }
-        // Admins would have been filtered out already, but as a fallback, they see all.
     }
-    // If no user is logged in, show all non-admin profiles, which is the default state.
 
     return roleFilteredProfiles.filter((profile) => {
       const locationMatch = locationFilter === "" || profile.location.toLowerCase().includes(locationFilter.toLowerCase());
@@ -82,7 +72,7 @@ export function SearchClient() {
 
       return locationMatch && ageMatch && photoMatch && newMatch && onlineMatch;
     });
-  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser, loading]);
+  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser]);
   
   const formatHeight = (cm: number) => {
     const totalInches = cm / 2.54;

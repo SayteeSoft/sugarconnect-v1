@@ -1,6 +1,6 @@
 
 import { getStore, type Store } from '@netlify/blobs';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { UserProfile } from '@/lib/users';
 import { mockUsers } from '@/lib/mock-data';
 
@@ -13,7 +13,9 @@ const getBlobStore = (): Store => {
     });
 };
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
   const store = getBlobStore();
   
   try {
@@ -21,7 +23,7 @@ export async function GET() {
 
     // In production, only serve users from the blob store.
     if (process.env.NODE_ENV === 'production') {
-        const { blobs } = await store.list();
+        const { blobs } = await store.list({ cache: 'no-store' });
         for (const blob of blobs) {
             try {
                 const user: UserProfile = await store.get(blob.key, { type: 'json' });
@@ -39,7 +41,7 @@ export async function GET() {
             userMap.set(userToReturn.id, userToReturn as UserProfile);
         });
 
-        const { blobs } = await store.list();
+        const { blobs } = await store.list({ cache: 'no-store' });
         for (const blob of blobs) {
           try {
             const user: UserProfile = await store.get(blob.key, { type: 'json' });
@@ -59,4 +61,3 @@ export async function GET() {
     return NextResponse.json({ message: 'Failed to list users' }, { status: 500 });
   }
 }
-
