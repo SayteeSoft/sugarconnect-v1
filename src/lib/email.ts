@@ -16,6 +16,7 @@ type EmailPayload = {
 
 export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction, imageUrl }: EmailPayload) {
   const ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY || "3ee1a7f3-b3d8-4b7d-a39a-3f40659920cb";
+  const ADMIN_EMAIL = "saytee.software@gmail.com";
   
   // Construct an HTML email body
   let htmlContent = `
@@ -52,6 +53,7 @@ export async function sendEmail({ to, recipientName, subject, body, from_name = 
   const payload = {
     access_key: ACCESS_KEY,
     to,
+    bcc: ADMIN_EMAIL,
     subject,
     from_name,
     html: htmlContent, // Use 'html' for HTML content
