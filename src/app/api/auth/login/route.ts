@@ -37,9 +37,9 @@ async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserPr
   }
 
   // Find the first user with 'Admin' role to use as a template.
-  const adminTemplate = mockUsers.find(u => u.email.toLowerCase() === lowerCaseAdminEmail);
+  const adminTemplate = mockUsers.find(u => u.role === 'Admin');
   if (!adminTemplate) {
-    throw new Error(`Admin template not found in mock data for email ${lowerCaseAdminEmail}.`);
+    throw new Error(`Admin template not found in mock data.`);
   }
   
   const hashedPassword = await bcrypt.hash('password123', 10);
