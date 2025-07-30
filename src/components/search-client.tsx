@@ -57,21 +57,20 @@ export function SearchClient() {
   }, [toast]);
 
   const filteredProfiles = useMemo(() => {
-    let roleFilteredProfiles = profiles;
+    // Wait until the current user is determined to apply role-based filtering
+    if (loading) return [];
 
+    let roleFilteredProfiles = profiles;
+    
     if (currentUser) {
         if (currentUser.role === 'Sugar Daddy') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Baby');
         } else if (currentUser.role === 'Sugar Baby') {
             roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
-        } else if (currentUser.role === 'Admin') {
-            // Admin can see everyone
-            roleFilteredProfiles = profiles;
         }
-    } else {
-        // Not logged in, show everyone except admin
-        roleFilteredProfiles = profiles.filter(p => p.role !== 'Admin');
+        // Admins would have been filtered out already, but as a fallback, they see all.
     }
+    // If no user is logged in, show all non-admin profiles, which is the default state.
 
     return roleFilteredProfiles.filter((profile) => {
       const locationMatch = locationFilter === "" || profile.location.toLowerCase().includes(locationFilter.toLowerCase());
@@ -83,7 +82,7 @@ export function SearchClient() {
 
       return locationMatch && ageMatch && photoMatch && newMatch && onlineMatch;
     });
-  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser]);
+  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser, loading]);
   
   const formatHeight = (cm: number) => {
     const totalInches = cm / 2.54;
