@@ -69,21 +69,17 @@ export default function Home() {
         try {
             const res = await fetch('/api/users', { cache: 'no-store' });
             let users: UserProfile[];
-            const allUsers = [...mockUsers];
-
             if (res.ok) {
-                const apiUsers = await res.json();
-                const mockUserIds = new Set(mockUsers.map(u => u.id));
-                for (const apiUser of apiUsers) {
-                    if (!mockUserIds.has(apiUser.id)) {
-                        allUsers.push(apiUser);
-                    }
-                }
+                users = await res.json();
             } else {
-                console.warn(`API call failed with status ${res.status}, using only mock users for featured profiles.`);
+                 console.warn(`API call failed with status ${res.status}, using only mock users for featured profiles.`);
+                 users = [...mockUsers];
             }
-            users = allUsers;
-
+            
+            if (process.env.NODE_ENV === 'production') {
+                users = users.filter(u => !mockUsers.some(mu => mu.id === u.id));
+            }
+            
             let filteredProfilesForDisplay;
             if (user?.role === 'Sugar Daddy') {
                 filteredProfilesForDisplay = users.filter(p => p.role === 'Sugar Baby');

@@ -20,7 +20,7 @@ export async function GET() {
     let allUsers: UserProfile[] = [];
 
     // In production, only serve users from the blob store.
-    if (process.env.NETLIFY) {
+    if (process.env.NODE_ENV === 'production') {
         const { blobs } = await store.list();
         for (const blob of blobs) {
             try {
@@ -33,10 +33,11 @@ export async function GET() {
         }
     } else {
         // In development, merge with mock users for testing.
-        allUsers.push(...mockUsers.map(u => {
+        const userMap = new Map<string, UserProfile>();
+        mockUsers.forEach(u => {
             const { password, ...userToReturn } = u;
-            return userToReturn as UserProfile;
-        }));
+            userMap.set(userToReturn.id, userToReturn as UserProfile);
+        });
 
         const { blobs } = await store.list();
         for (const blob of blobs) {
@@ -44,15 +45,12 @@ export async function GET() {
             const user: UserProfile = await store.get(blob.key, { type: 'json' });
             // Omit password from the returned user list
             const { password, ...userToReturn } = user;
-            
-            // Ensure no duplicate users are added if they exist in both mocks and blobs
-            if (!allUsers.some(u => u.id === user.id)) {
-                allUsers.push(userToReturn as UserProfile);
-            }
+            userMap.set(user.id, userToReturn as UserProfile);
           } catch (e) {
               console.warn(`Could not parse blob ${blob.key} as JSON, or it was a duplicate.`, e);
           }
         }
+        allUsers = Array.from(userMap.values());
     }
     
     return NextResponse.json(allUsers);
@@ -61,3 +59,4 @@ export async function GET() {
     return NextResponse.json({ message: 'Failed to list users' }, { status: 500 });
   }
 }
+
