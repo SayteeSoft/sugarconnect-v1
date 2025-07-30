@@ -27,6 +27,7 @@ async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserPr
   }
 
   if (adminData) {
+    // If admin exists but password is not hashed, hash it.
     if (!adminData.password || !adminData.password.startsWith('$2b$')) {
         const hashedPassword = await bcrypt.hash('password123', 10);
         adminData.password = hashedPassword;
@@ -38,14 +39,22 @@ async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserPr
   // Find the first user with 'Admin' role to use as a template.
   const adminTemplate = mockUsers.find(u => u.role === 'Admin');
   if (!adminTemplate) {
-    throw new Error(`Admin template not found in mock data.`);
+    // This is a fallback if the main admin template is missing for some reason.
+    const genericAdminTemplate = mockUsers.find(u => u.email.toLowerCase() === 'saytee.software@gmail.com');
+    if (!genericAdminTemplate) {
+        throw new Error(`Admin template not found in mock data.`);
+    }
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    const adminUser: UserProfile = { ...genericAdminTemplate, email: lowerCaseAdminEmail, password: hashedPassword };
+    await store.setJSON(lowerCaseAdminEmail, adminUser);
+    return adminUser;
   }
-
+  
   const hashedPassword = await bcrypt.hash('password123', 10);
   
   const adminUser: UserProfile = {
     ...adminTemplate,
-    email: lowerCaseAdminEmail, // Use the actual admin email from the login attempt
+    email: lowerCaseAdminEmail,
     password: hashedPassword,
   };
 
@@ -65,8 +74,7 @@ export async function POST(request: NextRequest) {
     let user: UserProfile | null = null;
     const lowerCaseEmail = email.toLowerCase();
     
-    // Check if the login attempt is for any of the emails associated with an admin role in mockUsers.
-    const isAdminLoginAttempt = mockUsers.some(u => u.email.toLowerCase() === lowerCaseEmail && u.role === 'Admin');
+    const isAdminLoginAttempt = lowerCaseEmail === 'saytee.software@gmail.com';
 
     if (process.env.NODE_ENV !== 'production' && isAdminLoginAttempt) {
       user = await ensureAdminUser(store, lowerCaseEmail);
@@ -74,7 +82,6 @@ export async function POST(request: NextRequest) {
       try {
         user = (await store.get(lowerCaseEmail, { type: 'json' })) as UserProfile;
       } catch (error) {
-        // If not found, it's an invalid credential case for non-admins.
         return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
       }
     }
