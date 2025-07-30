@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -41,7 +42,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const handleSelectConversation = useCallback(async (conversation: Conversation) => {
-        if (selectedConversation?.user.id === conversation.user.id) return;
+        if (selectedConversation?.user.id === conversation.user.id && selectedConversation.messages.length > 0) return;
 
         setLoadingMessages(true);
         setSelectedConversation({ ...conversation, messages: [] }); // Reset messages for skeleton
@@ -56,28 +57,50 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
         } catch (error) {
             console.error(error);
             toast({ variant: 'destructive', title: 'Error', description: `Could not load messages for ${conversation.user.name}` });
+            // If fetching fails but we have a shell, keep it
+            if(!selectedConversation) setSelectedConversation(conversation);
         } finally {
             setLoadingMessages(false);
         }
-    }, [currentUser.id, selectedConversation?.user.id, toast]);
+    }, [currentUser.id, selectedConversation, toast]);
+
 
     useEffect(() => {
-        const fetchConversations = async () => {
+        const fetchConversationsAndUsers = async () => {
             setLoadingConversations(true);
             try {
-                const res = await fetch(`/api/conversations`, { 
-                    headers: { 'x-user-id': currentUser.id, 'x-user-email': currentUser.email }, 
-                    cache: 'no-store' 
-                });
-                if (!res.ok) throw new Error("Failed to fetch conversations");
-                const loadedConversations: Conversation[] = await res.json();
+                const [convRes, usersRes] = await Promise.all([
+                    fetch(`/api/conversations`, { 
+                        headers: { 'x-user-id': currentUser.id, 'x-user-email': currentUser.email }, 
+                        cache: 'no-store' 
+                    }),
+                    fetch('/api/users', { cache: 'no-store' })
+                ]);
+
+                if (!convRes.ok) throw new Error("Failed to fetch conversations");
+                if (!usersRes.ok) throw new Error("Failed to fetch users");
+
+                const loadedConversations: Conversation[] = await convRes.json();
+                const allUsers: UserProfile[] = await usersRes.json();
                 
                 const convosWithStatus = loadedConversations.map(c => ({...c, user: {...c.user, onlineStatus: Math.random() > 0.5 ? 'online' : 'offline'}}));
                 setConversations(convosWithStatus);
 
-                let conversationToSelect = null;
+                let conversationToSelect: Conversation | null = null;
                 if (selectedUserId) {
-                    conversationToSelect = convosWithStatus.find(c => c.user.id === selectedUserId);
+                    conversationToSelect = convosWithStatus.find(c => c.user.id === selectedUserId) || null;
+                    // If conversation doesn't exist, create a shell for it so we can start one
+                    if (!conversationToSelect) {
+                        const targetUser = allUsers.find(u => u.id === selectedUserId);
+                        if (targetUser) {
+                           const newConversationShell: Conversation = {
+                                user: targetUser,
+                                messages: []
+                           };
+                           setConversations(prev => [newConversationShell, ...prev]);
+                           conversationToSelect = newConversationShell;
+                        }
+                    }
                 } else if (convosWithStatus.length > 0) {
                     conversationToSelect = convosWithStatus[0];
                 }
@@ -93,7 +116,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                 setLoadingConversations(false);
             }
         };
-        fetchConversations();
+        fetchConversationsAndUsers();
     }, [currentUser.id, currentUser.email, selectedUserId, toast, handleSelectConversation]);
 
     const filteredConversations = useMemo(() => {
@@ -218,7 +241,7 @@ export function MessagesClient({ currentUser, selectedUserId }: MessagesClientPr
                                     <Avatar className="h-12 w-12"><AvatarImage src={convo.user.image} /><AvatarFallback>{convo.user.name.charAt(0)}</AvatarFallback></Avatar>
                                     <div className="flex-1 truncate">
                                         <h3 className="font-semibold">{convo.user.name}</h3>
-                                        <p className="text-sm text-muted-foreground truncate">{convo.messages[convo.messages.length - 1]?.text || "No messages yet"}</p>
+                                        <p className="text-sm text-muted-foreground truncate">{convo.messages[convo.messages.length - 1]?.text || "Click to start conversation..."}</p>
                                     </div>
                                 </div>
                             ))
