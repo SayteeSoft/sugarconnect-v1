@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -113,6 +112,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isEditModeFromQuery = searchParams.get('edit') === 'true';
+    const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
 
     const [isEditMode, setIsEditMode] = useState(isEditModeFromQuery || false);
     const [profile, setProfile] = useState(initialProfile);
@@ -182,9 +182,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 recipientName: profile.name,
                 subject: 'Someone viewed your profile!',
                 body: `${currentUser.name} just viewed your profile.`,
+                imageUrl: currentUser.image ? `${siteUrl}${currentUser.image}` : undefined,
                 callToAction: {
                     text: 'View Their Profile',
-                    url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
+                    url: `${siteUrl}/dashboard/profile/${currentUser.id}`
                 }
             });
 
@@ -205,7 +206,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <NotificationToast
                                     user={profile}
                                     actionText={randomAction.text}
-                                    profileUrl={`/dashboard/profile/${profile.id}`}
+                                    profileUrl={`${siteUrl}/dashboard/profile/${profile.id}`}
                                 />
                             )
                         });
@@ -215,16 +216,17 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             recipientName: currentUser.name,
                             subject: randomAction.subject,
                             body: `Good news! ${profile.name} ${randomAction.text}`,
+                            imageUrl: profile.image ? `${siteUrl}${profile.image}` : undefined,
                             callToAction: {
                                 text: 'View Their Profile',
-                                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${profile.id}`
+                                url: `${siteUrl}/dashboard/profile/${profile.id}`
                             }
                         });
                     }, Math.random() * 5000 + 2000); // delay between 2-7 seconds
                 }
             }
         }
-    }, [isOwnProfile, currentUser, profile, toast]);
+    }, [isOwnProfile, currentUser, profile, toast, siteUrl]);
 
     const handleAction = (action: string) => {
         if (action === 'message') {
@@ -260,9 +262,10 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             recipientName: profile.name,
             subject: subjectMap[action] || 'New activity on your profile',
             body: `${currentUser.name} ${emailBodyMap[action]}.`,
+            imageUrl: currentUser.image ? `${siteUrl}${currentUser.image}` : undefined,
             callToAction: {
                 text: 'View Their Profile',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${currentUser.id}`
+                url: `${siteUrl}/dashboard/profile/${currentUser.id}`
             }
         });
     }
@@ -802,5 +805,6 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 

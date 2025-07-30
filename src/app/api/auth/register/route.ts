@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
+        const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
 
         const newUser: UserProfile = {
             id: uuidv4(),
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
             body: `We are thrilled to have you join our community! Get started by completing your profile to find your perfect match.`,
             callToAction: {
                 text: 'Complete Your Profile',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${newUser.id}?edit=true`
+                url: `${siteUrl}/dashboard/profile/${newUser.id}?edit=true`
             }
         });
 
@@ -123,9 +124,10 @@ export async function POST(request: NextRequest) {
                 recipientName: newUser.name,
                 subject: `You have a new message from ${adminUser.name}`,
                 body: `You have received a new message from ${adminUser.name} on Sugar Connect.\n\nMessage: "${welcomeMessage.text}"`,
+                imageUrl: `${siteUrl}${adminUser.image}`,
                 callToAction: {
                     text: 'Click here to reply',
-                    url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${adminUser.id}`
+                    url: `${siteUrl}/messages?userId=${adminUser.id}`
                 }
             });
         }

@@ -7,32 +7,54 @@ type EmailPayload = {
   subject: string;
   body: string; // This will be the main content of the email
   from_name?: string;
+  imageUrl?: string;
   callToAction?: {
     text: string;
     url: string;
   };
 };
 
-export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction }: EmailPayload) {
+export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction, imageUrl }: EmailPayload) {
   const ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY || "3ee1a7f3-b3d8-4b7d-a39a-3f40659920cb";
   
-  // Construct a human-readable, plain-text email body
-  let textContent = `Hello ${recipientName},\n\n`;
-  textContent += `${body}\n\n`;
-  
+  // Construct an HTML email body
+  let htmlContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+      <h2 style="color: #F5A3F5;">Hello ${recipientName},</h2>
+      <p>${body.replace(/\n/g, '<br>')}</p>
+  `;
+
+  if (imageUrl) {
+    htmlContent += `
+      <div style="margin: 20px 0;">
+        <a href="${callToAction?.url || '#'}">
+          <img src="${imageUrl}" alt="User Profile Image" style="max-width: 150px; height: auto; border-radius: 8px;" />
+        </a>
+      </div>
+    `;
+  }
+
   if (callToAction) {
-      textContent += `You can view this by clicking the link below:\n`;
-      textContent += `${callToAction.url}\n\n`;
+      htmlContent += `
+        <a href="${callToAction.url}" style="background-color: #F5A3F5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">
+          ${callToAction.text}
+        </a>
+      `;
   }
   
-  textContent += `Thank you,\nThe Sugar Connect Team`;
+  htmlContent += `
+      <p style="margin-top: 30px; font-size: 0.9em; color: #888;">
+        Thank you,<br>The Sugar Connect Team
+      </p>
+    </div>
+  `;
 
   const payload = {
     access_key: ACCESS_KEY,
     to,
     subject,
-    message: textContent, // Use 'message' for plain text
     from_name,
+    html: htmlContent, // Use 'html' for HTML content
   };
 
   try {

@@ -57,6 +57,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
             description: "Your username has been successfully changed.",
         });
 
+        const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
+
         // Send notification email
         await sendEmail({
             to: user.email,
@@ -65,7 +67,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
             body: `<p>This is a confirmation that your profile details on Sugar Connect were recently updated.</p><p>If you did not make this change, please contact our support team immediately.</p>`,
             callToAction: {
                 text: 'View Your Profile',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/dashboard/profile/${user.id}`
+                url: `${siteUrl}/dashboard/profile/${user.id}`
             }
         });
 
@@ -122,6 +124,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
             description: "Your password has been changed successfully.",
         });
 
+        const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
+
         // Send notification email
          await sendEmail({
             to: user.email,
@@ -130,7 +134,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
             body: `<p>This is a security alert to inform you that your password on Sugar Connect was recently changed.</p><p>If you did not make this change, please secure your account and contact our support team immediately.</p>`,
             callToAction: {
                 text: 'Go to Settings',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/settings`
+                url: `${siteUrl}/settings`
             }
         });
 

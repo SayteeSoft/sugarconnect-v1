@@ -1,4 +1,6 @@
 
+'use server';
+
 import { getStore, type Store } from '@netlify/blobs';
 import { NextRequest, NextResponse } from 'next/server';
 import { Message } from '@/lib/messages';
@@ -21,7 +23,11 @@ async function findUser(userStore: Store, userId: string): Promise<{key: string,
     if (process.env.NODE_ENV !== 'production') {
         const mockUser = mockUsers.find(u => u.id === userId);
         if (mockUser) {
-            return { key: mockUser.email, user: mockUser };
+            // Find the key (email) for the mock user
+            const mockUserWithEmail = mockUsers.find(u => u.id === userId);
+            if(mockUserWithEmail) {
+                return { key: mockUserWithEmail.email, user: mockUser };
+            }
         }
     }
     
@@ -30,7 +36,7 @@ async function findUser(userStore: Store, userId: string): Promise<{key: string,
     const { blobs } = await userStore.list({ cache: 'no-store' });
     for (const blob of blobs) {
       try {
-        const user = await userStore.get(blob.key, { type: 'json' });
+        const user: UserProfile = await userStore.get(blob.key, { type: 'json' });
         if (user && user.id === userId) {
           return { key: blob.key, user };
         }
@@ -113,6 +119,8 @@ export async function POST(
 
         let imageUrl: string | undefined = undefined;
         const conversationId = [senderId, otherUserId].sort().join('--');
+        const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
+
         if (imageFile) {
             const imageBuffer = await imageFile.arrayBuffer();
             const imageKey = `message-${conversationId}-${uuidv4()}`;
@@ -147,9 +155,10 @@ export async function POST(
             recipientName: recipient.name,
             subject: `You have a new message from ${sender.name}`,
             body: `You have received a new message from ${sender.name} on Sugar Connect.\n\nMessage: "${text}"`,
+            imageUrl: sender.image ? `${siteUrl}${sender.image}` : undefined,
             callToAction: {
                 text: 'Click here to reply',
-                url: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:9002'}/messages?userId=${sender.id}`
+                url: `${siteUrl}/messages?userId=${sender.id}`
             }
         });
 
