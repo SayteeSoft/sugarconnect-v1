@@ -47,6 +47,8 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
     ...adminTemplate,
     email: adminEmail,
     password: hashedPassword,
+    image: adminTemplate.image || '',
+    interests: adminTemplate.interests || [],
   };
 
   await store.setJSON(adminEmail, adminUser);
