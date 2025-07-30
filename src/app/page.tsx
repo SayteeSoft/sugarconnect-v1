@@ -128,10 +128,10 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/50 z-10"></div>
           <div className="relative z-20 px-4">
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-headline font-bold tracking-tighter mb-4">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-headline font-bold tracking-tighter mb-4">
               Sugar Connect
             </h1>
-            <p className="max-w-2xl mx-auto text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-6">
+            <p className="max-w-2xl mx-auto text-lg sm:text-2xl md:text-3xl lg:text-4xl font-light mb-6">
               For Sugar Daddy and Sugar Baby
             </p>
             <p className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg mb-8">
