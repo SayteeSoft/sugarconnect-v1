@@ -19,20 +19,6 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
 };
 
 async function findUser(userStore: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
-    // In development, we can check mock users first for speed.
-    if (process.env.NODE_ENV !== 'production') {
-        const mockUser = mockUsers.find(u => u.id === userId);
-        if (mockUser) {
-            // Find the key (email) for the mock user
-            const mockUserWithEmail = mockUsers.find(u => u.id === userId);
-            if(mockUserWithEmail) {
-                return { key: mockUserWithEmail.email, user: mockUser };
-            }
-        }
-    }
-    
-    // In production (or if not in mocks), scan the store.
-    // This is less efficient but necessary if we only have the ID.
     const { blobs } = await userStore.list({ cache: 'no-store' });
     for (const blob of blobs) {
       try {
@@ -43,6 +29,14 @@ async function findUser(userStore: Store, userId: string): Promise<{key: string,
       } catch (e) {
         // Ignore blobs that are not valid JSON or don't match
       }
+    }
+    
+    // In development, we can check mock users as a fallback.
+    if (process.env.NODE_ENV !== 'production') {
+        const mockUser = mockUsers.find(u => u.id === userId);
+        if (mockUser) {
+            return { key: mockUser.email, user: mockUser };
+        }
     }
     return null;
 }
@@ -99,7 +93,6 @@ export async function POST(
         const messagesStore = getBlobStore('messages');
         const imageStore = getBlobStore('images');
         
-        // Fetch sender and recipient profiles
         const senderResult = await findUser(userStore, senderId);
         const recipientResult = await findUser(userStore, otherUserId);
 
@@ -109,8 +102,7 @@ export async function POST(
         const sender = senderResult.user;
         const recipient = recipientResult.user;
         
-        // Handle credit deduction for Sugar Daddy
-        if (sender.role === 'Sugar Daddy') {
+        if (sender.role === 'Sugar Daddy' && senderId !== recipient.id) {
             const currentCredits = sender.credits ?? 0;
             if (currentCredits <= 0) {
                 return NextResponse.json({ message: 'No Credits Remaining. Please purchase more credits to send messages.' }, { status: 402 });
@@ -149,7 +141,6 @@ export async function POST(
 
         await messagesStore.setJSON(conversationId, conversation);
         
-        // Send email notification
         await sendEmail({
             to: recipient.email,
             recipientName: recipient.name,

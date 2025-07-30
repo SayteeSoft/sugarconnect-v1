@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -27,13 +26,13 @@ import { sendEmail } from '@/lib/email';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
-    currentUser: UserProfile | null; // Allow currentUser to be null
+    currentUser: UserProfile | null;
 };
 
-const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void }) => {
+const ProfileActionButtons = ({ onAction, onMessageClick }: { onAction: (action: string) => void; onMessageClick: () => void; }) => {
     const actions = [
         { id: 'favorite', icon: <Heart className="h-5 w-5" />, label: 'Add to Favorites' },
-        { id: 'message', icon: <MessageSquare className="h-5 w-5" />, label: 'Send Message' },
+        { id: 'message', icon: <MessageSquare className="h-5 w-5" />, label: 'Send Message', onClick: onMessageClick },
     ];
     
     const secondaryActions = [
@@ -47,7 +46,7 @@ const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void
                 {actions.map(action => (
                     <Tooltip key={action.id}>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => onAction(action.id)}>
+                            <Button variant="ghost" size="icon" onClick={() => action.onClick ? action.onClick() : onAction(action.id)}>
                                 {action.icon}
                             </Button>
                         </TooltipTrigger>
@@ -191,9 +190,8 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 }
             });
 
-            // Simulate activity for Sugar Daddy viewers
             if (currentUser.role === 'Sugar Daddy' && profile.role === 'Sugar Baby') {
-                const simulateActivity = Math.random() < 0.5; // 50% chance to simulate an activity
+                const simulateActivity = Math.random() < 0.5;
                 if (simulateActivity) {
                     setTimeout(() => {
                         const actions = [
@@ -224,11 +222,15 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 url: `${siteUrl}/dashboard/profile/${profile.id}`
                             }
                         });
-                    }, Math.random() * 5000 + 2000); // delay between 2-7 seconds
+                    }, Math.random() * 5000 + 2000);
                 }
             }
         }
     }, [isOwnProfile, currentUser, profile, toast, siteUrl]);
+
+    const handleMessageClick = () => {
+        router.push(`/messages?userId=${profile.id}`);
+    };
 
     const handleAction = (action: string) => {
         if (!currentUser) {
@@ -238,11 +240,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 description: "You must be logged in to perform this action.",
                 action: <Button asChild><Link href="/login">Login</Link></Button>
             });
-            return;
-        }
-
-        if (action === 'message') {
-            router.push(`/messages?userId=${profile.id}`);
             return;
         }
         
@@ -602,12 +599,12 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
                         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div className='flex items-center gap-2 order-2 md:order-1'>
+                             <div className='flex items-center gap-2 order-2 md:order-1'>
                                 <CardTitle>{`About ${profile.name}`}</CardTitle>
                                 <Badge variant="outline">{completionPercentages.about}%</Badge>
                             </div>
                            <div className="order-1 md:order-2 self-end md:self-center">
-                                {!isOwnProfile && <ProfileActionButtons onAction={handleAction} />}
+                                {!isOwnProfile && currentUser && <ProfileActionButtons onAction={handleAction} onMessageClick={handleMessageClick}/>}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -801,27 +798,3 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
         )}
     </div>
 );
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
