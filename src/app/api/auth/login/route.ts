@@ -21,16 +21,17 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
   let adminData: UserProfile | null = null;
   
   try {
-    adminData = await store.get(adminEmail.toLowerCase(), { type: 'json' });
+    adminData = await store.get(adminEmail, { type: 'json' });
   } catch(e) {
     // Admin does not exist, will be created.
   }
 
   if (adminData) {
-    if (!adminData.password || !adminData.password.startsWith('$2b$')) {
-        const hashedPassword = await bcrypt.hash('password123', 10);
+    // If password exists but isn't hashed, hash it.
+    if (adminData.password && !adminData.password.startsWith('$2b$')) {
+        const hashedPassword = await bcrypt.hash(adminData.password, 10);
         adminData.password = hashedPassword;
-        await store.setJSON(adminEmail.toLowerCase(), adminData);
+        await store.setJSON(adminEmail, adminData);
     }
     return adminData;
   }
@@ -44,11 +45,11 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
   
   const adminUser: UserProfile = {
     ...adminTemplate,
-    email: adminEmail.toLowerCase(),
+    email: adminEmail,
     password: hashedPassword,
   };
 
-  await store.setJSON(adminEmail.toLowerCase(), adminUser);
+  await store.setJSON(adminEmail, adminUser);
   return adminUser;
 }
 
@@ -56,13 +57,13 @@ export async function POST(request: NextRequest) {
   try {
     const store = getBlobStore();
     const { email, password } = await request.json();
+    const lowerCaseEmail = email.toLowerCase();
 
     if (!email || !password) {
       return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
     }
 
     let user: UserProfile | null = null;
-    const lowerCaseEmail = email.toLowerCase();
     
     if (lowerCaseEmail === 'saytee.software@gmail.com') {
       user = await ensureAdminUser(store);
