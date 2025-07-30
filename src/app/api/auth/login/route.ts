@@ -39,15 +39,7 @@ async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserPr
   // Find the first user with 'Admin' role to use as a template.
   const adminTemplate = mockUsers.find(u => u.role === 'Admin');
   if (!adminTemplate) {
-    // This is a fallback if the main admin template is missing for some reason.
-    const genericAdminTemplate = mockUsers.find(u => u.email.toLowerCase() === 'saytee.software@gmail.com');
-    if (!genericAdminTemplate) {
-        throw new Error(`Admin template not found in mock data.`);
-    }
-    const hashedPassword = await bcrypt.hash('password123', 10);
-    const adminUser: UserProfile = { ...genericAdminTemplate, email: lowerCaseAdminEmail, password: hashedPassword };
-    await store.setJSON(lowerCaseAdminEmail, adminUser);
-    return adminUser;
+    throw new Error(`Admin template not found in mock data.`);
   }
   
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -82,6 +74,7 @@ export async function POST(request: NextRequest) {
       try {
         user = (await store.get(lowerCaseEmail, { type: 'json' })) as UserProfile;
       } catch (error) {
+        // If user not found in blob store, deny access
         return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
       }
     }
