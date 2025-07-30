@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
     ],
     // Allow data URIs
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentSecurityPolicy: "default-src 'self'; script-src 'self'; sandbox;",
   },
 };
 
