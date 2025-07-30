@@ -601,12 +601,14 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 {/* Right Column */}
                 <div className="md:col-span-2 space-y-8">
                      <Card className="shadow-xl">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div className='flex items-center gap-2'>
+                        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div className='flex items-center gap-2 order-2 md:order-1'>
                                 <CardTitle>{`About ${profile.name}`}</CardTitle>
                                 <Badge variant="outline">{completionPercentages.about}%</Badge>
                             </div>
-                           <ProfileActionButtons onAction={handleAction} />
+                           <div className="order-1 md:order-2 self-end md:self-center">
+                               <ProfileActionButtons onAction={handleAction} />
+                            </div>
                         </CardHeader>
                         <CardContent>
                             {isEditMode ? (
@@ -817,6 +819,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
