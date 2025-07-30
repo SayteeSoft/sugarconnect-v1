@@ -21,7 +21,8 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
   let adminData: UserProfile | null = null;
   
   try {
-    adminData = await store.get(adminEmail, { type: 'json' });
+    const existingAdmin = await store.get(adminEmail.toLowerCase(), { type: 'json' });
+    adminData = existingAdmin as UserProfile;
   } catch(e) {
     // Admin does not exist, will be created.
   }
@@ -31,7 +32,7 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
     if (adminData.password && !adminData.password.startsWith('$2b$')) {
         const hashedPassword = await bcrypt.hash(adminData.password, 10);
         adminData.password = hashedPassword;
-        await store.setJSON(adminEmail, adminData);
+        await store.setJSON(adminEmail.toLowerCase(), adminData);
     }
     return adminData;
   }
@@ -45,13 +46,13 @@ async function ensureAdminUser(store: Store): Promise<UserProfile> {
   
   const adminUser: UserProfile = {
     ...adminTemplate,
-    email: adminEmail,
+    email: adminEmail.toLowerCase(),
     password: hashedPassword,
     image: adminTemplate.image || '',
     interests: adminTemplate.interests || [],
   };
 
-  await store.setJSON(adminEmail, adminUser);
+  await store.setJSON(adminEmail.toLowerCase(), adminUser);
   return adminUser;
 }
 
