@@ -69,6 +69,8 @@ export default function ProfilePage() {
                     console.error("Could not parse current user from localStorage", e);
                     setCurrentUser(null);
                 }
+            } else {
+                setCurrentUser(null);
             }
             setLoading(false);
         };
@@ -96,6 +98,6 @@ export default function ProfilePage() {
     
     // The ProfileForm can handle a null currentUser
     return (
-        <ProfileForm initialProfile={profile} currentUser={currentUser!} />
+        <ProfileForm initialProfile={profile} currentUser={currentUser} />
     );
 }
