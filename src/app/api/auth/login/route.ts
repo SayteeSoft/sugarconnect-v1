@@ -68,8 +68,10 @@ export async function POST(request: NextRequest) {
       user = await ensureAdminUser(store);
     } else {
       try {
-        user = (await store.get(lowerCaseEmail, { type: 'json' })) as UserProfile;
+        const userData = await store.get(lowerCaseEmail, { type: 'json' });
+        user = userData as UserProfile;
       } catch (error) {
+        // This catch block will trigger if the user blob doesn't exist.
         return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
       }
     }
