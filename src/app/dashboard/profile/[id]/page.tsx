@@ -51,25 +51,29 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchProfileAndUser = async () => {
+            setLoading(true);
+
+            // Fetch the profile being viewed
             if (id) {
-                setLoading(true);
                 const fetchedProfile = await getProfileById(id);
                 setProfile(fetchedProfile);
-                setLoading(false);
             }
-        };
 
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setCurrentUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Could not parse current user from localStorage", e);
+            // Attempt to get the current user from localStorage
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    setCurrentUser(JSON.parse(storedUser));
+                } catch (e) {
+                    console.error("Could not parse current user from localStorage", e);
+                    setCurrentUser(null);
+                }
             }
-        }
+            setLoading(false);
+        };
         
-        fetchProfile();
+        fetchProfileAndUser();
     }, [id]);
 
     if (loading) {
@@ -90,11 +94,8 @@ export default function ProfilePage() {
         notFound();
     }
     
-    if (!currentUser) {
-        return <p>Loading user session...</p>
-    }
-
+    // The ProfileForm can handle a null currentUser
     return (
-        <ProfileForm initialProfile={profile} currentUser={currentUser} />
+        <ProfileForm initialProfile={profile} currentUser={currentUser!} />
     );
 }

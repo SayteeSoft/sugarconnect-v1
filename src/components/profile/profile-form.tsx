@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -26,7 +27,7 @@ import { sendEmail } from '@/lib/email';
 
 type ProfileFormProps = {
     initialProfile: UserProfile;
-    currentUser: UserProfile;
+    currentUser: UserProfile | null; // Allow currentUser to be null
 };
 
 const ProfileActionButtons = ({ onAction }: { onAction: (action: string) => void }) => {
@@ -114,7 +115,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     const isEditModeFromQuery = searchParams.get('edit') === 'true';
     const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://sugarconnect-v1.netlify.app';
 
-    const [isEditMode, setIsEditMode] = useState(isEditModeFromQuery || false);
+    const isOwnProfile = currentUser ? initialProfile.id === currentUser.id : false;
+    
+    const [isEditMode, setIsEditMode] = useState(isOwnProfile && isEditModeFromQuery);
     const [profile, setProfile] = useState(initialProfile);
     
     const [imagePreview, setImagePreview] = useState<string | null>(initialProfile.image);
@@ -161,10 +164,9 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
         setCurrentImageIndex((prevIndex) => (prevIndex - 1 + allImages.length) % allImages.length);
     };
 
-    const isOwnProfile = initialProfile.id === currentUser.id;
     const isVerified = profile.verifiedUntil && new Date(profile.verifiedUntil) > new Date();
     
-    const canViewSensitiveInfo = isOwnProfile || currentUser.role === 'Admin';
+    const canViewSensitiveInfo = isOwnProfile || (currentUser && currentUser.role === 'Admin');
     
     const completionPercentages = useMemo(() => ({
         about: calculateCompletion(profile, ['about']),
@@ -229,6 +231,16 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
     }, [isOwnProfile, currentUser, profile, toast, siteUrl]);
 
     const handleAction = (action: string) => {
+        if (!currentUser) {
+             toast({
+                variant: 'destructive',
+                title: "Login Required",
+                description: "You must be logged in to perform this action.",
+                action: <Button asChild><Link href="/login">Login</Link></Button>
+            });
+            return;
+        }
+
         if (action === 'message') {
             router.push(`/messages?userId=${profile.id}`);
             return;
@@ -540,7 +552,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             </div>
                             <div>
                                 <Label htmlFor="role">Role</Label>
-                                    <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading || currentUser.role !== 'Admin'}>
+                                    <Select name="role" value={profile.role} onValueChange={(value) => handleSelectChange('role', value)} disabled={!isEditMode || isLoading || (currentUser && currentUser.role !== 'Admin')}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="Sugar Baby">Sugar Baby</SelectItem>
@@ -805,6 +817,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
