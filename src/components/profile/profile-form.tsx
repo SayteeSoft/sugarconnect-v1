@@ -607,7 +607,7 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                                 <Badge variant="outline">{completionPercentages.about}%</Badge>
                             </div>
                            <div className="order-1 md:order-2 self-end md:self-center">
-                               <ProfileActionButtons onAction={handleAction} />
+                                {!isOwnProfile && <ProfileActionButtons onAction={handleAction} />}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -819,6 +819,7 @@ const AttributeSelect = ({ label, value, name, options, isEditMode, onChange, di
 
 
     
+
 
 
 
