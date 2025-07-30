@@ -34,7 +34,7 @@ async function ensureAdminUser(store: Store, adminEmail: string): Promise<UserPr
     return adminData;
   }
 
-  const adminTemplate = mockUsers.find(u => u.email === adminEmail && u.role === 'Admin');
+  const adminTemplate = mockUsers.find(u => u.email.toLowerCase() === adminEmail.toLowerCase() && u.role === 'Admin');
   if (!adminTemplate) {
     throw new Error(`Admin template for ${adminEmail} not found in mock data.`);
   }
