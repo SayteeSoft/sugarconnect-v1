@@ -19,45 +19,35 @@ export async function GET(request: NextRequest) {
   const store = getBlobStore();
   
   try {
-    let allUsers: UserProfile[] = [];
+    const userMap = new Map<string, UserProfile>();
 
-    // In production, only serve users from the blob store.
-    if (process.env.NODE_ENV === 'production') {
-        const { blobs } = await store.list({ cache: 'no-store' });
-        for (const blob of blobs) {
-            try {
-                const user: UserProfile = await store.get(blob.key, { type: 'json' });
-                const { password, ...userToReturn } = user;
-                allUsers.push(userToReturn as UserProfile);
-            } catch (e) {
-                console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
-            }
-        }
-    } else {
-        // In development, merge with mock users for testing.
-        const userMap = new Map<string, UserProfile>();
-        mockUsers.forEach(u => {
-            const { password, ...userToReturn } = u;
-            userMap.set(userToReturn.id, userToReturn as UserProfile);
-        });
+    // Always load mock users first as a base, especially for development
+    mockUsers.forEach(u => {
+        const { password, ...userToReturn } = u;
+        userMap.set(userToReturn.id, userToReturn as UserProfile);
+    });
 
-        const { blobs } = await store.list({ cache: 'no-store' });
-        for (const blob of blobs) {
-          try {
-            const user: UserProfile = await store.get(blob.key, { type: 'json' });
-            // Omit password from the returned user list
-            const { password, ...userToReturn } = user;
-            userMap.set(user.id, userToReturn as UserProfile);
-          } catch (e) {
-              console.warn(`Could not parse blob ${blob.key} as JSON, or it was a duplicate.`, e);
-          }
-        }
-        allUsers = Array.from(userMap.values());
+    // Overwrite with and add users from the blob store
+    const { blobs } = await store.list({ cache: 'no-store' });
+    for (const blob of blobs) {
+      try {
+        const user: UserProfile = await store.get(blob.key, { type: 'json' });
+        // Omit password from the returned user list
+        const { password, ...userToReturn } = user;
+        userMap.set(user.id, userToReturn as UserProfile);
+      } catch (e) {
+          console.warn(`Could not parse blob ${blob.key} as JSON.`, e);
+      }
     }
+    
+    // Filter out Admin users from the final list
+    const allUsers = Array.from(userMap.values()).filter(u => u.role !== 'Admin');
     
     return NextResponse.json(allUsers);
   } catch (error) {
     console.error('Failed to list users:', error);
-    return NextResponse.json({ message: 'Failed to list users' }, { status: 500 });
+    // In case of a blob store error, return at least the mock users (excluding admin)
+    const fallbackUsers = mockUsers.filter(u => u.role !== 'Admin');
+    return NextResponse.json(fallbackUsers, { status: 500 });
   }
 }

@@ -14,7 +14,7 @@ import { Filter, Wifi, Sparkles, Image as ImageIcon, Loader2 } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 
 export function SearchClient() {
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [locationFilter, setLocationFilter] = useState("");
@@ -31,18 +31,19 @@ export function SearchClient() {
         try {
             const res = await fetch(`/api/users`, { cache: 'no-store' });
              if (!res.ok) {
-                throw new Error(`API call failed with status ${res.status}`);
+                const errorData = await res.json();
+                throw new Error(errorData.message || `API call failed with status ${res.status}`);
             }
             const fetchedUsers = await res.json();
-            setProfiles(fetchedUsers.filter((user: UserProfile) => user.role !== 'Admin'));
+            setAllProfiles(fetchedUsers);
 
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
                 setCurrentUser(JSON.parse(storedUser));
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching profiles for search:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not load profiles.' });
+            toast({ variant: 'destructive', title: 'Error', description: `Could not load profiles: ${error.message}` });
         } finally {
             setLoading(false);
         }
@@ -52,27 +53,30 @@ export function SearchClient() {
   }, [toast]);
 
   const filteredProfiles = useMemo(() => {
-    let roleFilteredProfiles = profiles;
+    let roleFilteredProfiles = allProfiles;
     
+    // Apply role-based filtering if a user is logged in
     if (currentUser) {
         if (currentUser.role === 'Sugar Daddy') {
-            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Baby');
+            roleFilteredProfiles = allProfiles.filter(p => p.role === 'Sugar Baby');
         } else if (currentUser.role === 'Sugar Baby') {
-            roleFilteredProfiles = profiles.filter(p => p.role === 'Sugar Daddy');
+            roleFilteredProfiles = allProfiles.filter(p => p.role === 'Sugar Daddy');
         }
     }
 
+    // Apply other filters
     return roleFilteredProfiles.filter((profile) => {
-      const locationMatch = locationFilter === "" || profile.location.toLowerCase().includes(locationFilter.toLowerCase());
+      const locationMatch = locationFilter === "" || (profile.location && profile.location.toLowerCase().includes(locationFilter.toLowerCase()));
       const ageMatch = profile.age >= ageRange[0] && profile.age <= ageRange[1];
       const photoMatch = !withPhoto || (!!profile.image && !profile.image.includes('placeholder'));
       
+      // These are simulated for now as we don't have this data
       const newMatch = !isNew || Math.random() > 0.8; 
       const onlineMatch = !isOnline || Math.random() > 0.5;
 
       return locationMatch && ageMatch && photoMatch && newMatch && onlineMatch;
     });
-  }, [profiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser]);
+  }, [allProfiles, locationFilter, ageRange, withPhoto, isNew, isOnline, currentUser]);
   
   const formatHeight = (cm: number) => {
     const totalInches = cm / 2.54;
@@ -147,7 +151,6 @@ export function SearchClient() {
                                 />
                             </div>
                             <div className="flex flex-col gap-2 pt-4">
-                                <Button>Apply Filters</Button>
                                 <Button variant="ghost" onClick={handleClearFilters}>Clear Filters</Button>
                             </div>
                         </div>
