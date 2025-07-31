@@ -183,7 +183,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                 recipientName: profile.name,
                 subject: 'Someone viewed your profile!',
                 body: `${currentUser.name} just viewed your profile.`,
-                imageUrl: currentUser.image ? `${siteUrl}${currentUser.image}` : undefined,
                 callToAction: {
                     text: 'View Their Profile',
                     url: `${siteUrl}/dashboard/profile/${currentUser.id}`
@@ -216,7 +215,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
                             recipientName: currentUser.name,
                             subject: randomAction.subject,
                             body: `Good news! ${profile.name} ${randomAction.text}`,
-                            imageUrl: profile.image ? `${siteUrl}${profile.image}` : undefined,
                             callToAction: {
                                 text: 'View Their Profile',
                                 url: `${siteUrl}/dashboard/profile/${profile.id}`
@@ -271,7 +269,6 @@ export function ProfileForm({ initialProfile, currentUser }: ProfileFormProps) {
             recipientName: profile.name,
             subject: subjectMap[action] || 'New activity on your profile',
             body: `${currentUser.name} ${emailBodyMap[action]}.`,
-            imageUrl: currentUser.image ? `${siteUrl}${currentUser.image}` : undefined,
             callToAction: {
                 text: 'View Their Profile',
                 url: `${siteUrl}/dashboard/profile/${currentUser.id}`

@@ -22,10 +22,6 @@ export async function sendEmail({ to, recipientName, subject, body, from_name = 
   let textContent = `Hello ${recipientName},\n\n`;
   textContent += `${body}\n\n`;
 
-  if (imageUrl) {
-    textContent += `View profile image: ${imageUrl}\n\n`;
-  }
-
   if (callToAction) {
       textContent += `${callToAction.text}: ${callToAction.url}\n\n`;
   }

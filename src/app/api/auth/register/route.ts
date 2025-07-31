@@ -124,7 +124,6 @@ export async function POST(request: NextRequest) {
                 recipientName: newUser.name,
                 subject: `You have a new message from ${adminUser.name}`,
                 body: `You have received a new message from ${adminUser.name} on Sugar Connect.\n\nMessage: "${welcomeMessage.text}"`,
-                imageUrl: `${siteUrl}${adminUser.image}`,
                 callToAction: {
                     text: 'Click here to reply',
                     url: `${siteUrl}/messages?userId=${adminUser.id}`
