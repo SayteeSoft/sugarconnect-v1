@@ -18,12 +18,44 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
     });
 };
 
+const userCache = new Map<string, { key: string, user: UserProfile }>();
+
+async function populateUserCache(userStore: Store) {
+    if (userCache.size > 0) return;
+    const { blobs } = await userStore.list({ cache: 'no-store' });
+    for (const blob of blobs) {
+        try {
+            const user: UserProfile = await userStore.get(blob.key, { type: 'json' });
+            if (user && user.id) {
+                userCache.set(user.id, { key: blob.key, user });
+            }
+        } catch (e) {
+            console.warn(`Could not process user blob ${blob.key}`, e);
+        }
+    }
+    // In development, add mock users as a fallback.
+    if (process.env.NODE_ENV !== 'production') {
+        mockUsers.forEach(u => {
+            if (!userCache.has(u.id)) {
+                userCache.set(u.id, { key: u.email, user: u });
+            }
+        });
+    }
+}
+
+
 async function findUser(userStore: Store, userId: string): Promise<{key: string, user: UserProfile} | null> {
+    await populateUserCache(userStore);
+    if (userCache.has(userId)) {
+        return userCache.get(userId)!;
+    }
+    // Fallback if cache is not populated for some reason
     const { blobs } = await userStore.list({ cache: 'no-store' });
     for (const blob of blobs) {
       try {
         const user: UserProfile = await userStore.get(blob.key, { type: 'json' });
         if (user && user.id === userId) {
+          userCache.set(userId, { key: blob.key, user });
           return { key: blob.key, user };
         }
       } catch (e) {
@@ -35,6 +67,7 @@ async function findUser(userStore: Store, userId: string): Promise<{key: string,
     if (process.env.NODE_ENV !== 'production') {
         const mockUser = mockUsers.find(u => u.id === userId);
         if (mockUser) {
+            userCache.set(userId, { key: mockUser.email, user: mockUser });
             return { key: mockUser.email, user: mockUser };
         }
     }
