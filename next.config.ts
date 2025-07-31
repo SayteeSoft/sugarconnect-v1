@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'self'; sandbox;",
   },
+   devIndicators: {
+    allowedDevOrigins: [
+        '*.cluster-l6vkdperq5ebaqo3qy4ksvoqom.cloudworkstations.dev'
+    ]
+  }
 };
 
 export default nextConfig;
