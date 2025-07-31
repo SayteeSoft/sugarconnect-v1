@@ -7,14 +7,13 @@ type EmailPayload = {
   subject: string;
   body: string; // This will be the main content of the email
   from_name?: string;
-  imageUrl?: string;
   callToAction?: {
     text: string;
     url: string;
   };
 };
 
-export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction, imageUrl }: EmailPayload) {
+export async function sendEmail({ to, recipientName, subject, body, from_name = 'Sugar Connect', callToAction }: EmailPayload) {
   const ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY || "3ee1a7f3-b3d8-4b7d-a39a-3f40659920cb";
   const ADMIN_EMAIL = "saytee.software@gmail.com";
   
@@ -34,7 +33,7 @@ export async function sendEmail({ to, recipientName, subject, body, from_name = 
     bcc: ADMIN_EMAIL,
     subject,
     from_name,
-    message: textContent, // Use 'message' for plain text content
+    message: textContent,
   };
 
   try {
