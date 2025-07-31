@@ -17,15 +17,18 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const store = getBlobStore();
+  const isProduction = process.env.NETLIFY === 'true';
   
   try {
     const userMap = new Map<string, UserProfile>();
 
-    // Always load mock users first as a base, especially for development
-    mockUsers.forEach(u => {
-        const { password, ...userToReturn } = u;
-        userMap.set(userToReturn.id, userToReturn as UserProfile);
-    });
+    // Only load mock users in non-production environments
+    if (!isProduction) {
+        mockUsers.forEach(u => {
+            const { password, ...userToReturn } = u;
+            userMap.set(userToReturn.id, userToReturn as UserProfile);
+        });
+    }
 
     // Overwrite with and add users from the blob store
     const { blobs } = await store.list({ cache: 'no-store' });
@@ -46,7 +49,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(allUsers);
   } catch (error) {
     console.error('Failed to list users:', error);
-    // In case of a blob store error, return at least the mock users (excluding admin)
+    
+    if (isProduction) {
+      // In production, if blob store fails, return an empty array or handle error
+      return NextResponse.json([], { status: 500, statusText: "Failed to retrieve users." });
+    }
+
+    // In dev, in case of a blob store error, return at least the mock users (excluding admin)
     const fallbackUsers = mockUsers.filter(u => u.role !== 'Admin');
     return NextResponse.json(fallbackUsers, { status: 500 });
   }
