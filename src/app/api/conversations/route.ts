@@ -15,11 +15,14 @@ const getBlobStore = (name: 'users' | 'messages') => getStore({
 const userCache = new Map<string, UserProfile>();
 
 async function populateUserCache(userStore: Store) {
-    if (userCache.size > 0) return;
+    if (userCache.size > 0 && process.env.NODE_ENV === 'production') return; // Don't repopulate in prod
+    
+    userCache.clear();
     const { blobs: userBlobs } = await userStore.list({ cache: 'no-store' });
+
     for (const blob of userBlobs) {
         try {
-            const user = await userStore.get(blob.key, { type: 'json' });
+            const user: UserProfile = await userStore.get(blob.key, { type: 'json' });
             if (user && user.id) {
                 const { password, ...userToReturn } = user;
                 userCache.set(user.id, userToReturn as UserProfile);
@@ -28,7 +31,8 @@ async function populateUserCache(userStore: Store) {
              console.warn(`Could not process user blob ${blob.key}`, e);
         }
     }
-    // Also add mock users to cache for dev env
+    
+    // Also add mock users to cache for dev env, allowing overrides from blob
     if (process.env.NODE_ENV !== 'production') {
         mockUsers.forEach(u => {
             if (!userCache.has(u.id)) {
@@ -95,7 +99,7 @@ export async function GET(request: NextRequest) {
         // In dev mode or for admin, add users who aren't in conversations yet
         if (currentUser.role === 'Admin') {
             const testingUsers = ['Darianna', 'Kateryna', 'Sofia'];
-            const otherUsers = Array.from(userCache.values()).filter(u => testingUsers.includes(u.name));
+            const otherUsers = Array.from(userCache.values()).filter(u => testingUsers.includes(u.name) && u.id !== currentUser.id);
             for(const partner of otherUsers) {
                 if (!conversations.has(partner.id)) {
                     conversations.set(partner.id, {

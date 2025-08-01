@@ -21,7 +21,9 @@ const getBlobStore = (name: 'users' | 'messages' | 'images'): Store => {
 const userCache = new Map<string, { key: string, user: UserProfile }>();
 
 async function populateUserCache(userStore: Store) {
-    if (userCache.size > 0) return;
+    if (userCache.size > 0 && process.env.NODE_ENV === 'production') return;
+    
+    userCache.clear();
     const { blobs } = await userStore.list({ cache: 'no-store' });
     for (const blob of blobs) {
         try {
@@ -135,9 +137,9 @@ export async function POST(
         const sender = senderResult.user;
         const recipient = recipientResult.user;
         
-        if (sender.role === 'Sugar Daddy' && senderId !== recipient.id) {
+        if (sender.role === 'Sugar Daddy') {
             const currentCredits = sender.credits ?? 0;
-            if (currentCredits <= 0) {
+            if (currentCredits < 1) {
                 return NextResponse.json({ message: 'No Credits Remaining. Please purchase more credits to send messages.' }, { status: 402 });
             }
         }
@@ -174,6 +176,12 @@ export async function POST(
 
         await messagesStore.setJSON(conversationId, conversation);
         
+        // Decrement credits for Sugar Daddy
+        if (sender.role === 'Sugar Daddy') {
+            const updatedSender = { ...sender, credits: (sender.credits ?? 0) - 1 };
+            await userStore.setJSON(senderResult.key, updatedSender);
+        }
+
         await sendEmail({
             to: recipient.email,
             recipientName: recipient.name,
