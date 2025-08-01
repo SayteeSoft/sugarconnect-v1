@@ -138,8 +138,15 @@ export async function POST(request: NextRequest) {
     if (!user || !user.password) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
+    
+    let passwordMatch = false;
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    // Special case for admin login in dev environment for testing
+    if (process.env.NODE_ENV !== 'production' && lowerCaseEmail === 'saytee.software@gmail.com' && password === 'password123') {
+        passwordMatch = true;
+    } else {
+        passwordMatch = await bcrypt.compare(password, user.password);
+    }
 
     if (!passwordMatch) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
