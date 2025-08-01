@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 const verificationPackages = [
     { id: 'VERIFY1W', name: '1 Week Verification', price: '149.99', bonus: 'Get seen first' },
     { id: 'VERIFY2W', name: '2 Weeks Verification', price: '89.99', bonus: 'Most Popular' },
-    { id: 'VERIFY4W', name: '4 Weeks Verification', price: '149.99', bonus: 'Best Value' },
+    { id: 'VERIFY4W', name: '4 Weeks Verification', price: '49.99', bonus: 'Best Value' },
 ];
 
 export default function GetVerifiedPage() {

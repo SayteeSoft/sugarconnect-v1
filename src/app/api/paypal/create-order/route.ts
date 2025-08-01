@@ -21,7 +21,7 @@ const creditPackages: { [key: string]: { price: string, name: string } } = {
     'PKG1000': { price: '299.99', name: '1000 Credits Package' },
     'VERIFY1W': { price: '149.99', name: '1 Week Verification' },
     'VERIFY2W': { price: '89.99', name: '2 Weeks Verification' },
-    'VERIFY4W': { price: '149.99', name: '4 Weeks Verification' },
+    'VERIFY4W': { price: '49.99', name: '4 Weeks Verification' },
 };
 
 
