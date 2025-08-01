@@ -14,7 +14,7 @@ export function FeaturedProfileCard({ user, isLoggedIn }: FeaturedProfileCardPro
   const isOnline = Math.random() > 0.5; // Simulate online status
 
   return (
-    <Link href={`/dashboard/profile/${user.id}`}>
+    <Link href={isLoggedIn ? `/dashboard/profile/${user.id}` : '/login'}>
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-primary/20 hover:scale-105 group">
         <div className={cn(
             "relative aspect-square",
